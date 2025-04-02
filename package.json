@@ -1,24 +1,79 @@
 {
   "name": "@infactory/infactory-ts",
   "version": "0.5.0",
+  "type": "module",
   "description": "Infactory TypeScript SDK for use with Infactory Workshop, MCP Server and API",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rimraf dist",
+    "dead-code": "ts-prune | grep -v \"no-unused\" || true",
+    "format": "prettier --write . --ignore-path .prettierignore",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prebuild": "npm run clean",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "type-check": "tsc --noEmit"
   },
-  "keywords": [],
+  "keywords": [
+    "infactory",
+    "api",
+    "sdk",
+    "typescript"
+  ],
   "author": "Sean Kruzel <sean@infactory.ai>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/infactory-io/infactory-ts.git"
+  },
   "devDependencies": {
-    "@types/node": "^20.14.10",
+    "@types/jest": "29.5.14",
+    "@types/node": "20.17.30",
     "@types/react": "^19.1.0",
-    "esbuild": "^0.25.2",
-    "typescript": "^5.5.3",
-    "zod": "^3.23.8"
+    "@typescript-eslint/eslint-plugin": "8.29.0",
+    "@typescript-eslint/parser": "8.29.0",
+    "esbuild": "0.25.2",
+    "eslint": "9.23.0",
+    "eslint-config-prettier": "10.1.1",
+    "eslint-plugin-prettier": "5.2.6",
+    "husky": "9.1.7",
+    "jest": "29.7.0",
+    "lint-staged": "15.5.0",
+    "prettier": "3.5.3",
+    "rimraf": "6.0.1",
+    "ts-jest": "29.3.1",
+    "ts-prune": "0.10.3",
+    "tsup": "8.4.0",
+    "typescript": "5.8.2",
+    "typescript-eslint": "8.29.0",
+    "zod": "3.24.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
