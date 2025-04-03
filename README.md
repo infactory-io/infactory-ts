@@ -1,87 +1,260 @@
-# Infactory MCP Server
+# Infactory TypeScript SDK
 
-An MCP server using https://api.infactory.ai to connect to and build applications with your data.
+Official TypeScript SDK for interacting with the Infactory AI platform. This SDK allows you to programmatically access and manage your data, projects, and queries through the Infactory API.
 
-## Features
+## Installation
 
-- **Connect**: Connect files, databases and APIs to an Infactory Project
-- **Build**: Build queries to access and transform your data to answer specific questions
-- **Deploy**: Deploy your queries as APIs to build applications with your data
-- **Explore**: An organic chat interface to explore your deployed queries
-
-## Tools
-
-- **list_projects**
-  - Lists all projects in your Infactory account
-- **select_project**
-  - Select a project to work on based on either the provided name or projectId
-  - Inputs:
-    - `projectId` (string): The ID of the Infactory Project.
-    - `projectName` (string): The name of the Infactory Project.
+```bash
+npm install @infactory/infactory-ts
+```
 
 ## Configuration
 
-### Setting up Infactory Credentials
+Before using the SDK, you need to set up your Infactory API credentials:
 
-1. Obtain API key from the [Infactory Workshop](https://workshop.infactory.ai) then click [API Keys](https://workshop.infactory.ai/api-keys) to generate a new key.
-2. Copy the API key and save it in a secure location.
+1. Obtain an API key from the [Infactory Workshop](https://workshop.infactory.ai/api-keys)
+2. Use the API key to initialize the client
 
-## Usage
+## Quick Start
 
-### Claude Desktop
+```typescript
+import { InfactoryClient } from '@infactory/infactory-ts';
 
-Add this to your `claude_desktop_config.json`:
+// Initialize the client with your API key
+const client = new InfactoryClient({
+  apiKey: 'your-api-key-here',
+  // Optional: baseURL: 'https://api.infactory.ai' // Use custom API endpoint if needed
+});
 
-```json
-{
-  "mcpServers": {
-    "infactory-mcp": {
-      "command": "npx",
-      "args": ["-y", "@infactory/infactory-mcp"],
-      "env": {
-        "NF_API_KEY": "YOUR_INFACTORY_API_KEY"
-      }
-    }
+// Example: Get current user information
+async function getCurrentUser() {
+  const response = await client.users.getCurrentUser();
+  if (response.error) {
+    console.error(`Error: ${response.error.message}`);
+    return null;
   }
+  return response.data;
 }
+
+// Example: List all projects
+async function listProjects() {
+  const response = await client.projects.getProjects();
+  if (response.error) {
+    console.error(`Error: ${response.error.message}`);
+    return [];
+  }
+  return response.data;
+}
+```
+
+## Environment Variables
+
+The SDK supports loading configuration from environment variables:
+
+```bash
+# Required
+NF_API_KEY=your-api-key-here
+
+# Optional - defaults to https://api.infactory.ai
+NF_BASE_URL=https://api.infactory.ai
+```
+
+You can load these variables from a `.env` file using dotenv:
+
+```typescript
+import * as dotenv from 'dotenv';
+import { InfactoryClient } from '@infactory/infactory-ts';
+
+// Load environment variables
+dotenv.config();
+
+// Create client using environment variables
+const client = new InfactoryClient({
+  apiKey: process.env.NF_API_KEY || '',
+});
+```
+
+## Available APIs
+
+The SDK provides access to the following Infactory API resources:
+
+- **Projects** - Create and manage projects
+- **Teams** - Manage teams and team memberships
+- **Organizations** - Access organization information
+- **Users** - User management and authentication
+- **Auth** - API key management
+- **Chat** - Interact with the chat interface
+- **Datasources** - Connect to and manage data sources
+- **Datalines** - Access and transform data
+- **QueryPrograms** - Create, run, and publish queries
+- **APIs** - Deploy and manage API endpoints
+- **Credentials** - Manage connection credentials
+- **Secrets** - Store and manage secrets
+- **Tasks** - Track and manage tasks
+- **Events** - Access event information
+
+## Common Workflows
+
+### Creating a Project and Uploading Data
+
+```typescript
+// Create a new project
+const projectResponse = await client.projects.createProject({
+  name: 'Stock Analysis Project',
+  team_id: teamId,
+  description: 'Project for analyzing stock data',
+});
+const project = projectResponse.data;
+
+// Create a datasource
+const datasourceResponse = await client.datasources.createDatasource({
+  name: 'Stock Data',
+  project_id: project.id,
+  type: 'csv',
+});
+const datasource = datasourceResponse.data;
+
+// Upload a CSV file (This is a simplified example)
+const formData = new FormData();
+formData.append('file', fs.createReadStream('./data/stocks.csv'));
+
+// Upload using the datasource
+await fetch(
+  `${client.getBaseURL()}/v1/actions/load/${project.id}?datasource_id=${datasource.id}`,
+  {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${client.getApiKey()}`,
+    },
+    body: formData,
+  },
+);
+```
+
+### Working with Query Programs
+
+```typescript
+// Get query programs for a project
+const queryProgramsResponse =
+  await client.queryprograms.getQueryProgramsByProject(projectId);
+const queryPrograms = queryProgramsResponse.data;
+
+// Execute a query program
+const evaluateResponse =
+  await client.queryprograms.executeQueryProgram(queryProgramId);
+const queryResult = evaluateResponse.data;
+
+// Publish a query program to make it available as an API
+await client.queryprograms.publishQueryProgram(queryProgramId);
+```
+
+### Accessing APIs
+
+```typescript
+// Get APIs for a project
+const apisResponse = await client.apis.getProjectApis(projectId);
+const apis = apisResponse.data;
+
+// Get endpoints for an API
+const endpointsResponse = await client.apis.getApiEndpoints(apiId);
+const endpoints = endpointsResponse.data;
+```
+
+## Complete Examples
+
+For complete examples, see:
+
+- `example.ts` - Basic SDK usage examples
+- `infactory-e2e-test.ts` - End-to-end testing workflow including project creation, data upload, query execution, and API usage
+
+## Command Line Tools
+
+To run the included example files:
+
+```bash
+# Set up your API key
+export NF_API_KEY=your-api-key-here
+
+# Run the basic example
+npm run example
+
+# Run the end-to-end test
+npm run e2e-test
 ```
 
 ## Development
 
-### Docker
+### Building from Source
 
-```sh
-git clone https://github.com/infactory/infactory-mcp.git
-cd infactory-mcp
-docker build -t infactory-mcp -f src/Dockerfile .
+```bash
+git clone https://github.com/infactory-io/infactory-ts.git
+cd infactory-ts
+npm install
+npm run e2e-test
 ```
 
-### Docker configuration
+## Testing the SDK
 
-After building the docker image, follow the instructions in the [Usage](#usage-with-claude-desktop) section above but replace `commands` and `args` like below
+The SDK includes a comprehensive test suite using Jest with several types of tests:
 
-```json
-{
-  "mcpServers": {
-    "infactory-mcp": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "NF_API_KEY", "infactory-mcp"],
-      "env": {
-        "NF_API_KEY": "YOUR_INFACTORY_API_KEY"
-      }
-    }
-  }
-}
+### Unit Tests
+
+Unit tests verify individual components of the SDK in isolation:
+
+```bash
+npm run test:unit
 ```
 
-## Deployment
+### Integration Tests
 
-This repo is built and deployed to NPM via GitHub Actions. It is available at https://www.npmjs.com/package/@infactory/infactory-mcp
+Integration tests verify how components work together and with the Infactory API:
 
-We use the `NPM_TOKEN` github secret to authenticate the publish process and this token will be managed by the Infactory development team.
+```bash
+npm run test:integration
+```
 
-We use semantic versioning for releases. For example v1.0.0
+### Mock Service Worker Tests
+
+MSW tests simulate API interactions using request interception:
+
+```bash
+npm run test:msw
+```
+
+### Running All Tests
+
+To run the entire test suite:
+
+```bash
+npm test
+```
+
+### Test Coverage
+
+Generate test coverage reports:
+
+```bash
+npm run test:coverage
+```
+
+### Setting Up Tests
+
+For contributors writing tests:
+
+1. **Unit Tests**: Place in `src/__tests__/` and name as `*.test.ts`
+2. **Integration Tests**: Place in `src/__tests__/integration/` directory
+3. **MSW Tests**: Place in `src/__tests__/msw/` directory
+
+### Testing Dependencies
+
+The test suite uses several tools:
+
+- **Jest**: Test runner and assertion library
+- **ts-jest**: TypeScript support for Jest
+- **jest-fetch-mock**: Mocking fetch requests
+- **nock**: HTTP server mocking
+- **MSW**: API mocking via request interception
 
 ## License
 
-This Infactory MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
+This Infactory TypeScript SDK is licensed under the MIT License. See the LICENSE file for more details.
