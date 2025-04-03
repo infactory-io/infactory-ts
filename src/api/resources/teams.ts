@@ -7,8 +7,10 @@ import {
 } from '@/types/common.js';
 
 export const teamsApi = {
-  getTeams: async (): Promise<ApiResponse<Team[]>> => {
-    return await get<Team[]>('/v1/teams');
+  getTeams: async (organizationId: string): Promise<ApiResponse<Team[]>> => {
+    return await get<Team[]>('/v1/teams', {
+      params: { organization_id: organizationId },
+    });
   },
 
   getTeam: async (teamId: string): Promise<ApiResponse<Team>> => {

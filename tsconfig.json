@@ -19,6 +19,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["src/**/*", "tsup.config.ts"],
+  "include": ["src/**/*", "tsup.config.ts", "tests/**/*", "example.ts", "infactory-e2e-test.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

@@ -1,6 +1,6 @@
 import { get, post, patch, del } from '@/core/client.js';
 import { ApiResponse, Platform, CreatePlatformParams } from '@/types/common.js';
-import { getVersionInfo } from '@/core/version.js';
+import { getConfig } from '@/config/index.js';
 
 const PLATFORM_ID = 'redacted';
 
@@ -18,7 +18,7 @@ export const platformsApi = {
     if (PLATFORM_ID) {
       return await get<Platform>(`/v1/platforms/${PLATFORM_ID}`);
     }
-    const platform_name = getVersionInfo().appUrl;
+    const platform_name = getConfig(true, false).base_url;
     if (platform_name) {
       const response = await get<Platform[]>('/v1/platforms');
       if (response.data && response.data.length > 0) {

@@ -33,7 +33,7 @@ export const datasourcesApi = {
   ): Promise<ApiResponse<Datasource>> => {
     // Extract the project_id from the params using pop
     return await post<Datasource>(`/v1/datasources`, {
-      body: JSON.stringify(params),
+      body: params,
     });
   },
 
@@ -42,7 +42,7 @@ export const datasourcesApi = {
     params: Partial<CreateDatasourceParams>,
   ): Promise<ApiResponse<Datasource>> => {
     return await patch<Datasource>(`/v1/datasources/${datasourceId}`, {
-      body: JSON.stringify(params),
+      body: params,
     });
   },
 
@@ -57,7 +57,7 @@ export const datasourcesApi = {
     newProjectId: string,
   ): Promise<ApiResponse<Datasource>> => {
     return await post<Datasource>(`/v1/datasources/${datasourceId}/clone`, {
-      body: JSON.stringify({ new_project_id: newProjectId }),
+      body: { new_project_id: newProjectId },
     });
   },
 

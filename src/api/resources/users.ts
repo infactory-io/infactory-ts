@@ -11,7 +11,7 @@ export const usersApi = {
   },
 
   getCurrentUser: async (): Promise<ApiResponse<User>> => {
-    return await get<User>('/v1/users/me');
+    return await get<User>('/v1/authentication/me');
   },
 
   getOrCreateUserTeamOrganization: async ({

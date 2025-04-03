@@ -31,7 +31,9 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "example": "tsx example.ts",
+    "e2e-test": "tsx infactory-e2e-test.ts"
   },
   "keywords": [
     "infactory",
@@ -75,5 +77,14 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@types/minimist": "1.2.5",
+    "@types/node-fetch": "2.6.12",
+    "dotenv": "16.4.7",
+    "form-data": "4.0.2",
+    "minimist": "1.2.8",
+    "node-fetch": "3.3.2",
+    "tsx": "4.19.3"
   }
 }

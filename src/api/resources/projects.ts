@@ -1,5 +1,5 @@
+import { getConfig } from '@/config/index.js';
 import { get, downloadFile, post, patch, del } from '@/core/client.js';
-import { SERVER_BASE_URL } from '@/core/version.js';
 import { Project, CreateProjectParams, ApiResponse } from '@/types/common.js';
 
 export const projectsApi = {
@@ -88,7 +88,9 @@ export const projectsApi = {
 
       // Use direct fetch for maximum control
       const isServer = typeof window === 'undefined';
-      const baseUrl = isServer ? SERVER_BASE_URL : '/api/infactory';
+      const baseUrl = isServer
+        ? getConfig(true, false).base_url
+        : '/api/infactory';
       const url = `${baseUrl}/projects/import`;
 
       console.log('Making direct fetch request to:', url);
@@ -176,7 +178,9 @@ export const projectsApi = {
 
       // Use direct fetch for maximum control
       const isServer = typeof window === 'undefined';
-      const baseUrl = isServer ? SERVER_BASE_URL : '/api/infactory';
+      const baseUrl = isServer
+        ? getConfig(true, false).base_url
+        : '/api/infactory';
       const url = `${baseUrl}/projects/validate-import`;
 
       console.log('Making direct fetch request to:', url);

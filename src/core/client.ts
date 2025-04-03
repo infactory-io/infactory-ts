@@ -4,13 +4,9 @@ import { ApiResponse } from '@/types/common.js';
 // If on the client, it will call the /api/infactory endpoint
 // If on the server, it will call the API directly as implemented in /api/infactory/[...slug]/route.ts
 
-import { SERVER_BASE_URL } from './version.js';
+import { getConfig } from '@/config/index.js';
 
 const API_BASE_URL = '/api/infactory';
-
-if (!SERVER_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_BASE_URL is not defined');
-}
 
 interface RequestArgsNoBody {
   params?: Record<string, any>;
@@ -42,22 +38,40 @@ export async function fetchApi<T>(
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
+  const config = getConfig(true, false);
+  if (!config) {
+    throw new Error(
+      'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+    );
+  }
+
+  const headers = new Headers({
+    ...defaultHeaders,
+    ...(options.headers as Record<string, string>),
+  });
+
+  // Only add Cookie if document exists and has a cookie
+  if (typeof document !== 'undefined' && document.cookie) {
+    headers.set('Cookie', document.cookie);
+  }
+
+  // Add Bearer token if API key is available
+  if (config.api_key) {
+    headers.set('Authorization', `Bearer ${config.api_key}`);
+  }
+
   const fetchOptions: RequestInit = {
     ...options,
     credentials: 'include',
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-      Cookie: typeof document !== 'undefined' ? document.cookie : '',
-    },
+    headers,
   };
 
   const isServer = typeof window === 'undefined';
   let fullUrl = '';
   if (isAPIRequest) {
-    fullUrl = `${isServer ? SERVER_BASE_URL : API_BASE_URL}${endpoint}`;
+    fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
   } else {
-    fullUrl = `${SERVER_BASE_URL}${endpoint}`;
+    fullUrl = `${config.base_url}${endpoint}`;
   }
 
   console.log('SDK API request:', {
@@ -97,28 +111,47 @@ export async function streamApi(
   options.method = (options.method || 'GET').toUpperCase();
   const defaultHeaders: HeadersInit = {};
 
+  const config = getConfig(true, false);
+  if (!config) {
+    throw new Error(
+      'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+    );
+  }
   // Don't set Content-Type for FormData - let browser handle it
   if (options.body && !(options.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
+  const headers = new Headers({
+    ...defaultHeaders,
+    ...(options.headers as Record<string, string>),
+  });
+
+  // Only add Cookie if document exists and has a cookie
+  if (typeof document !== 'undefined' && document.cookie) {
+    headers.set('Cookie', document.cookie);
+  }
+
+  // Add Bearer token if API key is available
+  if (config.api_key) {
+    headers.set('Authorization', `Bearer ${config.api_key}`);
+  }
+
+  // Add Accept header for SSE
+  headers.set('Accept', 'text/event-stream');
+
   const fetchOptions: RequestInit = {
     ...options,
     credentials: 'include',
-    headers: {
-      ...defaultHeaders,
-      Accept: 'text/event-stream',
-      ...options.headers,
-      Cookie: typeof document !== 'undefined' ? document.cookie : '',
-    },
+    headers,
   };
 
   const isServer = typeof window === 'undefined';
   let fullUrl = '';
   if (isAPIRequest) {
-    fullUrl = `${isServer ? SERVER_BASE_URL : API_BASE_URL}${endpoint}`;
+    fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
   } else {
-    fullUrl = `${SERVER_BASE_URL}${endpoint}`;
+    fullUrl = `${config.base_url}${endpoint}`;
   }
 
   console.log('SDK API stream request:', {
@@ -307,7 +340,13 @@ function addParamsToPath(
   relative_path: string,
   params: Record<string, any> = {},
 ): string {
-  const url = new URL(relative_path, SERVER_BASE_URL);
+  const config = getConfig(true, false);
+  if (!config) {
+    throw new Error(
+      'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+    );
+  }
+  const url = new URL(relative_path, config.base_url);
   const existingParams = Object.fromEntries(url.searchParams.entries());
   const mergedParams = { ...existingParams, ...params };
   const queryString = buildQueryString(mergedParams);
