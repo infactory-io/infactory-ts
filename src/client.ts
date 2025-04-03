@@ -46,6 +46,7 @@ export class InfactoryClient {
   public readonly queryprograms = Resources.queryProgramsApi;
   public readonly secrets = Resources.secretsApi;
   public readonly tasks = Resources.tasksApi;
+  public readonly apis = Resources.apisApi;
   // Other resource groups can be added here
 
   /**

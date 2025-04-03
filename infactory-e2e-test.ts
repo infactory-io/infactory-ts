@@ -491,6 +491,10 @@ async function main() {
         process.exit(1);
       }
       team = teamResponse.data;
+      if (!team) {
+        console.error('Error creating team: Team not found');
+        process.exit(1);
+      }
       console.log(`Created new team: ${team.name} (ID: ${team.id})`);
     } else {
       team = teamsResponse.data[0]; // Select the first team
@@ -514,6 +518,10 @@ async function main() {
     }
 
     const project = projectResponse.data;
+    if (!project) {
+      console.error('Error creating project: Project not found');
+      process.exit(1);
+    }
     console.log(`Project created: ${project.name} (ID: ${project.id})`);
 
     // Step 4: Create a datasource and upload CSV
@@ -546,6 +554,10 @@ async function main() {
     }
 
     const datasource = datasourceResponse.data;
+    if (!datasource) {
+      console.error('Error creating datasource: Datasource not found');
+      process.exit(1);
+    }
     console.log(
       `Datasource created: ${datasource.name} (ID: ${datasource.id})`,
     );
