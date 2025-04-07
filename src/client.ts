@@ -1,14 +1,17 @@
 import * as Resources from '@/api/resources/index.js';
-import type { InfactorySDKError } from '@/types/common.js';
 import { getConfig } from './config/index.js';
+import { InfactoryAPIError } from './errors/index.js';
 
-export class InfactoryClientError extends Error implements InfactorySDKError {
+export class InfactoryClientError extends InfactoryAPIError {
   constructor(
-    public status: number,
+    status: number,
     message: string,
+    requestId?: string,
+    details?: any,
   ) {
-    super(message);
+    super(status, 'client_error', message, requestId, details);
     this.name = 'InfactoryClientError';
+    Object.setPrototypeOf(this, InfactoryClientError.prototype);
   }
 }
 

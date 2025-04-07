@@ -5,6 +5,12 @@ import { ApiResponse } from '@/types/common.js';
 // If on the server, it will call the API directly as implemented in /api/infactory/[...slug]/route.ts
 
 import { getConfig } from '@/config/index.js';
+import {
+  InfactoryAPIError,
+  NetworkError,
+  ValidationError,
+  createErrorFromStatus,
+} from '@/errors/index.js';
 
 const API_BASE_URL = '/api/infactory';
 
@@ -17,89 +23,138 @@ interface RequestArgs<T> extends RequestArgsNoBody {
   body?: T;
 }
 
-class InfactorySDKError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'InfactorySDKError';
-  }
-}
-
 export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {},
   isAPIRequest: boolean = true,
 ): Promise<ApiResponse<T>> {
-  options.method = (options.method || 'GET').toUpperCase();
-  const defaultHeaders: HeadersInit = {};
-  if (options.body) {
-    defaultHeaders['Content-Type'] = 'application/json';
-  }
+  try {
+    options.method = (options.method || 'GET').toUpperCase();
+    const defaultHeaders: HeadersInit = {};
+    if (options.body) {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
 
-  const config = getConfig(true, false);
-  if (!config) {
-    throw new Error(
-      'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+    const config = getConfig(true, false);
+    if (!config) {
+      throw new ValidationError(
+        'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+        undefined,
+        { requiredEnvVars: ['NF_API_KEY', 'NF_BASE_URL'] },
+      );
+    }
+
+    const headers = new Headers({
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string>),
+    });
+
+    // Only add Cookie if document exists and has a cookie
+    if (typeof document !== 'undefined' && document.cookie) {
+      headers.set('Cookie', document.cookie);
+    }
+
+    // Add Bearer token if API key is available
+    if (config.api_key) {
+      headers.set('Authorization', `Bearer ${config.api_key}`);
+    }
+
+    const fetchOptions: RequestInit = {
+      ...options,
+      credentials: 'include',
+      headers,
+    };
+
+    const isServer = typeof window === 'undefined';
+    let fullUrl = '';
+    if (isAPIRequest) {
+      fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
+    } else {
+      fullUrl = `${config.base_url}${endpoint}`;
+    }
+
+    console.log('SDK API request:', {
+      isServer,
+      method: options.method,
+      url: fullUrl,
+      headers: fetchOptions.headers,
+      body: options.body,
+    });
+
+    const response = await fetch(fullUrl, fetchOptions);
+
+    if (!response.ok) {
+      // Attempt to parse error response as JSON
+      let errorData: any = {};
+      let errorMessage = '';
+
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorBody = await response.json();
+          errorData = errorBody;
+          errorMessage =
+            errorBody.message ||
+            errorBody.detail ||
+            `API request failed with status: ${response.status}`;
+        } else {
+          const errorBody = await response.text();
+          errorMessage = `API ${options.method} request failed ${response.status}: ${errorBody}`;
+        }
+      } catch (e) {
+        errorMessage = `API request failed with status: ${response.status}`;
+      }
+
+      // Get request ID from headers if available
+      const requestId = response.headers.get('x-request-id') || undefined;
+
+      // Create appropriate error based on status code
+      const error = createErrorFromStatus(
+        response.status,
+        errorData.code || 'api_error',
+        errorMessage,
+        requestId,
+        errorData.details || errorData,
+      );
+
+      // For client-facing errors (4xx), return in the response
+      // For server errors (5xx), throw the error
+      if (response.status < 500) {
+        return { error };
+      }
+
+      throw error;
+    }
+
+    const data = await response.json();
+    return { data: data as T };
+  } catch (error) {
+    // Handle network errors and other unexpected exceptions
+    if (error instanceof InfactoryAPIError) {
+      // Re-throw if it's already our error type
+      throw error;
+    }
+
+    console.error('Unexpected error in API request:', error);
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred';
+
+    // Create a NetworkError for network-related issues
+    if (error instanceof TypeError && message.includes('fetch')) {
+      throw new NetworkError(`Network error: ${message}`, {
+        originalError: error,
+      });
+    }
+
+    // For other unexpected errors
+    throw new InfactoryAPIError(
+      500,
+      'unexpected_error',
+      `An unexpected error occurred: ${message}`,
+      undefined,
+      { originalError: error },
     );
   }
-
-  const headers = new Headers({
-    ...defaultHeaders,
-    ...(options.headers as Record<string, string>),
-  });
-
-  // Only add Cookie if document exists and has a cookie
-  if (typeof document !== 'undefined' && document.cookie) {
-    headers.set('Cookie', document.cookie);
-  }
-
-  // Add Bearer token if API key is available
-  if (config.api_key) {
-    headers.set('Authorization', `Bearer ${config.api_key}`);
-  }
-
-  const fetchOptions: RequestInit = {
-    ...options,
-    credentials: 'include',
-    headers,
-  };
-
-  const isServer = typeof window === 'undefined';
-  let fullUrl = '';
-  if (isAPIRequest) {
-    fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
-  } else {
-    fullUrl = `${config.base_url}${endpoint}`;
-  }
-
-  console.log('SDK API request:', {
-    isServer,
-    method: options.method,
-    url: fullUrl,
-    headers: fetchOptions.headers,
-    body: options.body,
-  });
-
-  const response = await fetch(fullUrl, fetchOptions);
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    const errorMessage = `API ${options.method} request failed ${response.status}: ${fullUrl} ${JSON.stringify(fetchOptions)} ${errorBody}`;
-    if (response.status < 500) {
-      return {
-        error: {
-          status: response.status,
-          message: errorMessage,
-        },
-      };
-    }
-    throw new InfactorySDKError(response.status, errorMessage);
-  }
-
-  const data = await response.json();
-  return { data: data as T };
 }
 
 export async function streamApi(
@@ -108,89 +163,142 @@ export async function streamApi(
   isAPIRequest: boolean = true,
   signal?: AbortSignal,
 ): Promise<ReadableStream> {
-  options.method = (options.method || 'GET').toUpperCase();
-  const defaultHeaders: HeadersInit = {};
+  try {
+    options.method = (options.method || 'GET').toUpperCase();
+    const defaultHeaders: HeadersInit = {};
 
-  const config = getConfig(true, false);
-  if (!config) {
-    throw new Error(
-      'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
-    );
-  }
-  // Don't set Content-Type for FormData - let browser handle it
-  if (options.body && !(options.body instanceof FormData)) {
-    defaultHeaders['Content-Type'] = 'application/json';
-  }
-
-  const headers = new Headers({
-    ...defaultHeaders,
-    ...(options.headers as Record<string, string>),
-  });
-
-  // Only add Cookie if document exists and has a cookie
-  if (typeof document !== 'undefined' && document.cookie) {
-    headers.set('Cookie', document.cookie);
-  }
-
-  // Add Bearer token if API key is available
-  if (config.api_key) {
-    headers.set('Authorization', `Bearer ${config.api_key}`);
-  }
-
-  // Add Accept header for SSE
-  headers.set('Accept', 'text/event-stream');
-
-  const fetchOptions: RequestInit = {
-    ...options,
-    credentials: 'include',
-    headers,
-  };
-
-  const isServer = typeof window === 'undefined';
-  let fullUrl = '';
-  if (isAPIRequest) {
-    fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
-  } else {
-    fullUrl = `${config.base_url}${endpoint}`;
-  }
-
-  console.log('SDK API stream request:', {
-    isServer,
-    method: options.method,
-    url: fullUrl,
-    headers: fetchOptions.headers,
-    body: options.body,
-  });
-  const response = await fetch(fullUrl, { ...fetchOptions, signal });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    let errorJson = {};
-    let errorMessage = '';
-    console.error(errorBody);
-    try {
-      errorJson = JSON.parse(errorBody || '{}');
-      errorMessage = `API ${options.method} request failed ${response.status}: ${JSON.stringify(errorJson)}`;
-    } catch (e) {
-      errorMessage = `API ${options.method} request failed ${response.status}: ${errorBody}`;
+    const config = getConfig(true, false);
+    if (!config) {
+      throw new ValidationError(
+        'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+        undefined,
+        { requiredEnvVars: ['NF_API_KEY', 'NF_BASE_URL'] },
+      );
     }
-    if (response.status < 500) {
-      return new ReadableStream({
-        start(controller) {
-          const error = JSON.stringify({
-            error: {
-              status: response.status,
-              message: errorMessage,
-            },
-          });
-          controller.enqueue(new TextEncoder().encode(error));
-          controller.close();
-        },
+    // Don't set Content-Type for FormData - let browser handle it
+    if (options.body && !(options.body instanceof FormData)) {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
+
+    const headers = new Headers({
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string>),
+    });
+
+    // Only add Cookie if document exists and has a cookie
+    if (typeof document !== 'undefined' && document.cookie) {
+      headers.set('Cookie', document.cookie);
+    }
+
+    // Add Bearer token if API key is available
+    if (config.api_key) {
+      headers.set('Authorization', `Bearer ${config.api_key}`);
+    }
+
+    // Add Accept header for SSE
+    headers.set('Accept', 'text/event-stream');
+
+    const fetchOptions: RequestInit = {
+      ...options,
+      credentials: 'include',
+      headers,
+    };
+
+    const isServer = typeof window === 'undefined';
+    let fullUrl = '';
+    if (isAPIRequest) {
+      fullUrl = `${isServer ? config.base_url : API_BASE_URL}${endpoint}`;
+    } else {
+      fullUrl = `${config.base_url}${endpoint}`;
+    }
+
+    console.log('SDK API stream request:', {
+      isServer,
+      method: options.method,
+      url: fullUrl,
+      headers: fetchOptions.headers,
+      body: options.body,
+    });
+    const response = await fetch(fullUrl, { ...fetchOptions, signal });
+
+    if (!response.ok) {
+      // Attempt to parse error response as JSON
+      let errorData: any = {};
+      let errorMessage = '';
+
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorBody = await response.json();
+          errorData = errorBody;
+          errorMessage =
+            errorBody.message ||
+            errorBody.detail ||
+            `API request failed with status: ${response.status}`;
+        } else {
+          const errorBody = await response.text();
+          errorMessage = `API ${options.method} request failed ${response.status}: ${errorBody}`;
+        }
+      } catch (e) {
+        errorMessage = `API request failed with status: ${response.status}`;
+      }
+
+      // Get request ID from headers if available
+      const requestId = response.headers.get('x-request-id') || undefined;
+
+      // Create appropriate error based on status code
+      const error = createErrorFromStatus(
+        response.status,
+        errorData.code || 'api_error',
+        errorMessage,
+        requestId,
+        errorData.details || errorData,
+      );
+
+      // For streaming API calls with client-facing errors (4xx),
+      // return a ReadableStream with the error
+      if (response.status < 500) {
+        return new ReadableStream({
+          start(controller) {
+            const errorJson = JSON.stringify({
+              error: error.toJSON(),
+            });
+            controller.enqueue(new TextEncoder().encode(errorJson));
+            controller.close();
+          },
+        });
+      }
+
+      throw error;
+    }
+    return response.body as ReadableStream;
+  } catch (error) {
+    // Handle network errors and other unexpected exceptions
+    if (error instanceof InfactoryAPIError) {
+      // Re-throw if it's already our error type
+      throw error;
+    }
+
+    console.error('Unexpected error in streaming API request:', error);
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred';
+
+    // Create a NetworkError for network-related issues
+    if (error instanceof TypeError && message.includes('fetch')) {
+      throw new NetworkError(`Network error: ${message}`, {
+        originalError: error,
       });
     }
-    throw new InfactorySDKError(response.status, errorMessage);
+
+    // For other unexpected errors
+    throw new InfactoryAPIError(
+      500,
+      'unexpected_error',
+      `An unexpected error occurred: ${message}`,
+      undefined,
+      { originalError: error },
+    );
   }
-  return response.body as ReadableStream;
 }
 
 export async function get<T>(
@@ -342,8 +450,10 @@ function addParamsToPath(
 ): string {
   const config = getConfig(true, false);
   if (!config) {
-    throw new Error(
+    throw new ValidationError(
       'Config not found or invalid, set NF_API_KEY and NF_BASE_URL environment variables',
+      undefined,
+      { requiredEnvVars: ['NF_API_KEY', 'NF_BASE_URL'] },
     );
   }
   const url = new URL(relative_path, config.base_url);

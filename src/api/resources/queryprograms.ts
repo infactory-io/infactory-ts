@@ -6,6 +6,7 @@ import {
   QueryResponse,
   PaginationParams,
 } from '@/types/common.js';
+import { StreamOrApiResponse } from '@/utils/stream.js';
 
 export const queryProgramsApi = {
   listQueryPrograms: async (
@@ -56,7 +57,7 @@ export const queryProgramsApi = {
   executeQueryProgram: async (
     id: string,
     params?: { input_data?: Record<string, any>; stream?: boolean },
-  ): Promise<ApiResponse<QueryResponse> | ReadableStream<any>> => {
+  ): Promise<StreamOrApiResponse<QueryResponse>> => {
     if (params?.stream) {
       return postStream<QueryResponse>(`/v1/queryprograms/${id}/execute`, {
         params: params?.input_data || {},
