@@ -1,6 +1,7 @@
 import { getConfig } from '@/config/index.js';
 import { get, downloadFile, post, patch, del } from '@/core/client.js';
 import { Project, CreateProjectParams, ApiResponse } from '@/types/common.js';
+import { InfactoryClientError } from '@/client.js';
 
 export const projectsApi = {
   getProjects: async (): Promise<ApiResponse<Project[]>> => {
@@ -137,10 +138,7 @@ export const projectsApi = {
         }
 
         return {
-          error: {
-            status: response.status,
-            message: errorMessage,
-          },
+          error: new InfactoryClientError(response.status, errorMessage),
         };
       }
 
@@ -149,11 +147,10 @@ export const projectsApi = {
     } catch (error) {
       console.error('Error importing project:', error);
       return {
-        error: {
-          status: 500,
-          message:
-            error instanceof Error ? error.message : 'Failed to import project',
-        },
+        error: new InfactoryClientError(
+          500,
+          error instanceof Error ? error.message : 'Failed to import project',
+        ),
       };
     }
   },
@@ -209,10 +206,7 @@ export const projectsApi = {
         }
 
         return {
-          error: {
-            status: response.status,
-            message: errorMessage,
-          },
+          error: new InfactoryClientError(response.status, errorMessage),
         };
       }
 
@@ -221,13 +215,12 @@ export const projectsApi = {
     } catch (error) {
       console.error('Error validating import:', error);
       return {
-        error: {
-          status: 500,
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to validate import file',
-        },
+        error: new InfactoryClientError(
+          500,
+          error instanceof Error
+            ? error.message
+            : 'Failed to validate import file',
+        ),
       };
     }
   },

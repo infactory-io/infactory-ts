@@ -1,12 +1,12 @@
-// Common API response type
+import { InfactoryAPIError } from '@/errors/index.js';
 
-export interface InfactorySDKError {
-  status: number;
-  message: string;
-}
+/**
+ * Standard API response format
+ * Either contains data on success or an error on failure
+ */
 export interface ApiResponse<T> {
   data?: T;
-  error?: InfactorySDKError;
+  error?: InfactoryAPIError;
 }
 
 // Base types

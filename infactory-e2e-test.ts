@@ -27,7 +27,10 @@ import { performance } from 'perf_hooks';
 import minimist from 'minimist';
 import * as dotenv from 'dotenv';
 import { InfactoryClient } from './src/client.js';
-import { ApiResponse } from './src/types/common.js';
+import {
+  isReadableStream,
+  processStreamToApiResponse,
+} from './src/utils/stream.js';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
@@ -173,6 +176,13 @@ async function waitForJobCompletion(
 
       // Handle different response formats
       let job;
+      if (jobInfo === null || jobInfo === undefined) {
+        jobLogger.warn(`Job ${jobId} not found in status response`);
+        await new Promise((resolve) =>
+          setTimeout(resolve, pollInterval * 1000),
+        );
+        continue;
+      }
       if (Array.isArray(jobInfo)) {
         // If we get a list of jobs, find the one with our job_id
         const matchingJobs = jobInfo.filter((j) => j.id === jobId);
@@ -186,7 +196,9 @@ async function waitForJobCompletion(
         job = matchingJobs[0];
       } else if (typeof jobInfo === 'object' && 'jobs' in jobInfo) {
         // If we get a dict with a jobs list
-        const matchingJobs = jobInfo.jobs.filter((j) => j.id === jobId);
+        const matchingJobs = (jobInfo as { jobs: any[] }).jobs.filter(
+          (j) => j.id === jobId,
+        );
         if (matchingJobs.length === 0) {
           jobLogger.warn(`Job ${jobId} not found in status response`);
           await new Promise((resolve) =>
@@ -400,46 +412,11 @@ async function customSubmitJob(
       return '';
     }
 
-    const responseData = await response.json();
+    const responseData = (await response.json()) as string; // Return a job ID
     return responseData;
   } catch (error) {
     jobLogger.error(`Exception submitting job: ${String(error)}`);
     return '';
-  }
-}
-
-/**
- * Check the history of a job to get detailed information
- */
-async function checkJobHistory(
-  client: InfactoryClient,
-  jobId: string,
-): Promise<any> {
-  const jobLogger = new Logger('job_history');
-
-  try {
-    const response = await fetch(
-      `${client.getBaseURL()}/v1/jobs/history/${jobId}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${client.getApiKey()}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    if (response.status !== 200) {
-      jobLogger.error(
-        `Error checking job history: ${response.status} ${await response.text()}`,
-      );
-      return null;
-    }
-
-    return await response.json();
-  } catch (error) {
-    jobLogger.error(`Error checking job history: ${String(error)}`);
-    return null;
   }
 }
 
@@ -450,6 +427,10 @@ async function main() {
   try {
     // Step 1: Initialize client
     printStep(1, 'Initialize client and authenticate');
+    if (!API_KEY) {
+      console.error('API_KEY is not set');
+      process.exit(1);
+    }
     const client = new InfactoryClient({ apiKey: API_KEY });
 
     // Get current user
@@ -460,6 +441,10 @@ async function main() {
     }
 
     console.log('Successfully connected to Infactory API');
+    if (!userResponse.data) {
+      console.error('Failed to get current user');
+      process.exit(1);
+    }
     console.log(`User: ${userResponse.data.name} (${userResponse.data.email})`);
 
     // Step 2: Select organization and team
@@ -697,9 +682,15 @@ async function main() {
       try {
         // Run the query
         console.log('  Running query...');
-        const evaluateResponse = await client.queryprograms.executeQueryProgram(
+        let evaluateResponse = await client.queryprograms.executeQueryProgram(
           qp.id,
         );
+
+        // Handle the response which could be a stream or an API response
+        if (isReadableStream(evaluateResponse)) {
+          console.log('  Processing streaming response...');
+          evaluateResponse = await processStreamToApiResponse(evaluateResponse);
+        }
 
         if (evaluateResponse.data) {
           const data = evaluateResponse.data;
