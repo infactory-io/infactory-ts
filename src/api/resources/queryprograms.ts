@@ -10,7 +10,7 @@ import { StreamOrApiResponse } from '@/utils/stream.js';
 
 export const queryProgramsApi = {
   listQueryPrograms: async (
-    params?: PaginationParams & { dataline_id?: string },
+    params?: PaginationParams & { project_id?: string },
   ): Promise<ApiResponse<QueryProgram[]>> => {
     return await get<QueryProgram[]>(`/v1/queryprograms`, { params: params });
   },

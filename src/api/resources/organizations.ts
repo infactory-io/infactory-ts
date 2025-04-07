@@ -10,6 +10,12 @@ export const organizationsApi = {
     return await get<Organization[]>('/v1/orgs');
   },
 
+  getOrganization: async (
+    organizationId: string,
+  ): Promise<ApiResponse<Organization>> => {
+    return await get<Organization>(`/v1/orgs/${organizationId}`);
+  },
+
   getClerkOrganization: async (
     organizationId: string,
   ): Promise<ApiResponse<Organization>> => {

@@ -547,11 +547,13 @@ export async function downloadFile<T>(
   } catch (error) {
     console.error('Error downloading file:', error);
     return {
-      error: {
-        status: 500,
-        message:
-          error instanceof Error ? error.message : 'Failed to download file',
-      },
+      error: new InfactoryAPIError(
+        500,
+        'download_error',
+        error instanceof Error ? error.message : 'Failed to download file',
+        undefined,
+        { originalError: error },
+      ),
     };
   }
 }

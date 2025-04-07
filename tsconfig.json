@@ -24,7 +24,7 @@
     "tsup.config.ts",
     "tests/**/*",
     "example.ts",
-    "infactory-e2e-test.ts"
+    "tests/infactory-e2e-test.ts"
   ],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

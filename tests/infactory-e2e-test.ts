@@ -26,11 +26,11 @@ import path from 'path';
 import { performance } from 'perf_hooks';
 import minimist from 'minimist';
 import * as dotenv from 'dotenv';
-import { InfactoryClient } from './src/client.js';
+import { InfactoryClient } from '../src/client.js';
 import {
   isReadableStream,
   processStreamToApiResponse,
-} from './src/utils/stream.js';
+} from '../src/utils/stream.js';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
