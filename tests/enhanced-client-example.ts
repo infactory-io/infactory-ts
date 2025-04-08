@@ -54,6 +54,10 @@ async function main() {
     'Market Data',
   );
 
+  // Use newProject to demonstrate the response structure
+  // ProjectContext requires using get() to access project details
+  const projectDetails = await newProject.get();
+  console.log(`Created project with name: ${projectDetails.data?.name}`);
   console.log('Created new project and uploaded CSV in a single operation');
 }
 

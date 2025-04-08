@@ -2,12 +2,16 @@
 import { InfactoryClient } from '../../client.js';
 import nock from 'nock';
 import * as dotenv from 'dotenv';
+import {
+  isApiResponse,
+  processStreamToApiResponse,
+} from '../../utils/stream.js';
 
 // Load test environment variables
 dotenv.config();
 
 const TEST_API_KEY = process.env.TEST_API_KEY || 'test-api-key';
-const TEST_BASE_URL = 'https://api.test.infactory.ai';
+const TEST_BASE_URL = 'https://staging.infactory.ai';
 
 describe('InfactoryClient Integration', () => {
   let client: InfactoryClient;
@@ -124,8 +128,13 @@ describe('InfactoryClient Integration', () => {
         .post(`/v1/queryprograms/${queryProgramId}/execute`)
         .reply(200, mockResult);
 
-      const response =
+      const rawResponse =
         await client.queryprograms.executeQueryProgram(queryProgramId);
+
+      // Process the response to ensure it's an ApiResponse
+      const response = isApiResponse(rawResponse)
+        ? rawResponse
+        : await processStreamToApiResponse(rawResponse);
 
       expect(response.error).toBeUndefined();
       expect(response.data).toEqual(mockResult);
@@ -152,7 +161,7 @@ describe('InfactoryClient Integration', () => {
 
       expect(response.error).toBeUndefined();
       expect(response.data).toEqual(mockPublishedProgram);
-      expect(response.data.published).toBe(true);
+      expect(response.data?.published).toBe(true);
     });
   });
 

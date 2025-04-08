@@ -23,7 +23,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { performance } from 'perf_hooks';
+// Performance measurement no longer needed
+// import { performance } from 'perf_hooks';
 import minimist from 'minimist';
 import * as dotenv from 'dotenv';
 import { EnhancedInfactoryClient } from '../src/enhanced-client.js';
@@ -100,8 +101,10 @@ if (!fs.existsSync(CSV_FILE)) {
 }
 
 /**
- * Wait for user to press Enter
+ * Wait for user to press Enter - function is commented out as it's currently unused
+ * but kept for future interactive testing scenarios
  */
+/*
 function waitForUser(message = 'Press Enter to continue...'): Promise<void> {
   return new Promise((resolve) => {
     console.log(`\n${message}`);
@@ -110,6 +113,7 @@ function waitForUser(message = 'Press Enter to continue...'): Promise<void> {
     });
   });
 }
+*/
 
 /**
  * Print a formatted step header
@@ -349,8 +353,8 @@ async function main() {
     // Step 5: Monitor job progress
     printStep(5, 'Monitor job progress');
 
-    // Get a datasource context for fluent API access
-    const datasourceContext = projectContext.datasource(datasource.id);
+    // Get a datasource context for fluent API access (commented out as currently unused)
+    // const datasourceContext = projectContext.datasource(datasource.id);
 
     // Wait for job completion using the fluent API
     const [jobSuccess, jobStatus] = await client.waitForJobCompletion(

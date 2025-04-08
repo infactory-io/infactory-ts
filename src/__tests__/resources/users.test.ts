@@ -1,11 +1,16 @@
 // src/__tests__/resources/users.test.ts
 import { usersApi } from '../../api/resources/users.js';
-import fetchMock from 'jest-fetch-mock';
+import { enableFetchMocks } from 'jest-fetch-mock';
 
-global.fetch = fetchMock;
+// Enable fetch mocks
+enableFetchMocks();
+
+// The global.fetch is now handled by jest-fetch-mock
 
 describe('Users API', () => {
   beforeEach(() => {
+    // Reset mocks before each test
+    fetchMock.doMock();
     fetchMock.resetMocks();
   });
 
@@ -20,6 +25,7 @@ describe('Users API', () => {
         updated_at: '2023-01-01T00:00:00Z',
       };
 
+      // Use the proper mock method from jest-fetch-mock
       fetchMock.mockResponseOnce(JSON.stringify(mockUser));
 
       const response = await usersApi.getCurrentUser();
@@ -35,6 +41,7 @@ describe('Users API', () => {
     });
 
     it('should return error when request fails', async () => {
+      // Use the proper mock method from jest-fetch-mock
       fetchMock.mockRejectOnce(new Error('API error'));
 
       const response = await usersApi.getCurrentUser();

@@ -58,7 +58,7 @@ export class InfactoryClient {
   public readonly secrets = Resources.secretsApi;
   public readonly tasks = Resources.tasksApi;
   public readonly apis = Resources.apisApi;
-  // Other resource groups can be added here
+  public readonly jobs = Resources.jobsApi;
 
   /**
    * Creates a new instance of the InfactoryClient.

@@ -255,6 +255,7 @@ export interface User extends BaseEntity {
   email: string;
   name?: string;
   clerk_user_id: string;
+  organization_id?: string;
 }
 
 export interface RBACRole extends BaseEntity {

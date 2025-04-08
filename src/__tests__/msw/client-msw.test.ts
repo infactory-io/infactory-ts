@@ -1,6 +1,10 @@
 // src/__tests__/msw/client-msw.test.ts
 import { InfactoryClient } from '../../client.js';
 import { server } from './server.js';
+import {
+  isApiResponse,
+  processStreamToApiResponse,
+} from '../../utils/stream.js';
 
 // Set test environment variables
 process.env.NF_API_KEY = 'test-api-key';
@@ -100,14 +104,21 @@ describe('InfactoryClient with MSW', () => {
 
     it('should execute a query program', async () => {
       const queryProgramId = 'qp-test-1';
-      const response =
+      const rawResponse =
         await client.queryprograms.executeQueryProgram(queryProgramId);
+
+      // Process the response to ensure it's an ApiResponse
+      const response = isApiResponse(rawResponse)
+        ? rawResponse
+        : await processStreamToApiResponse(rawResponse);
 
       expect(response.error).toBeUndefined();
       expect(response.data).toBeDefined();
-      expect(response.data?.result).toBeDefined();
-      expect(Array.isArray(response.data?.result)).toBe(true);
-      expect(response.data?.result.length).toBe(3);
+      // Use type assertion to properly access the result property
+      const resultData = response.data as { result: Array<any> };
+      expect(resultData.result).toBeDefined();
+      expect(Array.isArray(resultData.result)).toBe(true);
+      expect(resultData.result.length).toBe(3);
     });
 
     it('should publish a query program', async () => {

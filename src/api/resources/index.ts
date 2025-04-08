@@ -6,6 +6,7 @@ export * from './datalines.js';
 export * from './datasources.js';
 export * from './events.js';
 export * from './infrastructures.js';
+export * from './jobs.js';
 export * from './organizations.js';
 export * from './platforms.js';
 export * from './projects.js';

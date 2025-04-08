@@ -165,7 +165,12 @@ const endpoints = endpointsResponse.data;
 The SDK provides a consistent error handling strategy with specific error classes for different types of errors:
 
 ```typescript
-import { InfactoryClient, AuthenticationError, PermissionError, NotFoundError } from '@infactory/infactory-ts';
+import {
+  InfactoryClient,
+  AuthenticationError,
+  PermissionError,
+  NotFoundError,
+} from '@infactory/infactory-ts';
 
 async function handleErrors() {
   try {
@@ -191,14 +196,21 @@ async function handleErrors() {
 Some API endpoints like `executeQueryProgram` can return streaming responses. The SDK provides utilities to handle these responses:
 
 ```typescript
-import { InfactoryClient, isReadableStream, processStreamToApiResponse } from '@infactory/infactory-ts';
+import {
+  InfactoryClient,
+  isReadableStream,
+  processStreamToApiResponse,
+} from '@infactory/infactory-ts';
 
 async function handleStreamingResponse() {
   const client = new InfactoryClient({ apiKey: 'your-api-key' });
-  
+
   // This may return a stream or a regular response
-  const result = await client.queryprograms.executeQueryProgram(queryProgramId, { stream: true });
-  
+  const result = await client.queryprograms.executeQueryProgram(
+    queryProgramId,
+    { stream: true },
+  );
+
   if (isReadableStream(result)) {
     // Process the stream into a regular API response
     const apiResponse = await processStreamToApiResponse(result);

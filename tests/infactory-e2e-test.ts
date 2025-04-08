@@ -78,9 +78,6 @@ class Logger {
   }
 }
 
-// Create global logger
-const logger = new Logger('main');
-
 // Check for API key in environment
 const API_KEY = process.env.NF_API_KEY;
 if (!API_KEY) {
@@ -96,18 +93,6 @@ const CSV_FILE = './tests/stocks.csv';
 if (!fs.existsSync(CSV_FILE)) {
   console.error(`ERROR: ${CSV_FILE} not found in current directory.`);
   process.exit(1);
-}
-
-/**
- * Wait for user to press Enter
- */
-function waitForUser(message = 'Press Enter to continue...'): Promise<void> {
-  return new Promise((resolve) => {
-    console.log(`\n${message}`);
-    process.stdin.once('data', () => {
-      resolve();
-    });
-  });
 }
 
 /**

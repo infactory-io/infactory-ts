@@ -10,17 +10,21 @@ import {
   Team,
   CreateTeamParams,
   Organization,
-  CreateOrganizationParams,
+  // CreateOrganizationParams not used directly in this file
   Datasource,
   CreateDatasourceParams,
   QueryProgram,
   CreateQueryProgramParams,
-  User,
+  // User not used directly in this file
   API,
   APIEndpoint,
   ApiResponse,
   QueryResponse,
 } from './types/common.js';
+import {
+  isReadableStream,
+  processStreamToApiResponse,
+} from './utils/stream.js';
 import { ServerError } from './errors/index.js';
 
 /**
@@ -36,7 +40,16 @@ export class ProjectContext {
    * Gets the current project details
    */
   async get(): Promise<ApiResponse<Project>> {
-    return this.client.projects.getProject(this.projectId);
+    try {
+      return await this.client.projects.getProject(this.projectId);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
@@ -45,21 +58,48 @@ export class ProjectContext {
   async update(
     params: Partial<CreateProjectParams>,
   ): Promise<ApiResponse<Project>> {
-    return this.client.projects.updateProject(this.projectId, params);
+    try {
+      return await this.client.projects.updateProject(this.projectId, params);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Deletes the current project
    */
   async delete(): Promise<ApiResponse<void>> {
-    return this.client.projects.deleteProject(this.projectId);
+    try {
+      return await this.client.projects.deleteProject(this.projectId);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Exports the current project
    */
   async export(teamId: string): Promise<ApiResponse<any>> {
-    return this.client.projects.exportProject(this.projectId, teamId);
+    try {
+      return await this.client.projects.exportProject(this.projectId, teamId);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
@@ -68,17 +108,37 @@ export class ProjectContext {
   async createDatasource(
     params: CreateDatasourceParams,
   ): Promise<ApiResponse<Datasource>> {
-    return this.client.datasources.createDatasource({
-      ...params,
-      project_id: this.projectId,
-    });
+    try {
+      return await this.client.datasources.createDatasource({
+        ...params,
+        project_id: this.projectId,
+      });
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Gets all datasources for the current project
    */
   async getDatasources(): Promise<ApiResponse<Datasource[]>> {
-    return this.client.datasources.getProjectDatasources(this.projectId);
+    try {
+      return await this.client.datasources.getProjectDatasources(
+        this.projectId,
+      );
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
@@ -94,36 +154,72 @@ export class ProjectContext {
   async createQueryProgram(
     params: CreateQueryProgramParams,
   ): Promise<ApiResponse<QueryProgram>> {
-    return this.client.queryprograms.createQueryProgram({
-      ...params,
-      project_id: this.projectId,
-    });
+    try {
+      return await this.client.queryprograms.createQueryProgram({
+        ...params,
+        project_id: this.projectId,
+      });
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Gets all query programs for this project
    */
   async getQueryPrograms(): Promise<ApiResponse<QueryProgram[]>> {
-    return this.client.queryprograms.listQueryPrograms({
-      project_id: this.projectId,
-    });
+    try {
+      return await this.client.queryprograms.listQueryPrograms({
+        project_id: this.projectId,
+      });
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Gets all APIs for this project
    */
   async getApis(): Promise<ApiResponse<API[]>> {
-    return this.client.apis.getProjectApis(this.projectId);
+    try {
+      return await this.client.apis.getProjectApis(this.projectId);
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
    * Creates an API for this project
    */
   async createApi(params: any): Promise<ApiResponse<API>> {
-    return this.client.apis.createApi({
-      ...params,
-      project_id: this.projectId,
-    });
+    try {
+      return await this.client.apis.createApi({
+        ...params,
+        project_id: this.projectId,
+      });
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
@@ -166,10 +262,19 @@ export class ProjectContext {
    * Helper method to generate common query programs based on the project data
    */
   async generateQueries(): Promise<ApiResponse<QueryProgram[]>> {
-    // This would be a higher-level method that might analyze datasources
-    // and generate appropriate queries automatically
-    // For now, it's a placeholder that returns all existing queries
-    return this.getQueryPrograms();
+    try {
+      // This would be a higher-level method that might analyze datasources
+      // and generate appropriate queries automatically
+      // For now, it's a placeholder that returns all existing queries
+      return await this.getQueryPrograms();
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
+    }
   }
 
   /**
@@ -281,7 +386,9 @@ export class TeamContext {
   constructor(
     private readonly client: InfactoryClient,
     private readonly teamId: string,
-    private readonly organizationId?: string,
+
+    // This parameter is kept for API consistency even though it's not directly used in this class
+    _organizationId?: string,
   ) {}
 
   /**
@@ -460,9 +567,9 @@ export class ApiContext {
  * Fluent builder for query programs
  */
 export class QueryProgramBuilder {
+  // Using question for user-friendly API but mapping to query internally
   private question?: string;
   private name?: string;
-  private description?: string;
 
   constructor(
     private readonly client: InfactoryClient,
@@ -487,10 +594,11 @@ export class QueryProgramBuilder {
   }
 
   /**
-   * Sets the description for the query program
+   * Sets the description for the query program (for display purposes only)
+   * Note: Not used in the actual query creation since the API doesn't support it directly
    */
-  withDescription(description: string): QueryProgramBuilder {
-    this.description = description;
+  withDescription(_description: string): QueryProgramBuilder {
+    // We'll keep the method for API compatibility but not use the parameter
     return this;
   }
 
@@ -498,54 +606,87 @@ export class QueryProgramBuilder {
    * Creates and executes the query program
    */
   async execute(): Promise<ApiResponse<QueryResponse>> {
-    if (!this.question) {
-      throw new Error('Question is required for creating a query program');
+    try {
+      if (!this.question) {
+        return {
+          error: new ServerError(
+            'Question is required for creating a query program',
+          ),
+        };
+      }
+
+      // Create the query program - map question to query for the API
+      // Note: We need to add the datasource as a custom parameter
+      // since it's not directly in the CreateQueryProgramParams interface
+      const createResponse = await this.client.queryprograms.createQueryProgram(
+        {
+          project_id: this.projectId,
+          name: this.name || `Query: ${this.question.substring(0, 30)}...`,
+          query: this.question, // Use query field instead of question to match the API
+          datasource_ids: [this.datasourceId], // Add the datasource ID to the API call
+        } as CreateQueryProgramParams & { datasource_ids: string[] },
+      );
+
+      if (createResponse.error) {
+        return createResponse as unknown as ApiResponse<QueryResponse>;
+      }
+
+      // Execute the query program and convert stream response to ApiResponse if needed
+      const response = await this.client.queryprograms.executeQueryProgram(
+        createResponse.data!.id,
+      );
+
+      // Process the response if it's a stream
+      if (isReadableStream(response)) {
+        return await processStreamToApiResponse<QueryResponse>(response);
+      }
+
+      // Otherwise, it's already an ApiResponse
+      return response;
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
+      };
     }
-
-    // Create the query program
-    const createResponse = await this.client.queryprograms.createQueryProgram({
-      project_id: this.projectId,
-      name: this.name || `Query: ${this.question.substring(0, 30)}...`,
-      description: this.description || `Query generated from: ${this.question}`,
-      question: this.question,
-      datasource_ids: [this.datasourceId],
-    });
-
-    if (createResponse.error) {
-      return createResponse;
-    }
-
-    // Execute the query program
-    return this.client.queryprograms.executeQueryProgram(
-      createResponse.data!.id,
-    );
   }
 
   /**
    * Creates, executes, and publishes the query program
    */
   async executeAndPublish(): Promise<ApiResponse<QueryResponse>> {
-    const executeResponse = await this.execute();
+    try {
+      const executeResponse = await this.execute();
 
-    if (executeResponse.error) {
+      if (executeResponse.error) {
+        return executeResponse;
+      }
+
+      // Get the query program ID from the executed response
+      // This might need adjustment based on the actual response structure
+      const queryProgramId = executeResponse.data?.metadata?.query_program_id;
+
+      if (!queryProgramId) {
+        return {
+          error: new ServerError(
+            'Could not determine query program ID from execution response',
+          ),
+        };
+      }
+
+      // Publish the query program
+      await this.client.queryprograms.publishQueryProgram(queryProgramId);
+
       return executeResponse;
-    }
-
-    // Get the query program ID from the executed response
-    // This might need adjustment based on the actual response structure
-    const queryProgramId = executeResponse.data?.metadata?.query_program_id;
-
-    if (!queryProgramId) {
+    } catch (error) {
       return {
-        error: new Error(
-          'Could not determine query program ID from execution response',
-        ),
+        error:
+          error instanceof Error
+            ? new ServerError(error.message)
+            : new ServerError(String(error)),
       };
     }
-
-    // Publish the query program
-    await this.client.queryprograms.publishQueryProgram(queryProgramId);
-
-    return executeResponse;
   }
 }

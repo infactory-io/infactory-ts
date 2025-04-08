@@ -1,14 +1,18 @@
 // src/__tests__/client.test.ts
 import { InfactoryClient, InfactoryClientError } from '../client.js';
+import { enableFetchMocks } from 'jest-fetch-mock';
 import fetchMock from 'jest-fetch-mock';
 
-// Mock the global fetch
-global.fetch = fetchMock;
+// Enable fetch mocks
+enableFetchMocks();
+// Mock the global fetch with proper typing
+global.fetch = fetchMock as unknown as typeof fetch;
 
 describe('InfactoryClient', () => {
   // Reset mocks before each test
   beforeEach(() => {
-    fetchMock.resetMocks();
+    // Use the correct method with proper typing
+    (fetchMock as unknown as { resetMocks: () => void }).resetMocks();
   });
 
   describe('constructor', () => {
