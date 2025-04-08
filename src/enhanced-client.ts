@@ -5,6 +5,7 @@
 
 import { InfactoryClient, InfactoryClientOptions } from './client.js';
 import { jobsApi, SubmitJobParams } from './api/jobs.js';
+import { JobStatus } from './api/resources/jobs.js';
 import { Project, Organization, User } from './types/common.js';
 
 import {
@@ -131,41 +132,103 @@ export class EnhancedInfactoryClient extends InfactoryClient {
   }
 
   /**
-   * Helper method to wait for job completion
+   * Helper method to wait for job completion with improved polling mechanism
+   * @param jobId ID of the job to wait for
+   * @param timeout Timeout in seconds (for backward compatibility)
+   * @param pollInterval Initial polling interval in seconds (for backward compatibility)
+   * @returns A tuple with [success: boolean, status: string] for backward compatibility
    */
   async waitForJobCompletion(
     jobId: string,
-    timeout = 300,
-    pollInterval = 2,
-  ): Promise<[boolean, string]> {
-    const startTime = Date.now();
-    const maxTime = startTime + timeout * 1000;
+    timeout?: number,
+    pollInterval?: number,
+  ): Promise<[boolean, string]>;
 
-    while (Date.now() < maxTime) {
-      const response = await jobsApi.getJobStatus({ job_id: jobId });
+  /**
+   * Helper method to wait for job completion with improved polling mechanism (new API)
+   * @param jobId ID of the job to wait for
+   * @param options Polling options including timeout, abort signal, and polling intervals
+   * @returns JobStatus object containing the job status and metadata
+   * @throws PollingTimeoutError when timeout is reached
+   * @throws PollingCancelledError when operation is cancelled
+   * @throws ServerError for API errors
+   */
+  async waitForJobCompletion(
+    jobId: string,
+    timeoutOrOptions?:
+      | number
+      | {
+          timeout?: number;
+          abortSignal?: AbortSignal;
+          initialPollInterval?: number;
+          maxPollInterval?: number;
+          backoffMultiplier?: number;
+        },
+    pollInterval?: number,
+  ): Promise<[boolean, string] | JobStatus> {
+    // Import polling utilities
+    const { poll, PollingTimeoutError, PollingCancelledError } = await import(
+      './utils/polling.js'
+    );
 
-      if (response.error) {
-        return [false, response.error.message];
+    // Handle legacy vs. new API call pattern
+    const isLegacyCall =
+      typeof timeoutOrOptions === 'number' || timeoutOrOptions === undefined;
+    const options = isLegacyCall
+      ? {
+          timeout: timeoutOrOptions,
+          initialPollInterval: pollInterval,
+        }
+      : (timeoutOrOptions as object);
+
+    try {
+      // Execute the polling operation
+      const result = await poll<JobStatus>(
+        async () => {
+          const response = await jobsApi.getJobStatus({ job_id: jobId });
+
+          if (response.error) {
+            throw response.error;
+          }
+
+          if (!response.data) {
+            throw new Error('No job data found');
+          }
+
+          return response.data as JobStatus;
+        },
+        {
+          ...options,
+          endCondition: (status) => {
+            return ['completed', 'failed', 'error', 'terminated'].includes(
+              status.status,
+            );
+          },
+        },
+      );
+
+      // Return appropriate format based on API call pattern
+      if (isLegacyCall) {
+        const isSuccessful = result.status === 'completed';
+        return [isSuccessful, result.status];
       }
 
-      if (!response.data) {
-        return [false, 'No job data found'];
+      return result;
+    } catch (error) {
+      if (isLegacyCall) {
+        // Return legacy format for legacy calls
+        if (error instanceof PollingTimeoutError) {
+          return [false, 'timeout'];
+        } else if (error instanceof PollingCancelledError) {
+          return [false, 'cancelled'];
+        } else if (error instanceof Error) {
+          return [false, error.message];
+        }
+        return [false, String(error)];
       }
 
-      const status = response.data.status;
-
-      if (status === 'completed') {
-        return [true, 'completed'];
-      }
-
-      if (status === 'failed' || status === 'error') {
-        return [false, status];
-      }
-
-      // Wait before polling again
-      await new Promise((resolve) => setTimeout(resolve, pollInterval * 1000));
+      // For new API, propagate the error
+      throw error;
     }
-
-    return [false, 'timeout'];
   }
 }

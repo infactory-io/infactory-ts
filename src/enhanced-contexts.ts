@@ -279,60 +279,213 @@ export class ProjectContext {
 
   /**
    * Helper method to wait for datalines to be created
+   * @param timeout Timeout in seconds (legacy parameter)
+   * @param pollInterval Initial polling interval in seconds (legacy parameter)
+   * @returns Array of datalines when they become available
+   * @throws Error if timeout or another error occurs
    */
-  async waitForDatalines(timeout = 300, pollInterval = 5): Promise<any[]> {
-    const startTime = Date.now();
-    const maxTime = startTime + timeout * 1000;
+  async waitForDatalines(
+    timeout?: number,
+    pollInterval?: number,
+  ): Promise<any[]>;
 
-    while (Date.now() < maxTime) {
-      const response = await this.client.datalines.getProjectDatalines(
-        this.projectId,
+  /**
+   * Helper method to wait for datalines to be created (new API)
+   * @param options Polling options including timeout, abort signal, and polling intervals
+   * @returns Array of datalines when they become available
+   * @throws PollingTimeoutError when timeout is reached
+   * @throws PollingCancelledError when operation is cancelled
+   * @throws ServerError for API errors
+   */
+  async waitForDatalines(options?: {
+    timeout?: number;
+    abortSignal?: AbortSignal;
+    initialPollInterval?: number;
+    maxPollInterval?: number;
+    backoffMultiplier?: number;
+  }): Promise<any[]>;
+
+  /**
+   * Helper method implementation for both legacy and new API
+   */
+  async waitForDatalines(
+    timeoutOrOptions?:
+      | number
+      | {
+          timeout?: number;
+          abortSignal?: AbortSignal;
+          initialPollInterval?: number;
+          maxPollInterval?: number;
+          backoffMultiplier?: number;
+        },
+    pollInterval?: number,
+  ): Promise<any[]> {
+    // Import polling utilities
+    const { poll, PollingTimeoutError } = await import('./utils/polling.js');
+
+    // Handle legacy vs. new API call pattern
+    const isLegacyCall =
+      typeof timeoutOrOptions === 'number' || timeoutOrOptions === undefined;
+    const options = isLegacyCall
+      ? {
+          timeout: (timeoutOrOptions as number) ?? 300,
+          initialPollInterval: pollInterval ?? 5,
+        }
+      : timeoutOrOptions;
+
+    try {
+      return await (
+        poll as <T>(operation: () => Promise<T>, options?: any) => Promise<T>
+      )<any[]>(
+        async () => {
+          const response = await this.client.datalines.getProjectDatalines(
+            this.projectId,
+          );
+
+          if (response.error) {
+            throw response.error;
+          }
+
+          if (!response.data) {
+            return [];
+          }
+
+          return response.data;
+        },
+        {
+          ...options,
+          endCondition: (datalines: any[]) => datalines.length > 0,
+        },
       );
-
-      if (response.error) {
-        throw response.error;
+    } catch (error) {
+      // Preserve legacy behavior for legacy calls
+      if (isLegacyCall) {
+        if (error instanceof PollingTimeoutError) {
+          throw new Error(
+            `Timeout waiting for datalines after ${(timeoutOrOptions as number) ?? 300} seconds`,
+          );
+        }
       }
-
-      if (response.data && response.data.length > 0) {
-        return response.data;
-      }
-
-      // Wait before polling again
-      await new Promise((resolve) => setTimeout(resolve, pollInterval * 1000));
+      // Propagate the error
+      throw error;
     }
-
-    throw new Error(`Timeout waiting for datalines after ${timeout} seconds`);
   }
 
   /**
    * Helper method to wait for query programs to be created
+   * @param minCount Minimum number of query programs to wait for (legacy parameter)
+   * @param timeout Timeout in seconds (legacy parameter)
+   * @param pollInterval Initial polling interval in seconds (legacy parameter)
+   * @returns Array of query programs when they become available
+   * @throws Error if timeout or another error occurs
    */
   async waitForQueryPrograms(
-    minCount = 1,
-    timeout = 300,
-    pollInterval = 5,
+    minCount?: number,
+    timeout?: number,
+    pollInterval?: number,
+  ): Promise<QueryProgram[]>;
+
+  /**
+   * Helper method to wait for query programs to be created (new API)
+   * @param options Polling options and minimum count for query programs
+   * @returns Array of query programs when they become available
+   * @throws PollingTimeoutError when timeout is reached
+   * @throws PollingCancelledError when operation is cancelled
+   * @throws ServerError for API errors
+   */
+  async waitForQueryPrograms(options?: {
+    minCount?: number;
+    timeout?: number;
+    abortSignal?: AbortSignal;
+    initialPollInterval?: number;
+    maxPollInterval?: number;
+    backoffMultiplier?: number;
+  }): Promise<QueryProgram[]>;
+
+  /**
+   * Helper method implementation for both legacy and new API
+   */
+  async waitForQueryPrograms(
+    minCountOrOptions?:
+      | number
+      | {
+          minCount?: number;
+          timeout?: number;
+          abortSignal?: AbortSignal;
+          initialPollInterval?: number;
+          maxPollInterval?: number;
+          backoffMultiplier?: number;
+        },
+    timeout?: number,
+    pollInterval?: number,
   ): Promise<QueryProgram[]> {
-    const startTime = Date.now();
-    const maxTime = startTime + timeout * 1000;
+    // Import polling utilities
+    const { poll, PollingTimeoutError } = await import('./utils/polling.js');
 
-    while (Date.now() < maxTime) {
-      const response = await this.getQueryPrograms();
+    // Handle legacy vs. new API call pattern
+    const isLegacyCall =
+      typeof minCountOrOptions === 'number' || minCountOrOptions === undefined;
 
-      if (response.error) {
-        throw response.error;
+    // Set appropriate minCount based on call pattern
+    const minCount = isLegacyCall
+      ? ((minCountOrOptions as number) ?? 1)
+      : ((minCountOrOptions as { minCount?: number })?.minCount ?? 1);
+
+    // Set polling options
+    const options = isLegacyCall
+      ? {
+          timeout: timeout ?? 300,
+          initialPollInterval: pollInterval ?? 5,
+        }
+      : {
+          timeout: (minCountOrOptions as { timeout?: number })?.timeout,
+          initialPollInterval: (
+            minCountOrOptions as { initialPollInterval?: number }
+          )?.initialPollInterval,
+          maxPollInterval: (minCountOrOptions as { maxPollInterval?: number })
+            ?.maxPollInterval,
+          backoffMultiplier: (
+            minCountOrOptions as { backoffMultiplier?: number }
+          )?.backoffMultiplier,
+          abortSignal: (minCountOrOptions as { abortSignal?: AbortSignal })
+            ?.abortSignal,
+        };
+
+    try {
+      return await (
+        poll as <T>(operation: () => Promise<T>, options?: any) => Promise<T>
+      )<QueryProgram[]>(
+        async () => {
+          const response = await this.getQueryPrograms();
+
+          if (response.error) {
+            throw response.error;
+          }
+
+          if (!response.data) {
+            return [];
+          }
+
+          return response.data;
+        },
+        {
+          ...options,
+          endCondition: (queryPrograms: QueryProgram[]) =>
+            queryPrograms.length >= minCount,
+        },
+      );
+    } catch (error) {
+      // Preserve legacy behavior for legacy calls
+      if (isLegacyCall) {
+        if (error instanceof PollingTimeoutError) {
+          throw new Error(
+            `Timeout waiting for at least ${minCount} query programs after ${timeout ?? 300} seconds`,
+          );
+        }
       }
-
-      if (response.data && response.data.length >= minCount) {
-        return response.data;
-      }
-
-      // Wait before polling again
-      await new Promise((resolve) => setTimeout(resolve, pollInterval * 1000));
+      // Propagate the error
+      throw error;
     }
-
-    throw new Error(
-      `Timeout waiting for at least ${minCount} query programs after ${timeout} seconds`,
-    );
   }
 }
 
