@@ -88,7 +88,6 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "@infactory/infactory-ts": "0.5.3",
     "@types/minimist": "1.2.5",
     "@types/node-fetch": "2.6.12",
     "dotenv": "16.4.7",
