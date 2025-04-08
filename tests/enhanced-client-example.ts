@@ -19,14 +19,6 @@ async function main() {
     description: 'Analysis of stock market data',
   });
 
-  // Simulate uploading a CSV file
-  // In a real app, you'd get this from a file input
-  const csvFile = new File(
-    ['symbol,price,date\nAAPL,190.50,2025-03-30\nGOOG,2800.75,2025-03-30'],
-    'stocks.csv',
-    { type: 'text/csv' },
-  );
-
   // Upload the CSV file as a datasource
   await project.uploadCSV('./tests/stocks.csv', 'Stock Prices');
 
