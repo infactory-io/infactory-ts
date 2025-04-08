@@ -1,4 +1,3 @@
-// import * as React from "react";
 import {
   ChatMessage,
   ConversationGraph,
@@ -95,7 +94,7 @@ export const setConversationGraphData = (
 
 export async function processReadableChatResponseStream(
   response: ReadableStream<any>,
-  setStatus: React.Dispatch<React.SetStateAction<MessageStatus | null>>,
+  setStatus: (status: MessageStatus | null) => void,
 ) {
   const reader = response?.getReader();
   if (!reader) {

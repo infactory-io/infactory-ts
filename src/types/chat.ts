@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+// Using a generic type instead of ReactNode from React
 
 export interface ChatMessage {
   id: string;
@@ -13,7 +13,7 @@ export interface ChatMessage {
   content_type: string;
   content_text: string | null;
   data: Record<string, any> | null; // TODO replace with specific types
-  react_element: ReactNode | null;
+  react_element: any; // Generic replacement for ReactNode
   response_format: string | null;
   status: string;
   end_turn: boolean | null;
