@@ -434,42 +434,54 @@ async function main() {
 
     // Step 2: Select organization and team
     printStep(2, 'Select organization and team');
-    const orgsResponse = await client.organizations.getOrganizations();
 
-    if (!orgsResponse.data || orgsResponse.data.length === 0) {
+    // Get organizations through the user's teams and organizations endpoint
+    const userTeamsResponse = await fetch(
+      `${client.getBaseURL()}/v1/users/get_teams_with_organizations_and_projects?clerk_user_id=${userResponse.data.clerkUserId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${client.getApiKey()}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    if (userTeamsResponse.status !== 200) {
       console.error(
-        'No organizations found. Please create an organization first.',
+        'Error getting user teams:',
+        await userTeamsResponse.text(),
       );
       process.exit(1);
     }
 
-    const organization = orgsResponse.data[0]; // Select the first organization
+    interface Organization {
+      id: string;
+      name: string;
+    }
+
+    interface Team {
+      id: string;
+      name: string;
+      organizations: Organization;
+    }
+
+    interface UserTeamsResponse {
+      teams: Team[];
+    }
+
+    const userTeamsData = (await userTeamsResponse.json()) as UserTeamsResponse;
+    if (!userTeamsData.teams || userTeamsData.teams.length === 0) {
+      console.error('No teams found. Please create a team first.');
+      process.exit(1);
+    }
+
+    const team = userTeamsData.teams[0];
+    const organization = team.organizations;
     console.log(
       `Selected organization: ${organization.name} (ID: ${organization.id})`,
     );
-
-    const teamsResponse = await client.teams.getTeams();
-    let team;
-    if (!teamsResponse.data || teamsResponse.data.length === 0) {
-      console.log('No teams found. Creating a new team...');
-      const teamResponse = await client.teams.createTeam({
-        name: `Team_${organization.id}`,
-        organizationId: organization.id,
-      });
-      if (teamResponse.error) {
-        console.error(`Error creating team: ${teamResponse.error.message}`);
-        process.exit(1);
-      }
-      team = teamResponse.data;
-      if (!team) {
-        console.error('Error creating team: Team not found');
-        process.exit(1);
-      }
-      console.log(`Created new team: ${team.name} (ID: ${team.id})`);
-    } else {
-      team = teamsResponse.data[0]; // Select the first team
-      console.log(`Selected existing team: ${team.name} (ID: ${team.id})`);
-    }
+    console.log(`Selected existing team: ${team.name} (ID: ${team.id})`);
 
     // Step 3: Create a new project
     printStep(3, 'Create a new project');
@@ -513,7 +525,8 @@ async function main() {
     const datasourceResponse = await client.datasources.createDatasource({
       name: datasourceName,
       projectId: project.id,
-      type: datasourceType,
+      type: 'file',
+      status: 'created',
     });
 
     if (datasourceResponse.error) {
