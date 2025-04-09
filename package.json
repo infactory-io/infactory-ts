@@ -36,7 +36,7 @@
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit",
-    "example": "tsx example.ts",
+    "example": "tsx examples/example.ts",
     "e2e-test": "tsx tests/infactory-e2e-test.ts",
     "e2e-test2": "tsx tests/enhanced-e2e-test.ts"
   },

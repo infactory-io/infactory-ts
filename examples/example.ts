@@ -1,6 +1,6 @@
 // example.ts - Example usage of the InfactoryClient SDK
 
-import { InfactoryClient } from './src/client.js';
+import { InfactoryClient } from '../src/client.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables from .env file

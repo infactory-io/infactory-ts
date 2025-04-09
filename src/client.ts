@@ -1,6 +1,7 @@
-import * as Resources from '@/api/resources/index.js';
+import * as Resources from './api/resources/index.js';
 import { getConfig } from './config/index.js';
 import { InfactoryAPIError } from './errors/index.js';
+import { AuthManager } from './auth/auth-manager.js';
 import {
   HttpClient,
   RequestInterceptor,
@@ -24,13 +25,15 @@ export class InfactoryClientError extends InfactoryAPIError {
 // Define an interface for the client options
 export interface InfactoryClientOptions {
   /** The API key for authentication. */
-  apiKey: string;
+  apiKey?: string;
   /** Optional base URL for the Infactory API. Defaults to the production URL. */
   baseURL?: string;
   /** Optional fetch implementation to use for requests. Defaults to global fetch. */
   fetch?: typeof globalThis.fetch;
   /** Default headers to include with every request */
   defaultHeaders?: Record<string, string>;
+  /** Optional authentication manager to handle API key and auth state */
+  authManager?: AuthManager;
 }
 
 /**
@@ -42,6 +45,7 @@ export class InfactoryClient {
   private readonly responseInterceptors: ResponseInterceptor[] = [];
 
   // API Resource Namespaces - using direct import references for now
+  // Core API resources
   public readonly projects = Resources.projectsApi;
   public readonly teams = Resources.teamsApi;
   public readonly users = Resources.usersApi;
@@ -59,6 +63,12 @@ export class InfactoryClient {
   public readonly tasks = Resources.tasksApi;
   public readonly apis = Resources.apisApi;
   public readonly jobs = Resources.jobsApi;
+
+  // New API resources - using the correct exported names from the resource files
+  public readonly mcpResource = Resources.mcpResource;
+  public readonly knowledgeGraph = Resources.knowledgeGraphApi;
+  public readonly chatIntegrations = Resources.chatIntegrationsApi;
+  public readonly integrations = Resources.integrationsApi;
 
   /**
    * Creates a new instance of the InfactoryClient.

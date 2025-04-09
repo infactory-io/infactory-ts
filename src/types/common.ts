@@ -109,7 +109,8 @@ export interface DatasourceWithDatalines extends BaseEntity {
     | 'sync_started'
     | 'sync_completed'
     | 'sync_error'
-    | 'transformation_started';
+    | 'transformation_started'
+    | null;
   dataobjects: DataObject[];
   projects: any;
 }
@@ -220,16 +221,17 @@ export interface CreateSecretParams {
 }
 // Query Program types
 export interface QueryProgram extends BaseEntity {
-  name?: string;
-  query?: string;
-  query_program?: string;
-  steps?: string;
-  slots?: string;
-  stores?: string;
-  published?: boolean;
-  reason?: string;
-  prev_id?: string;
+  name?: string | null;
+  query?: string | null;
+  query_program?: string | null;
+  steps?: string | null;
+  slots?: string | null;
+  stores?: string | null;
+  published?: boolean | null;
+  reason?: string | null;
+  prev_id?: string | null;
   project_id: string;
+  ontologyId?: string | null;
 }
 
 export interface CreateQueryProgramParams {
@@ -245,9 +247,17 @@ export interface CreateQueryProgramParams {
   project_id: string;
 }
 
+/**
+ * Response from executing a query program
+ * Aligns with the OpenAPI schema definition
+ */
 export interface QueryResponse {
   result: any;
   metadata?: Record<string, any>;
+  success?: boolean;
+  error?: string;
+  status?: string;
+  execution_time?: number;
 }
 
 // User and Role types

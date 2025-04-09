@@ -17,6 +17,7 @@ const API_BASE_URL = '/api/infactory';
 interface RequestArgsNoBody {
   params?: Record<string, any>;
   options?: RequestInit;
+  headers?: Record<string, string>;
 }
 
 interface RequestArgs<T> extends RequestArgsNoBody {

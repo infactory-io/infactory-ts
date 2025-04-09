@@ -63,8 +63,23 @@ export async function processStreamToApiResponse<T>(
       // Otherwise, return the data
       return { data: parsedResult as T };
     } catch (e) {
-      // If we can't parse as JSON, return the raw result as data
-      return { data: result as unknown as T };
+      // If we can't parse as JSON, return the raw result as data but also include parsing error information
+      // This allows consumers to know there was a parsing failure while still accessing the raw data
+      return {
+        data: result as unknown as T,
+        error: new InfactoryAPIError(
+          400,
+          'json_parse_error',
+          e instanceof Error ? e.message : 'Failed to parse response as JSON',
+          undefined,
+          {
+            originalError: e,
+            rawData:
+              result.substring(0, 200) + (result.length > 200 ? '...' : ''),
+            isParseError: true, // Use metadata field to indicate parse error
+          },
+        ),
+      };
     }
   } catch (error) {
     // Handle stream processing errors

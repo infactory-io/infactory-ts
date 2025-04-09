@@ -84,14 +84,18 @@ The SDK provides access to the following Infactory API resources:
 - **Users** - User management and authentication
 - **Auth** - API key management
 - **Chat** - Interact with the chat interface
+- **Chat Integrations** - Work with chat tools and custom functions
+- **Knowledge Graph** - Create and manage knowledge graphs
 - **Datasources** - Connect to and manage data sources
 - **Datalines** - Access and transform data
 - **QueryPrograms** - Create, run, and publish queries
 - **APIs** - Deploy and manage API endpoints
 - **Credentials** - Manage connection credentials
+- **Integrations** - Work with third-party integrations like Fivetran
 - **Secrets** - Store and manage secrets
 - **Tasks** - Track and manage tasks
 - **Events** - Access event information
+- **MCP** - Management Control Plane for administrative operations
 
 ## Common Workflows
 
@@ -160,9 +164,35 @@ const endpointsResponse = await client.apis.getApiEndpoints(apiId);
 const endpoints = endpointsResponse.data;
 ```
 
+## Authentication Management
+
+The SDK now includes an enhanced authentication manager that provides better control over API keys and authentication state:
+
+```typescript
+import { InfactoryClient, AuthManager } from '@infactory/infactory-ts';
+
+// Create an authentication manager
+const authManager = new AuthManager({
+  apiKey: 'your-api-key-here',
+});
+
+// Create a client using the auth manager
+const client = new InfactoryClient({
+  authManager,
+});
+
+// Check if authenticated
+if (authManager.isAuthenticated()) {
+  console.log('Authenticated with API key!');
+}
+
+// Update API key if needed
+authManager.setApiKey('new-api-key');
+```
+
 ## Error Handling
 
-The SDK provides a consistent error handling strategy with specific error classes for different types of errors:
+The SDK provides an improved error handling system with specific error classes that match the OpenAPI specification:
 
 ```typescript
 import {
@@ -170,6 +200,9 @@ import {
   AuthenticationError,
   PermissionError,
   NotFoundError,
+  ValidationError,
+  RateLimitError,
+  ServerError,
 } from '@infactory/infactory-ts';
 
 async function handleErrors() {
@@ -184,6 +217,15 @@ async function handleErrors() {
       console.error('You do not have permission to access this resource.');
     } else if (error instanceof NotFoundError) {
       console.error('The requested resource was not found.');
+    } else if (error instanceof ValidationError) {
+      console.error(`Validation error: ${error.message}`);
+      console.error('Validation details:', error.errors);
+    } else if (error instanceof RateLimitError) {
+      console.error(
+        `Rate limit exceeded. Try again in ${error.retryAfter} seconds.`,
+      );
+    } else if (error instanceof ServerError) {
+      console.error(`Server error: ${error.message}`);
     } else {
       console.error(`Unexpected error: ${error.message}`);
     }
@@ -193,16 +235,17 @@ async function handleErrors() {
 
 ### Handling Streaming Responses
 
-Some API endpoints like `executeQueryProgram` can return streaming responses. The SDK provides utilities to handle these responses:
+Some API endpoints like `executeQueryProgram` can return streaming responses. The SDK provides enhanced utilities to handle these responses, including event-based streaming:
 
 ```typescript
 import {
   InfactoryClient,
   isReadableStream,
   processStreamToApiResponse,
+  streamEvents,
 } from '@infactory/infactory-ts';
 
-async function handleStreamingResponse() {
+async function handleBasicStreamingResponse() {
   const client = new InfactoryClient({ apiKey: 'your-api-key' });
 
   // This may return a stream or a regular response
@@ -215,6 +258,44 @@ async function handleStreamingResponse() {
     // Process the stream into a regular API response
     const apiResponse = await processStreamToApiResponse(result);
     return apiResponse.data;
+  } else {
+    // Handle regular API response
+    return result.data;
+  }
+}
+
+// Enhanced event-based streaming for real-time data processing
+async function handleEventStreamingResponse() {
+  const client = new InfactoryClient({ apiKey: 'your-api-key' });
+
+  // Get a streaming response
+  const result = await client.queryprograms.executeQueryProgram(
+    queryProgramId,
+    { stream: true },
+  );
+
+  if (isReadableStream(result)) {
+    // Process events from the stream as they arrive
+    for await (const event of streamEvents(result)) {
+      switch (event.type) {
+        case 'data':
+          console.log('Received data chunk:', event.data);
+          // Process data in real-time
+          break;
+        case 'thinking':
+          console.log('AI is thinking:', event.content);
+          // Update UI with thinking state
+          break;
+        case 'completion':
+          console.log('Received completion:', event.content);
+          // Handle final result
+          break;
+        case 'error':
+          console.error('Stream error:', event.error);
+          // Handle errors appropriately
+          break;
+      }
+    }
   } else {
     // Handle regular API response
     return result.data;

@@ -54,18 +54,66 @@ export const queryProgramsApi = {
     return await del<void>(`/v1/queryprograms/${id}`);
   },
 
+  /**
+   * Execute a query program
+   *
+   * @param id - The ID of the query program to execute
+   * @param params - Execution parameters
+   * @param params.input_data - Optional input data for the query program
+   * @param params.stream - Whether to return a streaming response
+   * @param params.timeout - Optional timeout in milliseconds
+   * @param params.max_tokens - Optional maximum number of tokens to generate
+   * @returns Either a streaming response or a regular API response
+   */
   executeQueryProgram: async (
     id: string,
-    params?: { input_data?: Record<string, any>; stream?: boolean },
+    params?: {
+      input_data?: Record<string, any>;
+      stream?: boolean;
+      timeout?: number;
+      max_tokens?: number;
+    },
   ): Promise<StreamOrApiResponse<QueryResponse>> => {
     if (params?.stream) {
-      return postStream<QueryResponse>(`/v1/queryprograms/${id}/execute`, {
-        params: params?.input_data || {},
-      });
+      // Use dedicated stream parameter in the URL query string instead
+      const queryParams = new URLSearchParams();
+      queryParams.append('stream', 'true');
+      if (params?.timeout)
+        queryParams.append('timeout', params.timeout.toString());
+      if (params?.max_tokens)
+        queryParams.append('max_tokens', params.max_tokens.toString());
+
+      // When posting to a stream endpoint, we need to make sure we're structuring the data properly
+      const body = {
+        ...(params?.input_data || {}),
+        result: (params?.input_data as any)?.result || {},
+      };
+
+      return postStream<QueryResponse>(
+        `/v1/queryprograms/${id}/execute?${queryParams.toString()}`,
+        { body },
+      );
     } else {
-      return await post<QueryResponse>(`/v1/queryprograms/${id}/execute`, {
-        params: params?.input_data || {},
-      });
+      // Handle non-streaming requests
+      const queryParams = new URLSearchParams();
+      if (params?.timeout)
+        queryParams.append('timeout', params.timeout.toString());
+      if (params?.max_tokens)
+        queryParams.append('max_tokens', params.max_tokens.toString());
+
+      const queryString = queryParams.toString()
+        ? `?${queryParams.toString()}`
+        : '';
+      // Ensure the body has the required result property
+      const body = {
+        ...(params?.input_data || {}),
+        result: (params?.input_data as any)?.result || {},
+      };
+
+      return await post<QueryResponse>(
+        `/v1/queryprograms/${id}/execute${queryString}`,
+        { body },
+      );
     }
   },
 
