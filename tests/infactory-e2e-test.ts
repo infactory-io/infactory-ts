@@ -448,7 +448,7 @@ async function main() {
       `Selected organization: ${organization.name} (ID: ${organization.id})`,
     );
 
-    const teamsResponse = await client.teams.getTeams(organization.id);
+    const teamsResponse = await client.teams.getTeams();
     let team;
     if (!teamsResponse.data || teamsResponse.data.length === 0) {
       console.log('No teams found. Creating a new team...');

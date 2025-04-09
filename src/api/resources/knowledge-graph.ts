@@ -1,5 +1,5 @@
-import { get, post, patch, del } from '@/core/client.js';
-import { ApiResponse, PaginationParams } from '@/types/common.js';
+import type { PaginationParams } from '@/types/common.js';
+import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 /**
  * KnowledgeGraph API endpoints
@@ -13,7 +13,7 @@ export const knowledgeGraphApi = {
    * @returns The knowledge graph details
    */
   getKnowledgeGraph: async (id: string): Promise<ApiResponse<any>> => {
-    return await get<any>(`/v1/knowledge-graph/${id}`);
+    return await sharedClient.get<any>(`/v1/knowledge-graph/${id}`);
   },
 
   /**
@@ -25,7 +25,7 @@ export const knowledgeGraphApi = {
   listKnowledgeGraphs: async (
     params?: PaginationParams & { project_id?: string },
   ): Promise<ApiResponse<any[]>> => {
-    return await get<any[]>(`/v1/knowledge-graph`, { params });
+    return await sharedClient.get<any[]>(`/v1/knowledge-graph`, { params });
   },
 
   /**
@@ -44,9 +44,7 @@ export const knowledgeGraphApi = {
     const filteredParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value != null),
     );
-    return await post<any>('/v1/knowledge-graph', {
-      body: filteredParams,
-    });
+    return await sharedClient.post<any>('/v1/knowledge-graph', filteredParams);
   },
 
   /**
@@ -68,19 +66,47 @@ export const knowledgeGraphApi = {
     const filteredParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value != null),
     );
-    return await patch<any>(`/v1/knowledge-graph/${id}`, {
-      body: filteredParams,
-    });
+    return await sharedClient.patch<any>(
+      `/v1/knowledge-graph/${id}`,
+      filteredParams,
+    );
   },
 
   /**
    * Delete a knowledge graph
    *
    * @param id - The ID of the knowledge graph to delete
-   * @returns Void on success
+   * @returns The deletion response
    */
   deleteKnowledgeGraph: async (id: string): Promise<ApiResponse<void>> => {
-    return await del<void>(`/v1/knowledge-graph/${id}`);
+    return await sharedClient.delete<void>(`/v1/knowledge-graph/${id}`);
+  },
+
+  /**
+   * Get knowledge graph schema
+   *
+   * @param id - The ID of the knowledge graph
+   * @returns The knowledge graph schema
+   */
+  getKnowledgeGraphSchema: async (id: string): Promise<ApiResponse<any>> => {
+    return await sharedClient.get<any>(`/v1/knowledge-graph/${id}/schema`);
+  },
+
+  /**
+   * Update knowledge graph schema
+   *
+   * @param id - The ID of the knowledge graph
+   * @param schema - The new schema to apply
+   * @returns The updated schema
+   */
+  updateKnowledgeGraphSchema: async (
+    id: string,
+    schema: any,
+  ): Promise<ApiResponse<any>> => {
+    return await sharedClient.patch<any>(
+      `/v1/knowledge-graph/${id}/schema`,
+      schema,
+    );
   },
 
   /**
@@ -92,11 +118,11 @@ export const knowledgeGraphApi = {
    */
   queryKnowledgeGraph: async (
     id: string,
-    query: string,
-    params?: { limit?: number; offset?: number },
+    query: any,
   ): Promise<ApiResponse<any>> => {
-    return await post<any>(`/v1/knowledge-graph/${id}/query`, {
-      body: { query, ...params },
-    });
+    return await sharedClient.post<any>(
+      `/v1/knowledge-graph/${id}/query`,
+      query,
+    );
   },
 };

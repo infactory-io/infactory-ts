@@ -509,7 +509,7 @@ export class OrganizationContext {
    * Gets all teams for the current organization
    */
   async getTeams(): Promise<ApiResponse<Team[]>> {
-    return this.client.teams.getTeams(this.organizationId);
+    return this.client.teams.getTeams();
   }
 
   /**

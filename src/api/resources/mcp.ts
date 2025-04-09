@@ -3,18 +3,14 @@
  *
  * This resource provides methods for interacting with the Infactory MCP API.
  */
-import { get, post } from '../../core/client.js';
-import type { StreamOrApiResponse } from '../../utils/stream.js';
 import type {
+  User,
   Project,
   Team,
-  User,
   Datasource,
   QueryProgram,
-} from '../../types/common.js';
-
-// For type compatibility
-type ApiResponse<T> = StreamOrApiResponse<T>;
+} from '@/types/common.js';
+import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 /**
  * MCP API resources for accessing projects, teams, and other management entities
@@ -26,7 +22,7 @@ export const mcpResource = {
    * @returns User information for the currently authenticated user
    */
   getCurrentUser: async (): Promise<ApiResponse<User>> => {
-    return await get<User>('/v1/users/me');
+    return await sharedClient.get<User>('/v1/users/me');
   },
 
   /**
@@ -35,7 +31,7 @@ export const mcpResource = {
    * @returns Array of projects
    */
   listProjects: async (): Promise<ApiResponse<Project[]>> => {
-    return await get<Project[]>('/v1/projects');
+    return await sharedClient.get<Project[]>('/v1/projects');
   },
 
   /**
@@ -45,7 +41,7 @@ export const mcpResource = {
    * @returns Project details
    */
   getProject: async (id: string): Promise<ApiResponse<Project>> => {
-    return await get<Project>(`/v1/projects/${id}`);
+    return await sharedClient.get<Project>(`/v1/projects/${id}`);
   },
 
   /**
@@ -59,7 +55,7 @@ export const mcpResource = {
     description?: string;
     team_id: string;
   }): Promise<ApiResponse<Project>> => {
-    return await post<Project>('/v1/projects', { body: data });
+    return await sharedClient.post<Project>('/v1/projects', data);
   },
 
   /**
@@ -69,7 +65,9 @@ export const mcpResource = {
    * @returns Array of teams
    */
   listTeams: async (organizationId: string): Promise<ApiResponse<Team[]>> => {
-    return await get<Team[]>(`/v1/organizations/${organizationId}/teams`);
+    return await sharedClient.get<Team[]>(
+      `/v1/organizations/${organizationId}/teams`,
+    );
   },
 
   /**
@@ -81,7 +79,9 @@ export const mcpResource = {
   listDatasources: async (
     projectId: string,
   ): Promise<ApiResponse<Datasource[]>> => {
-    return await get<Datasource[]>(`/v1/projects/${projectId}/datasources`);
+    return await sharedClient.get<Datasource[]>(
+      `/v1/projects/${projectId}/datasources`,
+    );
   },
 
   /**
@@ -93,7 +93,9 @@ export const mcpResource = {
   getDatasource: async (
     datasourceId: string,
   ): Promise<ApiResponse<Datasource>> => {
-    return await get<Datasource>(`/v1/datasources/${datasourceId}`);
+    return await sharedClient.get<Datasource>(
+      `/v1/datasources/${datasourceId}`,
+    );
   },
 
   /**
@@ -111,9 +113,10 @@ export const mcpResource = {
       uri?: string;
     },
   ): Promise<ApiResponse<any>> => {
-    return await post<any>(`/v1/projects/${projectId}/datasources`, {
-      body: data,
-    });
+    return await sharedClient.post<any>(
+      `/v1/projects/${projectId}/datasources`,
+      data,
+    );
   },
 
   /**
@@ -125,7 +128,9 @@ export const mcpResource = {
   listQueryPrograms: async (
     projectId: string,
   ): Promise<ApiResponse<QueryProgram[]>> => {
-    return await get<QueryProgram[]>(`/v1/projects/${projectId}/queryprograms`);
+    return await sharedClient.get<QueryProgram[]>(
+      `/v1/projects/${projectId}/queryprograms`,
+    );
   },
 
   /**
@@ -139,8 +144,9 @@ export const mcpResource = {
     queryProgramId: string,
     inputData?: Record<string, any>,
   ): Promise<ApiResponse<any>> => {
-    return await post<any>(`/v1/queryprograms/${queryProgramId}/execute`, {
-      body: { ...inputData },
-    });
+    return await sharedClient.post<any>(
+      `/v1/queryprograms/${queryProgramId}/execute`,
+      inputData || {},
+    );
   },
 };

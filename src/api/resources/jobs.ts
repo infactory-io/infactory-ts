@@ -1,5 +1,4 @@
-import { get } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export interface JobStatus {
   status: string;
@@ -12,7 +11,7 @@ export const jobsApi = {
    * @param jobId - ID of the job to check status for
    */
   getJobStatus: async (jobId: string): Promise<ApiResponse<JobStatus>> => {
-    return await get<JobStatus>(`/v1/jobs/${jobId}`);
+    return await sharedClient.get<JobStatus>(`/v1/jobs/${jobId}`);
   },
 
   /**
@@ -20,6 +19,6 @@ export const jobsApi = {
    * @param jobId - ID of the job to retrieve
    */
   getJob: async (jobId: string): Promise<ApiResponse<JobStatus>> => {
-    return await get<JobStatus>(`/v1/jobs/${jobId}`);
+    return await sharedClient.get<JobStatus>(`/v1/jobs/${jobId}`);
   },
 };

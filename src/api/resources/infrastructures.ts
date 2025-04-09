@@ -1,9 +1,8 @@
-import { get, post, del } from '@/core/client.js';
-import {
+import type {
   Infrastructure,
   CreateInfrastructureParams,
-  ApiResponse,
 } from '@/types/common.js';
+import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export const infrastructuresApi = {
   listInfrastructures: async (params?: {
@@ -12,57 +11,58 @@ export const infrastructuresApi = {
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<Infrastructure[]>> => {
-    const queryString = new URLSearchParams(
-      params as Record<string, string>,
-    ).toString();
-    return await get<Infrastructure[]>(`/v1/infrastructures?${queryString}`);
+    return await sharedClient.get<Infrastructure[]>(
+      '/v1/infrastructures',
+      params,
+    );
   },
 
   getInfrastructure: async (
     id: string,
   ): Promise<ApiResponse<Infrastructure>> => {
-    return await get<Infrastructure>(`/v1/infrastructures/${id}`);
+    return await sharedClient.get<Infrastructure>(`/v1/infrastructures/${id}`);
   },
 
   createInfrastructure: async (
     params: CreateInfrastructureParams,
   ): Promise<ApiResponse<Infrastructure>> => {
-    return await post<Infrastructure>('/v1/infrastructures', {
-      body: JSON.stringify(params),
-    });
+    return await sharedClient.post<Infrastructure>(
+      '/v1/infrastructures',
+      params,
+    );
   },
 
   updateInfrastructure: async (
     id: string,
     params: Partial<CreateInfrastructureParams>,
   ): Promise<ApiResponse<Infrastructure>> => {
-    return await post<Infrastructure>(`/v1/infrastructures/${id}`, {
-      body: JSON.stringify(params),
-    });
+    return await sharedClient.post<Infrastructure>(
+      `/v1/infrastructures/${id}`,
+      params,
+    );
   },
 
   deleteInfrastructure: async (id: string): Promise<ApiResponse<void>> => {
-    return await del<void>(`/v1/infrastructures/${id}`);
+    return await sharedClient.delete<void>(`/v1/infrastructures/${id}`);
   },
 
   validateInfrastructureConfig: async (params: {
     type: string;
     config: Record<string, any>;
   }): Promise<ApiResponse<{ valid: boolean; errors?: string[] }>> => {
-    return await post<{ valid: boolean; errors?: string[] }>(
+    return await sharedClient.post<{ valid: boolean; errors?: string[] }>(
       '/v1/infrastructures/validate',
-      {
-        body: JSON.stringify(params),
-      },
+      params,
     );
   },
 
   getInfrastructureTypes: async (): Promise<
     ApiResponse<{ types: string[]; schemas: Record<string, any> }>
   > => {
-    return await get<{ types: string[]; schemas: Record<string, any> }>(
-      '/v1/infrastructures/types',
-    );
+    return await sharedClient.get<{
+      types: string[];
+      schemas: Record<string, any>;
+    }>('/v1/infrastructures/types');
   },
 
   getInfrastructureStatus: async (
@@ -74,7 +74,7 @@ export const infrastructuresApi = {
       error?: string;
     }>
   > => {
-    return await get<{
+    return await sharedClient.get<{
       status: 'active' | 'inactive' | 'error';
       last_check: string;
       error?: string;
@@ -90,7 +90,7 @@ export const infrastructuresApi = {
       details?: Record<string, any>;
     }>
   > => {
-    return await post<{
+    return await sharedClient.post<{
       success: boolean;
       message?: string;
       details?: Record<string, any>;
@@ -106,7 +106,7 @@ export const infrastructuresApi = {
       sync_id?: string;
     }>
   > => {
-    return await post<{
+    return await sharedClient.post<{
       success: boolean;
       message?: string;
       sync_id?: string;
@@ -126,13 +126,10 @@ export const infrastructuresApi = {
       period: { start: string; end: string };
     }>
   > => {
-    const queryString = new URLSearchParams(
-      params as Record<string, string>,
-    ).toString();
-    return await get<{
+    return await sharedClient.get<{
       metrics: Record<string, any>;
       period: { start: string; end: string };
-    }>(`/v1/infrastructures/${id}/metrics?${queryString}`);
+    }>(`/v1/infrastructures/${id}/metrics`, params);
   },
 
   getInfrastructureResources: async (
@@ -148,7 +145,7 @@ export const infrastructuresApi = {
       }>;
     }>
   > => {
-    return await get<{
+    return await sharedClient.get<{
       resources: Array<{
         type: string;
         id: string;
@@ -165,9 +162,10 @@ export const infrastructuresApi = {
       credentials_id: string;
     },
   ): Promise<ApiResponse<Infrastructure>> => {
-    return await post<Infrastructure>(`/v1/infrastructures/${id}/credentials`, {
-      body: JSON.stringify(params),
-    });
+    return await sharedClient.post<Infrastructure>(
+      `/v1/infrastructures/${id}/credentials`,
+      params,
+    );
   },
 
   rotateInfrastructureCredentials: async (
@@ -178,7 +176,7 @@ export const infrastructuresApi = {
       message?: string;
     }>
   > => {
-    return await post<{
+    return await sharedClient.post<{
       success: boolean;
       message?: string;
     }>(`/v1/infrastructures/${id}/credentials/rotate`);

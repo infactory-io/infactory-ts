@@ -1,8 +1,6 @@
-import { get, post, del, patch, postStream } from '@/core/client.js';
-import {
+import type {
   Datasource,
   CreateDatasourceParams,
-  ApiResponse,
   DatasourceWithDatalines,
   Graph,
 } from '@/types/common.js';
@@ -10,18 +8,21 @@ import { SubmitJobParams } from '@/api/jobs.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import FormData from 'form-data';
+import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export const datasourcesApi = {
   getProjectDatasources: async (
     projectId: string,
   ): Promise<ApiResponse<Datasource[]>> => {
-    return await get<Datasource[]>(`/v1/datasources/project/${projectId}`);
+    return await sharedClient.get<Datasource[]>(
+      `/v1/datasources/project/${projectId}`,
+    );
   },
 
   getDatasourceWithDatalines: async (
     datasourceId: string,
   ): Promise<ApiResponse<DatasourceWithDatalines>> => {
-    return await get<DatasourceWithDatalines>(
+    return await sharedClient.get<DatasourceWithDatalines>(
       `/v1/datasources/${datasourceId}/with_datalines`,
     );
   },
@@ -29,40 +30,45 @@ export const datasourcesApi = {
   getDatasource: async (
     datasourceId: string,
   ): Promise<ApiResponse<Datasource>> => {
-    return await get<Datasource>(`/v1/datasources/${datasourceId}`);
+    return await sharedClient.get<Datasource>(
+      `/v1/datasources/${datasourceId}`,
+    );
   },
 
   createDatasource: async (
     params: CreateDatasourceParams,
   ): Promise<ApiResponse<Datasource>> => {
-    // Extract the project_id from the params using pop
-    return await post<Datasource>(`/v1/datasources`, {
-      body: params,
-    });
+    return await sharedClient.post<Datasource>(`/v1/datasources`, params);
   },
 
   updateDatasource: async (
     datasourceId: string,
     params: Partial<CreateDatasourceParams>,
   ): Promise<ApiResponse<Datasource>> => {
-    return await patch<Datasource>(`/v1/datasources/${datasourceId}`, {
-      body: params,
-    });
+    return await sharedClient.patch<Datasource>(
+      `/v1/datasources/${datasourceId}`,
+      params,
+    );
   },
 
   deleteDatasource: async (
     datasourceId: string,
   ): Promise<ApiResponse<void>> => {
-    return await del<void>(`/v1/datasources/${datasourceId}?permanent=false`);
+    return await sharedClient.delete<void>(
+      `/v1/datasources/${datasourceId}?permanent=false`,
+    );
   },
 
   cloneDatasource: async (
     datasourceId: string,
     newProjectId: string,
   ): Promise<ApiResponse<Datasource>> => {
-    return await post<Datasource>(`/v1/datasources/${datasourceId}/clone`, {
-      body: { new_project_id: newProjectId },
-    });
+    return await sharedClient.post<Datasource>(
+      `/v1/datasources/${datasourceId}/clone`,
+      {
+        new_project_id: newProjectId,
+      },
+    );
   },
 
   uploadDatasource: async (
@@ -71,15 +77,13 @@ export const datasourcesApi = {
     formData: FormData,
     jobId: string,
   ): Promise<ReadableStream> => {
-    // The FormData already contains the source_name if provided
-    return postStream(`/v1/actions/load/${projectId}`, {
+    return await sharedClient.createStream(`/v1/actions/load/${projectId}`, {
+      url: `/v1/actions/load/${projectId}`,
+      method: 'POST',
       params: { datasource_id: datasourceId, job_id: jobId },
-      body: formData,
-      options: {
-        headers: {
-          Accept: 'text/event-stream',
-          // Don't set Content-Type - let browser set it with boundary for FormData
-        },
+      body: formData as unknown as BodyInit,
+      headers: {
+        Accept: 'text/event-stream',
       },
     });
   },
@@ -87,7 +91,9 @@ export const datasourcesApi = {
   getOntologyGraph: async (
     datasourceId: string,
   ): Promise<ApiResponse<Graph>> => {
-    return await get<Graph>(`/v1/datasources/${datasourceId}/ontology_mapping`);
+    return await sharedClient.get<Graph>(
+      `/v1/datasources/${datasourceId}/ontology_mapping`,
+    );
   },
 
   /**
@@ -118,13 +124,14 @@ export const datasourcesApi = {
     const datasourceType = fileExtension === '.csv' ? 'csv' : 'csv'; // Default to CSV
 
     // Create the datasource
-    const datasourceResponse = await post<Datasource>(`/v1/datasources`, {
-      body: {
+    const datasourceResponse = await sharedClient.post<Datasource>(
+      `/v1/datasources`,
+      {
         name: actualDatasourceName,
         project_id: projectId,
         type: datasourceType,
       },
-    });
+    );
 
     if (datasourceResponse.error) {
       throw datasourceResponse.error;
@@ -169,17 +176,15 @@ export const datasourcesApi = {
       });
     } else {
       // Use standard job submission
-      const jobResponse = await post<string>('/v1/jobs/submit', {
-        body: {
-          project_id: projectId,
-          job_type: 'upload',
-          payload: jobPayload,
-          do_not_send_to_queue: true,
-          source_id: datasource.id,
-          source: 'datasource',
-          source_event_type: 'file_upload',
-          source_metadata: JSON.stringify(jobMetadata),
-        },
+      const jobResponse = await sharedClient.post<string>('/v1/jobs/submit', {
+        project_id: projectId,
+        job_type: 'upload',
+        payload: jobPayload,
+        do_not_send_to_queue: true,
+        source_id: datasource.id,
+        source: 'datasource',
+        source_event_type: 'file_upload',
+        source_metadata: JSON.stringify(jobMetadata),
       });
 
       if (jobResponse.error) {
@@ -199,34 +204,25 @@ export const datasourcesApi = {
     formData.append('datasource_id', datasource.id);
     formData.append('job_id', jobId);
 
-    // We need a way to get the API key
-    // This will be passed through the headers
-
-    // Upload the file
-    // Use node-fetch or other fetch implementation that supports FormData
-    // This implementation will depend on the actual client setup
-    const uploadResponse = await global.fetch(
-      `https://daily-api.infactory.ai/v1/actions/load/${projectId}?job_id=${jobId}&datasource_id=${datasource.id}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.INFACTORY_API_KEY || ''}`,
-          // Let the FormData set its own headers including boundary
-        },
-        // @ts-expect-error - FormData should be compatible with BodyInit but TypeScript doesn't recognize it
-        body: formData,
+    // Upload the file using the shared client
+    const uploadResponse = await sharedClient.request<any>({
+      url: `/v1/actions/load/${projectId}`,
+      method: 'POST',
+      params: {
+        job_id: jobId,
+        datasource_id: datasource.id,
       },
-    );
+      body: formData as unknown as BodyInit,
+    });
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
+    if (uploadResponse.error) {
+      throw uploadResponse.error;
     }
 
     return {
       datasource,
       jobId,
-      uploadResponse,
+      uploadResponse: uploadResponse as unknown as Response,
     };
   },
 };

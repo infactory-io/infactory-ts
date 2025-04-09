@@ -129,9 +129,7 @@ async function testClient() {
     // 6. List teams
     if (userResponse.data?.organization_id) {
       console.log('\n--- Listing teams ---');
-      const teamsResponse = await client.teams.getTeams(
-        userResponse.data.organization_id,
-      );
+      const teamsResponse = await client.teams.getTeams();
       if (teamsResponse.error) {
         console.error('Error listing teams:', teamsResponse.error);
       } else {
