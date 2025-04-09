@@ -9,20 +9,20 @@ import { BaseEntity } from './common.js';
 export interface KnowledgeGraph extends BaseEntity {
   name: string;
   description: string | null;
-  project_id: string;
+  projectId: string;
   schema: Record<string, any> | null;
   metadata: Record<string, any> | null;
   status: 'active' | 'inactive' | 'building' | 'error';
-  node_count: number;
-  edge_count: number;
-  last_updated: string | null;
+  nodeCount: number;
+  edgeCount: number;
+  lastUpdated: string | null;
 }
 
 /**
  * Knowledge Graph node entity
  */
 export interface KnowledgeGraphNode extends BaseEntity {
-  graph_id: string;
+  graphId: string;
   label: string;
   properties: Record<string, any>;
   metadata: Record<string, any> | null;
@@ -33,9 +33,9 @@ export interface KnowledgeGraphNode extends BaseEntity {
  * Knowledge Graph edge entity
  */
 export interface KnowledgeGraphEdge extends BaseEntity {
-  graph_id: string;
-  source_id: string;
-  target_id: string;
+  graphId: string;
+  sourceId: string;
+  targetId: string;
   label: string;
   properties: Record<string, any> | null;
   weight: number | null;
@@ -47,9 +47,9 @@ export interface KnowledgeGraphEdge extends BaseEntity {
 export interface KnowledgeGraphSearchRequest {
   query: string;
   filters?: Record<string, any>;
-  top_k?: number;
-  include_metadata?: boolean;
-  include_embeddings?: boolean;
+  topK?: number;
+  includeMetadata?: boolean;
+  includeEmbeddings?: boolean;
 }
 
 /**
@@ -57,17 +57,17 @@ export interface KnowledgeGraphSearchRequest {
  */
 export interface KnowledgeGraphSearchResult {
   nodes: KnowledgeGraphNode[];
-  similarity_scores: Record<string, number>;
-  query_embedding?: number[];
+  similarityScores: Record<string, number>;
+  queryEmbedding?: number[];
 }
 
 /**
  * Knowledge Graph import request
  */
 export interface KnowledgeGraphImportRequest {
-  source_type: 'file' | 'datasource' | 'api';
-  source_id?: string;
-  source_url?: string;
+  sourceType: 'file' | 'datasource' | 'api';
+  sourceId?: string;
+  sourceUrl?: string;
   config?: Record<string, any>;
 }
 
@@ -75,11 +75,11 @@ export interface KnowledgeGraphImportRequest {
  * Knowledge Graph import status
  */
 export interface KnowledgeGraphImportStatus extends BaseEntity {
-  graph_id: string;
+  graphId: string;
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   progress: number;
-  total_items: number;
-  processed_items: number;
-  error_message: string | null;
+  totalItems: number;
+  processedItems: number;
+  errorMessage: string | null;
   metadata: Record<string, any> | null;
 }

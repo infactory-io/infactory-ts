@@ -47,13 +47,13 @@ export const mcpResource = {
   /**
    * Create a new project
    *
-   * @param data - Project data including name, description, and team_id
+   * @param data - Project data including name, description, and teamId
    * @returns Newly created project
    */
   createProject: async (data: {
     name: string;
     description?: string;
-    team_id: string;
+    teamId: string;
   }): Promise<ApiResponse<Project>> => {
     return await sharedClient.post<Project>('/v1/projects', data);
   },

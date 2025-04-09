@@ -1,9 +1,9 @@
-import { postStream, post } from '@/core/client.js';
-import { ApiResponse, Graph } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
+import { Graph } from '@/types/common.js';
 
 interface EvaluateQueryprogramRequest {
-  project_id: string;
-  queryprogram_id: string;
+  projectId: string;
+  queryprogramId: string;
   stream?: boolean; // Optional parameter to control streaming
 }
 
@@ -12,12 +12,15 @@ export const evaluateActionsApi = {
   evaluateQueryprogram: async (
     request: EvaluateQueryprogramRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<any>('/v1/actions/evaluate/queryprogram', {
-      body: {
-        project_id: request.project_id,
-        queryprogram_id: request.queryprogram_id,
+    const url = '/v1/actions/evaluate/queryprogram';
+    return sharedClient.createStream(url, {
+      url,
+      method: 'POST',
+      body: JSON.stringify({
+        projectId: request.projectId,
+        queryprogramId: request.queryprogramId,
         stream: true, // Explicitly set streaming to true
-      },
+      }),
     });
   },
 
@@ -25,10 +28,10 @@ export const evaluateActionsApi = {
   evaluateQueryprogramSync: async (
     request: EvaluateQueryprogramRequest,
   ): Promise<ApiResponse<any>> => {
-    return await post<any>('/v1/actions/evaluate/queryprogram', {
+    return await sharedClient.post<any>('/v1/actions/evaluate/queryprogram', {
       body: {
-        project_id: request.project_id,
-        queryprogram_id: request.queryprogram_id,
+        projectId: request.projectId,
+        queryprogramId: request.queryprogramId,
         stream: false, // Explicitly set streaming to false
       },
     });
@@ -38,24 +41,27 @@ export const evaluateActionsApi = {
   analyzeQueryProgram: async (
     request: EvaluateQueryprogramRequest,
   ): Promise<ApiResponse<Graph>> => {
-    return await post<Graph>('/v1/actions/evaluate/queryprogram/graph', {
-      body: {
-        project_id: request.project_id,
-        queryprogram_id: request.queryprogram_id,
+    return await sharedClient.post<Graph>(
+      '/v1/actions/evaluate/queryprogram/graph',
+      {
+        body: {
+          projectId: request.projectId,
+          queryprogramId: request.queryprogramId,
+        },
       },
-    });
+    );
   },
 
   // Get readable answer for query response
   readableAnswerToQueryresponse: async (
-    query_response_id: string,
+    queryResponseId: string,
     query: string,
   ): Promise<ReadableStream<any>> => {
-    return postStream<any>(
-      `/v1/actions/generate/readableanswer-to-queryresponse/${query_response_id}`,
-      {
-        body: { query },
-      },
-    );
+    const url = `/v1/actions/generate/readableanswer-to-queryresponse/${queryResponseId}`;
+    return sharedClient.createStream(url, {
+      url,
+      method: 'POST',
+      body: JSON.stringify({ query }),
+    });
   },
 };

@@ -185,7 +185,7 @@ export class EnhancedInfactoryClient extends InfactoryClient {
       // Execute the polling operation
       const result = await poll<JobStatus>(
         async () => {
-          const response = await jobsApi.getJobStatus({ job_id: jobId });
+          const response = await jobsApi.getJobStatus({ jobId: jobId });
 
           if (response.error) {
             throw response.error;

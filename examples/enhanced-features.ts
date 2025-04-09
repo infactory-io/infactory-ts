@@ -83,14 +83,14 @@ async function run() {
           await client.knowledgeGraph.createKnowledgeGraph({
             name: 'Example Knowledge Graph',
             description: 'Created via SDK example',
-            project_id: projectId,
+            projectId: projectId,
           });
 
         console.log('Created knowledge graph:', createKgResponse.data);
 
         // List knowledge graphs
         const kgListResponse = await client.knowledgeGraph.listKnowledgeGraphs({
-          project_id: projectId,
+          projectId: projectId,
         });
         console.log(
           `Project has ${kgListResponse.data?.length ?? 0} knowledge graphs`,
@@ -127,7 +127,7 @@ async function run() {
             queryProgramId,
             {
               stream: true,
-              max_tokens: 1000,
+              maxTokens: 1000,
               timeout: 30000,
             },
           );

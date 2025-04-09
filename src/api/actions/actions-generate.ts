@@ -1,49 +1,49 @@
-import { postStream } from '@/core/client.js';
+import { sharedClient } from '@/core/shared-client.js';
 import { ContextInfo, ToolNameSpace } from '@/types/common.js';
 import { ChatMessageCreate } from '@/api/resources/chat.js';
 
 // Request interfaces
 interface CreateApiRequest {
-  api_name: string;
-  api_description: string;
+  apiName: string;
+  apiDescription: string;
   known_attributes?: Record<string, any>;
   context?: Record<string, any>;
 }
 
 interface CreateDatamodelRequest {
-  dataobject_id: string;
+  dataobjectId: string;
 }
 
 interface CreateFunctioncallRequest {
-  conversation_id: string;
-  message_create: ChatMessageCreate;
-  all_tools?: ToolNameSpace;
+  conversationId: string;
+  messageCreate: ChatMessageCreate;
+  allTools?: ToolNameSpace;
 }
 
 interface CreateKnowledgeEntityLinkRequest {
   question: string;
-  project_id: string;
-  team_id?: string;
+  projectId: string;
+  teamId?: string;
 }
 
 interface CreateQueryprogramRequest {
   question: string;
-  context_info?: ContextInfo;
-  project_id: string;
-  additional_instructions?: string;
+  contextInfo?: ContextInfo;
+  projectId: string;
+  additionalInstructions?: string;
 }
 
 interface FixQueryprogramRequest {
-  project_id: string;
-  queryprogram_id: string;
-  query_response_id?: string;
-  context_info?: ContextInfo;
-  additional_instructions?: string;
+  projectId: string;
+  queryprogramId: string;
+  queryResponseId?: string;
+  contextInfo?: ContextInfo;
+  additionalInstructions?: string;
 }
 
 interface CreateQuestionsRequest {
-  project_id: string;
-  previous_questions?: string[];
+  projectId: string;
+  previousQuestions?: string[];
   count?: number;
 }
 
@@ -52,19 +52,21 @@ interface CreateReadableanswerToQueryresponseRequest {
 }
 
 interface FunctionMessageReference {
-  request_id: string;
-  conversation_id: string;
-  author_user_id?: string;
-  project_id?: string;
-  node_id?: string;
+  requestId: string;
+  conversationId: string;
+  authorUserId?: string;
+  projectId?: string;
+  nodeId?: string;
   channel?: string;
 }
 
 export const generateActionsApi = {
   // Create a new API endpoint
   createApi: async (params: CreateApiRequest): Promise<ReadableStream<any>> => {
-    return postStream<CreateApiRequest>('/v1/actions/generate/new-api', {
-      body: params,
+    return sharedClient.createStream('/v1/actions/generate/new-api', {
+      url: '/v1/actions/generate/new-api',
+      method: 'POST',
+      body: JSON.stringify(params),
     });
   },
 
@@ -72,36 +74,33 @@ export const generateActionsApi = {
   createApiEndpoint: async (
     params: CreateApiRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateApiRequest>(
-      '/v1/actions/generate/new-api-endpoint',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/new-api-endpoint', {
+      url: '/v1/actions/generate/new-api-endpoint',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create datamodel endpoint
   createDatamodel: async (
     params: CreateDatamodelRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateDatamodelRequest>(
-      '/v1/actions/generate/datamodel',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/datamodel', {
+      url: '/v1/actions/generate/datamodel',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create functioncall endpoint
   createFunctioncall: async (
     params: CreateFunctioncallRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateFunctioncallRequest>(
-      '/v1/actions/generate/functioncall',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/functioncall', {
+      url: '/v1/actions/generate/functioncall',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create knowledge entity link endpoint
@@ -109,10 +108,12 @@ export const generateActionsApi = {
     params: CreateKnowledgeEntityLinkRequest,
     stream: boolean = false,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateKnowledgeEntityLinkRequest>(
+    return sharedClient.createStream(
       `/v1/actions/generate/knowledge/entity-link?stream=${stream}`,
       {
-        body: params,
+        url: `/v1/actions/generate/knowledge/entity-link?stream=${stream}`,
+        method: 'POST',
+        body: JSON.stringify(params),
       },
     );
   },
@@ -121,35 +122,32 @@ export const generateActionsApi = {
   createQueryprogram: async (
     params: CreateQueryprogramRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateQueryprogramRequest>(
-      '/v1/actions/generate/queryprogram',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/queryprogram', {
+      url: '/v1/actions/generate/queryprogram',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   fixQueryprogram: async (
     params: FixQueryprogramRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<FixQueryprogramRequest>(
-      '/v1/actions/generate/queryprogram',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/queryprogram', {
+      url: '/v1/actions/generate/queryprogram',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create questions endpoint
   createQuestions: async (
     params: CreateQuestionsRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateQuestionsRequest>(
-      '/v1/actions/generate/questions',
-      {
-        body: params,
-      },
-    );
+    return sharedClient.createStream('/v1/actions/generate/questions', {
+      url: '/v1/actions/generate/questions',
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create readable answer to query response endpoint
@@ -157,12 +155,12 @@ export const generateActionsApi = {
     queryResponseId: string,
     params: CreateReadableanswerToQueryresponseRequest,
   ): Promise<ReadableStream<any>> => {
-    return postStream<CreateReadableanswerToQueryresponseRequest>(
-      `/v1/actions/generate/readableanswer-to-queryresponse/${queryResponseId}`,
-      {
-        body: params,
-      },
-    );
+    const url = `/v1/actions/generate/readableanswer-to-queryresponse/${queryResponseId}`;
+    return sharedClient.createStream(url, {
+      url,
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 
   // Create readable answer to message endpoint
@@ -176,14 +174,14 @@ export const generateActionsApi = {
     if (!params) {
       throw new Error('conversationContext is required');
     }
-    if (params.request_id.startsWith('cg_')) {
-      params.request_id = params.request_id.slice(3);
+    if (params.requestId.startsWith('cg_')) {
+      params.requestId = params.requestId.slice(3);
     }
-    return postStream<any>(
-      `/v1/actions/generate/readableanswer-to-message/${messageId}`,
-      {
-        body: params,
-      },
-    );
+    const url = `/v1/actions/generate/readableanswer-to-message/${messageId}`;
+    return sharedClient.createStream(url, {
+      url,
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   },
 };

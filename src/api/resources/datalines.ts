@@ -3,9 +3,9 @@ import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export const datalinesApi = {
   getDatalines: async (
-    datasource_id?: string,
+    datasourceId?: string,
   ): Promise<ApiResponse<Dataline[]>> => {
-    const params = datasource_id ? { datasource_id } : {};
+    const params = datasourceId ? { datasourceId } : {};
     return await sharedClient.get<Dataline[]>(`/v1/datalines`, { params });
   },
 
@@ -31,13 +31,13 @@ export const datalinesApi = {
     datalineId: string,
     params: Partial<CreateDatalineParams>,
   ): Promise<ApiResponse<Dataline>> => {
-    const data_model = params.data_model;
-    if (data_model) delete params.data_model;
+    const dataModel = params.dataModel;
+    if (dataModel) delete params.dataModel;
 
-    if (data_model) {
+    if (dataModel) {
       return await sharedClient.patch<Dataline>(`/v1/datalines/${datalineId}`, {
         ...params,
-        data_model,
+        data_model: dataModel,
       });
     } else {
       return await sharedClient.patch<Dataline>(
@@ -49,11 +49,11 @@ export const datalinesApi = {
 
   updateDatalineSchema: async (
     datalineId: string,
-    schema_code: string,
+    schemaCode: string,
   ): Promise<ApiResponse<Dataline>> => {
     return await sharedClient.patch<Dataline>(
       `/v1/datalines/${datalineId}/schema`,
-      schema_code,
+      schemaCode,
     );
   },
 

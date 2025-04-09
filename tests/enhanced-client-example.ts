@@ -15,7 +15,7 @@ async function main() {
   // Example 1: Creating a project with method chaining
   const project = await client.createProject({
     name: 'Stock Analysis',
-    team_id: 'ba86d606-7445-40fb-bbc1-9c9c22c2d7e7', // Using team ID from memory
+    teamId: 'ba86d606-7445-40fb-bbc1-9c9c22c2d7e7', // Using team ID from memory
     description: 'Analysis of stock market data',
   });
 
@@ -47,7 +47,7 @@ async function main() {
   const newProject = await client.createProjectWithCSV(
     {
       name: 'Market Analysis 2025',
-      team_id: 'ba86d606-7445-40fb-bbc1-9c9c22c2d7e7',
+      teamId: 'ba86d606-7445-40fb-bbc1-9c9c22c2d7e7',
       description: 'Comprehensive analysis of market trends',
     },
     './tests/stocks.csv',

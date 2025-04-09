@@ -44,9 +44,9 @@ describe('InfactoryClient Integration', () => {
           id: 'proj-1',
           name: 'Test Project 1',
           description: 'Integration test project 1',
-          created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-01-01T00:00:00Z',
-          team_id: 'team-1',
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z',
+          teamId: 'team-1',
         },
       ];
 
@@ -63,14 +63,14 @@ describe('InfactoryClient Integration', () => {
       const newProject = {
         name: 'New Integration Project',
         description: 'Created during integration test',
-        team_id: 'team-1',
+        teamId: 'team-1',
       };
 
       const mockCreatedProject = {
         ...newProject,
         id: 'new-proj-1',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
       };
 
       // Mock the API response
@@ -80,7 +80,7 @@ describe('InfactoryClient Integration', () => {
           return (
             body.name === newProject.name &&
             body.description === newProject.description &&
-            body.team_id === newProject.team_id
+            body.teamId === newProject.teamId
           );
         })
         .reply(200, mockCreatedProject);
@@ -98,9 +98,9 @@ describe('InfactoryClient Integration', () => {
         id: 'user-1',
         email: 'test@example.com',
         name: 'Test User',
-        clerk_user_id: 'clerk-123',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
+        clerk_userId: 'clerk-123',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
       };
 
       // Mock the API response
@@ -146,9 +146,9 @@ describe('InfactoryClient Integration', () => {
         id: queryProgramId,
         name: 'Test Query Program',
         published: true,
-        project_id: 'project-1',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-02T00:00:00Z',
+        projectId: 'project-1',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-02T00:00:00Z',
       };
 
       // Mock the API response

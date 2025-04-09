@@ -1,5 +1,4 @@
-import { get, post, del, patch } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 import {
   Entity,
   Property,
@@ -20,29 +19,32 @@ import {
 export const ontologyApi = {
   // Entity endpoints
   getEntities: async (): Promise<ApiResponse<Entity[]>> => {
-    return await get<Entity[]>(`/v1/ontologies/entity`);
+    return await sharedClient.get<Entity[]>(`/v1/ontologies/entity`);
   },
 
   getEntitiesWithMentionTypes: async (
     projectId: string,
     includeGeneral: boolean = true,
   ): Promise<ApiResponse<EntityMentionTypes[]>> => {
-    return await get<EntityMentionTypes[]>(`/v1/ontologies/all-entities`, {
-      params: {
-        project_id: projectId,
-        include_general: includeGeneral,
+    return await sharedClient.get<EntityMentionTypes[]>(
+      `/v1/ontologies/all-entities`,
+      {
+        params: {
+          projectId: projectId,
+          includeGeneral: includeGeneral,
+        },
       },
-    });
+    );
   },
 
   getEntity: async (entityId: string): Promise<ApiResponse<Entity>> => {
-    return await get<Entity>(`/v1/ontologies/entity/${entityId}`);
+    return await sharedClient.get<Entity>(`/v1/ontologies/entity/${entityId}`);
   },
 
   createEntity: async (
     params: CreateEntityRequest,
   ): Promise<ApiResponse<Entity>> => {
-    return await post<Entity, CreateEntityRequest>(`/v1/ontologies/entity`, {
+    return await sharedClient.post<Entity>(`/v1/ontologies/entity`, {
       body: params,
     });
   },
@@ -51,45 +53,48 @@ export const ontologyApi = {
     entityId: string,
     params: UpdateEntityRequest,
   ): Promise<ApiResponse<Entity>> => {
-    return await patch<Entity, UpdateEntityRequest>(
+    return await sharedClient.patch<Entity>(
       `/v1/ontologies/entity/${entityId}`,
       { body: params },
     );
   },
 
   deleteEntity: async (entityId: string): Promise<ApiResponse<Entity>> => {
-    return await del<Entity>(`/v1/ontologies/entity/${entityId}`);
+    return await sharedClient.delete<Entity>(
+      `/v1/ontologies/entity/${entityId}`,
+    );
   },
 
   // Property endpoints
   getProperties: async (
     entityId?: string,
   ): Promise<ApiResponse<Property[]>> => {
-    return await get<Property[]>(`/v1/ontologies/property`, {
+    return await sharedClient.get<Property[]>(`/v1/ontologies/property`, {
       params: {
-        entity_id: entityId,
+        entityId: entityId,
       },
     });
   },
 
   getProperty: async (propertyId: string): Promise<ApiResponse<Property>> => {
-    return await get<Property>(`/v1/ontologies/property/${propertyId}`);
+    return await sharedClient.get<Property>(
+      `/v1/ontologies/property/${propertyId}`,
+    );
   },
 
   createProperty: async (
     params: CreatePropertyRequest,
   ): Promise<ApiResponse<Property>> => {
-    return await post<Property, CreatePropertyRequest>(
-      `/v1/ontologies/property`,
-      { body: params },
-    );
+    return await sharedClient.post<Property>(`/v1/ontologies/property`, {
+      body: params,
+    });
   },
 
   updateProperty: async (
     propertyId: string,
     params: UpdatePropertyRequest,
   ): Promise<ApiResponse<Property>> => {
-    return await patch<Property, UpdatePropertyRequest>(
+    return await sharedClient.patch<Property>(
       `/v1/ontologies/property/${propertyId}`,
       { body: params },
     );
@@ -98,7 +103,9 @@ export const ontologyApi = {
   deleteProperty: async (
     propertyId: string,
   ): Promise<ApiResponse<Property>> => {
-    return await del<Property>(`/v1/ontologies/property/${propertyId}`);
+    return await sharedClient.delete<Property>(
+      `/v1/ontologies/property/${propertyId}`,
+    );
   },
 
   // Relationship endpoints
@@ -106,18 +113,21 @@ export const ontologyApi = {
     sourceEntity?: string,
     targetEntity?: string,
   ): Promise<ApiResponse<Relationship[]>> => {
-    return await get<Relationship[]>(`/v1/ontologies/relationship`, {
-      params: {
-        source_entity: sourceEntity,
-        target_entity: targetEntity,
+    return await sharedClient.get<Relationship[]>(
+      `/v1/ontologies/relationship`,
+      {
+        params: {
+          sourceEntity: sourceEntity,
+          targetEntity: targetEntity,
+        },
       },
-    });
+    );
   },
 
   getRelationship: async (
     relationshipId: string,
   ): Promise<ApiResponse<Relationship>> => {
-    return await get<Relationship>(
+    return await sharedClient.get<Relationship>(
       `/v1/ontologies/relationship/${relationshipId}`,
     );
   },
@@ -125,7 +135,7 @@ export const ontologyApi = {
   createRelationship: async (
     params: CreateRelationshipRequest,
   ): Promise<ApiResponse<Relationship>> => {
-    return await post<Relationship, CreateRelationshipRequest>(
+    return await sharedClient.post<Relationship>(
       `/v1/ontologies/relationship`,
       { body: params },
     );
@@ -135,7 +145,7 @@ export const ontologyApi = {
     relationshipId: string,
     params: UpdateRelationshipRequest,
   ): Promise<ApiResponse<Relationship>> => {
-    return await patch<Relationship, UpdateRelationshipRequest>(
+    return await sharedClient.patch<Relationship>(
       `/v1/ontologies/relationship/${relationshipId}`,
       { body: params },
     );
@@ -144,116 +154,127 @@ export const ontologyApi = {
   deleteRelationship: async (
     relationshipId: string,
   ): Promise<ApiResponse<Relationship>> => {
-    return await del<Relationship>(
+    return await sharedClient.delete<Relationship>(
       `/v1/ontologies/relationship/${relationshipId}`,
     );
   },
 
   // Full ontology endpoints
   getFullOntology: async (): Promise<ApiResponse<Record<string, any[]>>> => {
-    return await get<Record<string, any[]>>(`/v1/ontologies/full`);
+    return await sharedClient.get<Record<string, any[]>>(`/v1/ontologies/full`);
   },
 
   searchOntology: async (
     query: string,
   ): Promise<ApiResponse<Record<string, any[]>>> => {
-    return await get<Record<string, any[]>>(`/v1/ontologies/search`, {
-      params: { query },
-    });
+    return await sharedClient.get<Record<string, any[]>>(
+      `/v1/ontologies/search`,
+      {
+        params: { query },
+      },
+    );
   },
 
   validateOntology: async (): Promise<
     ApiResponse<Record<string, string[]>>
   > => {
-    return await get<Record<string, string[]>>(`/v1/ontologies/validate`);
+    return await sharedClient.get<Record<string, string[]>>(
+      `/v1/ontologies/validate`,
+    );
   },
 
   // Generate ontology
   generateOntology: async (
     params: GenerateOntologyRequest,
   ): Promise<ApiResponse<any>> => {
-    return await post<any, GenerateOntologyRequest>(
-      `/v1/actions/generate/ontology`,
-      { body: params },
-    );
+    return await sharedClient.post<any>(`/v1/actions/generate/ontology`, {
+      body: params,
+    });
   },
 
   // Beta variants (keeping both for backward compatibility)
   beta: {
     getEntities: async (): Promise<ApiResponse<Entity[]>> => {
-      return await get<Entity[]>(`/beta/v1/ontologies/entity`);
+      return await sharedClient.get<Entity[]>(`/beta/v1/ontologies/entity`);
     },
 
     getEntitiesWithMentionTypes: async (
       projectId: string,
       includeGeneral: boolean = true,
     ): Promise<ApiResponse<EntityMentionTypes[]>> => {
-      return await get<EntityMentionTypes[]>(
+      return await sharedClient.get<EntityMentionTypes[]>(
         `/beta/v1/ontologies/all-entities`,
         {
           params: {
-            project_id: projectId,
-            include_general: includeGeneral,
+            projectId: projectId,
+            includeGeneral: includeGeneral,
           },
         },
       );
     },
 
     getEntity: async (entityId: string): Promise<ApiResponse<Entity>> => {
-      return await get<Entity>(`/beta/v1/ontologies/entity/${entityId}`);
+      return await sharedClient.get<Entity>(
+        `/beta/v1/ontologies/entity/${entityId}`,
+      );
     },
 
     createEntity: async (
       params: CreateEntityRequest,
     ): Promise<ApiResponse<Entity>> => {
-      return await post<Entity, CreateEntityRequest>(
-        `/beta/v1/ontologies/entity`,
-        { body: params },
-      );
+      return await sharedClient.post<Entity>(`/beta/v1/ontologies/entity`, {
+        body: params,
+      });
     },
 
     updateEntity: async (
       entityId: string,
       params: UpdateEntityRequest,
     ): Promise<ApiResponse<Entity>> => {
-      return await patch<Entity, UpdateEntityRequest>(
+      return await sharedClient.patch<Entity>(
         `/beta/v1/ontologies/entity/${entityId}`,
         { body: params },
       );
     },
 
     deleteEntity: async (entityId: string): Promise<ApiResponse<Entity>> => {
-      return await del<Entity>(`/beta/v1/ontologies/entity/${entityId}`);
+      return await sharedClient.delete<Entity>(
+        `/beta/v1/ontologies/entity/${entityId}`,
+      );
     },
 
     getProperties: async (
       entityId?: string,
     ): Promise<ApiResponse<Property[]>> => {
-      return await get<Property[]>(`/beta/v1/ontologies/property`, {
-        params: {
-          entity_id: entityId,
+      return await sharedClient.get<Property[]>(
+        `/beta/v1/ontologies/property`,
+        {
+          params: {
+            entityId: entityId,
+          },
         },
-      });
+      );
     },
 
     getProperty: async (propertyId: string): Promise<ApiResponse<Property>> => {
-      return await get<Property>(`/beta/v1/ontologies/property/${propertyId}`);
+      return await sharedClient.get<Property>(
+        `/beta/v1/ontologies/property/${propertyId}`,
+      );
     },
 
     createProperty: async (
       params: CreatePropertyRequest,
     ): Promise<ApiResponse<Property>> => {
-      return await post<Property, CreatePropertyRequest>(
-        `/beta/v1/ontologies/property`,
-        { body: params },
-      );
+      return await sharedClient.post<Property>(`/beta/v1/ontologies/property`, {
+        body: params,
+      });
     },
 
     updateProperty: async (
       propertyId: string,
       params: UpdatePropertyRequest,
     ): Promise<ApiResponse<Property>> => {
-      return await patch<Property, UpdatePropertyRequest>(
+      return await sharedClient.patch<Property>(
         `/beta/v1/ontologies/property/${propertyId}`,
         { body: params },
       );
@@ -262,25 +283,30 @@ export const ontologyApi = {
     deleteProperty: async (
       propertyId: string,
     ): Promise<ApiResponse<Property>> => {
-      return await del<Property>(`/beta/v1/ontologies/property/${propertyId}`);
+      return await sharedClient.delete<Property>(
+        `/beta/v1/ontologies/property/${propertyId}`,
+      );
     },
 
     getRelationships: async (
       sourceEntity?: string,
       targetEntity?: string,
     ): Promise<ApiResponse<Relationship[]>> => {
-      return await get<Relationship[]>(`/beta/v1/ontologies/relationship`, {
-        params: {
-          source_entity: sourceEntity,
-          target_entity: targetEntity,
+      return await sharedClient.get<Relationship[]>(
+        `/beta/v1/ontologies/relationship`,
+        {
+          params: {
+            sourceEntity: sourceEntity,
+            targetEntity: targetEntity,
+          },
         },
-      });
+      );
     },
 
     getRelationship: async (
       relationshipId: string,
     ): Promise<ApiResponse<Relationship>> => {
-      return await get<Relationship>(
+      return await sharedClient.get<Relationship>(
         `/beta/v1/ontologies/relationship/${relationshipId}`,
       );
     },
@@ -288,7 +314,7 @@ export const ontologyApi = {
     createRelationship: async (
       params: CreateRelationshipRequest,
     ): Promise<ApiResponse<Relationship>> => {
-      return await post<Relationship, CreateRelationshipRequest>(
+      return await sharedClient.post<Relationship>(
         `/beta/v1/ontologies/relationship`,
         { body: params },
       );
@@ -298,7 +324,7 @@ export const ontologyApi = {
       relationshipId: string,
       params: UpdateRelationshipRequest,
     ): Promise<ApiResponse<Relationship>> => {
-      return await patch<Relationship, UpdateRelationshipRequest>(
+      return await sharedClient.patch<Relationship>(
         `/beta/v1/ontologies/relationship/${relationshipId}`,
         { body: params },
       );
@@ -307,27 +333,32 @@ export const ontologyApi = {
     deleteRelationship: async (
       relationshipId: string,
     ): Promise<ApiResponse<Relationship>> => {
-      return await del<Relationship>(
+      return await sharedClient.delete<Relationship>(
         `/beta/v1/ontologies/relationship/${relationshipId}`,
       );
     },
 
     getFullOntology: async (): Promise<ApiResponse<Record<string, any[]>>> => {
-      return await get<Record<string, any[]>>(`/beta/v1/ontologies/full`);
+      return await sharedClient.get<Record<string, any[]>>(
+        `/beta/v1/ontologies/full`,
+      );
     },
 
     searchOntology: async (
       query: string,
     ): Promise<ApiResponse<Record<string, any[]>>> => {
-      return await get<Record<string, any[]>>(`/beta/v1/ontologies/search`, {
-        params: { query },
-      });
+      return await sharedClient.get<Record<string, any[]>>(
+        `/beta/v1/ontologies/search`,
+        {
+          params: { query },
+        },
+      );
     },
 
     validateOntology: async (): Promise<
       ApiResponse<Record<string, string[]>>
     > => {
-      return await get<Record<string, string[]>>(
+      return await sharedClient.get<Record<string, string[]>>(
         `/beta/v1/ontologies/validate`,
       );
     },
@@ -335,7 +366,7 @@ export const ontologyApi = {
     generateOntology: async (
       params: GenerateOntologyRequest,
     ): Promise<ApiResponse<any>> => {
-      return await post<any, GenerateOntologyRequest>(
+      return await sharedClient.post<any>(
         `/beta/v1/actions/generate/ontology`,
         { body: params },
       );

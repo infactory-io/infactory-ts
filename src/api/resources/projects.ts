@@ -8,7 +8,7 @@ export const projectsApi = {
 
   getTeamProjects: async (teamId: string): Promise<ApiResponse<Project[]>> => {
     return await sharedClient.get<Project[]>('/v1/projects', {
-      team_id: teamId,
+      teamId: teamId,
     });
   },
 
@@ -26,9 +26,9 @@ export const projectsApi = {
     projectId: string,
     params: Partial<CreateProjectParams>,
   ): Promise<ApiResponse<Project>> => {
-    const { team_id, ...updateParams } = params;
-    if (!team_id) {
-      throw new Error('team_id is required for updating a project');
+    const { teamId, ...updateParams } = params;
+    if (!teamId) {
+      throw new Error('teamId is required for updating a project');
     }
     // Convert params to query string
     const searchParams = new URLSearchParams();
@@ -37,7 +37,7 @@ export const projectsApi = {
         searchParams.append(key, value);
       }
     });
-    searchParams.append('team_id', team_id);
+    searchParams.append('teamId', teamId);
 
     return await sharedClient.patch<Project>(
       `/v1/projects/${projectId}?${searchParams.toString()}`,
@@ -55,7 +55,7 @@ export const projectsApi = {
   ): Promise<ApiResponse<any>> => {
     return await sharedClient.downloadFile<any>(
       `/projects/${projectId}/export`,
-      { team_id: teamId },
+      { teamId: teamId },
       `project_export_${projectId}.json`,
     );
   },
@@ -70,7 +70,7 @@ export const projectsApi = {
       // Create FormData
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('team_id', teamId);
+      formData.append('teamId', teamId);
       formData.append('conflict_strategy', 'rename');
 
       // Log FormData contents

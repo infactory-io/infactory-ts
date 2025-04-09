@@ -1,31 +1,30 @@
-import { get, post, postStream } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 
 /**
  * Parameters for submitting a new job
  */
 export interface SubmitJobParams {
-  project_id?: string;
-  user_id?: string;
+  projectId?: string;
+  userId?: string;
   metadata?: string;
   payload: Record<string, any>;
-  job_type: string;
-  parent_job_id?: string;
-  do_not_send_to_queue?: boolean;
-  source_id?: string;
+  jobType: string;
+  parentJobId?: string;
+  doNotSendToQueue?: boolean;
+  sourceId?: string;
   source?: string;
-  source_event_type?: string;
-  source_metadata?: string;
+  sourceEventType?: string;
+  sourceMetadata?: string;
 }
 
 /**
  * Parameters for retrieving job status
  */
 export interface GetJobStatusParams {
-  user_id?: string;
-  project_id?: string;
-  job_id?: string;
-  last_n?: number;
+  userId?: string;
+  projectId?: string;
+  jobId?: string;
+  lastN?: number;
 }
 
 /**
@@ -35,29 +34,29 @@ export interface Worker {
   id: string;
   name?: string;
   info?: string;
-  started_at: Date;
-  stopped_at?: Date;
-  last_heartbeat: Date;
+  startedAt: Date;
+  stoppedAt?: Date;
+  lastHeartbeat: Date;
 }
 
 // Define types for job events
 export interface JobEventPayload {
-  part_number?: number;
+  partNumber?: number;
   etag?: string;
   progress?: number;
 }
 
 export interface JobEvent {
-  job_id: string;
+  jobId: string;
   status?: 'uploading' | 'completed' | 'failed';
-  event_type?: string;
+  eventType?: string;
   payload?: JobEventPayload;
   timestamp: number;
-  extra_data?: {
+  extraData?: {
     progress: number;
   };
-  data_lineage?: any;
-  data_object?: any;
+  dataLineage?: any;
+  dataObject?: any;
 }
 export function parseEventData(value: Uint8Array): {
   data?: JobEvent;
@@ -67,14 +66,14 @@ export function parseEventData(value: Uint8Array): {
     const payload = new TextDecoder().decode(value);
     const lines = payload.split('\n').filter((line) => line.trim());
 
-    const eventObj: { id?: string; event_type?: string; data?: JobEvent } = {};
+    const eventObj: { id?: string; eventType?: string; data?: JobEvent } = {};
 
     for (const line of lines) {
       // Better parsing of SSE format
       if (line.startsWith('id:')) {
         eventObj.id = line.substring(3).trim();
       } else if (line.startsWith('event:')) {
-        eventObj.event_type = line.substring(6).trim();
+        eventObj.eventType = line.substring(6).trim();
       } else if (line.startsWith('data:')) {
         try {
           const jsonData = JSON.parse(line.substring(5).trim());
@@ -88,26 +87,26 @@ export function parseEventData(value: Uint8Array): {
     }
 
     // Handle special case for NewDataObjectEvent
-    if (eventObj.event_type === 'NewDataObjectEvent') {
-      if (eventObj.data?.data_lineage) {
+    if (eventObj.eventType === 'NewDataObjectEvent') {
+      if (eventObj.data?.dataLineage) {
         try {
-          eventObj.data.data_lineage = JSON.parse(
-            String(eventObj.data.data_lineage),
+          eventObj.data.dataLineage = JSON.parse(
+            String(eventObj.data.dataLineage),
           );
         } catch (e) {
           return {
-            error: `Invalid JSON in data_lineage: ${e instanceof Error ? String(e.message) : String(e)}`,
+            error: `Invalid JSON in dataLineage: ${e instanceof Error ? String(e.message) : String(e)}`,
           };
         }
       }
-      if (eventObj.data?.data_object) {
+      if (eventObj.data?.dataObject) {
         try {
-          eventObj.data.data_object = JSON.parse(
-            String(eventObj.data.data_object),
+          eventObj.data.dataObject = JSON.parse(
+            String(eventObj.data.dataObject),
           );
         } catch (e) {
           return {
-            error: `Invalid JSON in data_object: ${e instanceof Error ? String(e.message) : String(e)}`,
+            error: `Invalid JSON in dataObject: ${e instanceof Error ? String(e.message) : String(e)}`,
           };
         }
       }
@@ -126,7 +125,7 @@ export const jobsApi = {
    * Submit a new job
    */
   submitJob: async (params: SubmitJobParams): Promise<ApiResponse<string>> => {
-    return await post<string>('/v1/jobs/submit', {
+    return await sharedClient.post<string>('/v1/jobs/submit', {
       body: params,
     });
   },
@@ -137,7 +136,7 @@ export const jobsApi = {
   getJobStatus: async (
     params: GetJobStatusParams,
   ): Promise<ApiResponse<any>> => {
-    return await get<any>('/v1/jobs/status', {
+    return await sharedClient.get<any>('/v1/jobs/status', {
       params,
     });
   },
@@ -146,7 +145,7 @@ export const jobsApi = {
    * Get the history of a specific job
    */
   getJobHistory: async (jobId: string): Promise<ApiResponse<any>> => {
-    return await get<any>(`/v1/jobs/history/${jobId}`);
+    return await sharedClient.get<any>(`/v1/jobs/history/${jobId}`);
   },
 
   /**
@@ -159,24 +158,23 @@ export const jobsApi = {
     eventType?: string,
     signal?: AbortSignal,
   ) => {
-    return postStream<any>(
-      `/v1/jobs/subscribe/${jobId}`,
-      {
-        params: {
-          user_id: userId,
-          event_type: eventType,
-        },
+    const url = `/v1/jobs/subscribe/${jobId}`;
+    return sharedClient.createStream(url, {
+      url,
+      method: 'GET',
+      params: {
+        userId,
+        eventType,
       },
-      false,
       signal,
-    );
+    });
   },
 
   /**
    * List the active job workers
    */
   listActiveWorkers: async (): Promise<ApiResponse<Worker[]>> => {
-    return await get<Worker[]>('/v1/jobs/workers/active');
+    return await sharedClient.get<Worker[]>('/v1/jobs/workers/active');
   },
 
   /**
@@ -190,12 +188,12 @@ export const jobsApi = {
     limit?: number;
     offset?: number;
   }) => {
-    return await get<any>('/v1/jobs/by-source', {
+    return await sharedClient.get<any>('/v1/jobs/by-source', {
       params: {
         source: params.source,
-        source_id: params.sourceId,
-        event_type: params.eventType,
-        include_jobs: params.includeJobs,
+        sourceId: params.sourceId,
+        eventType: params.eventType,
+        includeJobs: params.includeJobs,
         limit: params.limit,
         offset: params.offset,
       },

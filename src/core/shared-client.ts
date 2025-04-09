@@ -7,8 +7,8 @@ const config = getConfig(true, false);
 
 // Create a shared HttpClient instance
 export const sharedClient = new HttpClient({
-  baseUrl: config?.base_url || '',
-  apiKey: config?.api_key,
+  baseUrl: config?.baseUrl || '',
+  apiKey: config?.apiKey,
   isServer: typeof window === 'undefined',
   defaultHeaders: {
     'Content-Type': 'application/json',

@@ -1,5 +1,4 @@
-import { fetchApi } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 import { I7YPendingJob } from './database.js';
 
 export interface ParameterConfig {
@@ -49,17 +48,17 @@ export interface TestHttpConnectionRequest {
 export interface TestHttpConnectionResponse {
   success: boolean;
   status: number;
-  response_time: number;
-  content_type: string;
+  responseTime: number;
+  contentType: string;
   size: number;
   data: any;
   headers?: Record<string, string>;
 }
 
 export interface ExecuteHttpRequestRequest extends TestHttpConnectionRequest {
-  project_id: string;
-  datasource_id: string;
-  connect_spec?: Record<string, any>;
+  projectId: string;
+  datasourceId: string;
+  connectSpec?: Record<string, any>;
 }
 
 export interface ExecuteHttpRequestResponse {
@@ -70,10 +69,12 @@ export const httpApi = {
   testConnection: async (
     requestConfig: TestHttpConnectionRequest,
   ): Promise<ApiResponse<TestHttpConnectionResponse>> => {
-    return fetchApi<TestHttpConnectionResponse>('/v1/http/test-connection', {
-      method: 'POST',
-      body: JSON.stringify(requestConfig),
-    });
+    return sharedClient.post<TestHttpConnectionResponse>(
+      '/v1/http/test-connection',
+      {
+        body: requestConfig,
+      },
+    );
   },
 
   executeRequest: async (
@@ -81,12 +82,14 @@ export const httpApi = {
   ): Promise<ApiResponse<ExecuteHttpRequestResponse>> => {
     const payload = {
       ...requestConfig,
-      connect_spec: requestConfig.connect_spec,
+      connectSpec: requestConfig.connectSpec,
     };
 
-    return fetchApi<ExecuteHttpRequestResponse>('/v1/http/execute-request', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return sharedClient.post<ExecuteHttpRequestResponse>(
+      '/v1/http/execute-request',
+      {
+        body: payload,
+      },
+    );
   },
 };

@@ -8,8 +8,8 @@ export interface Entity extends BaseEntity {
   description?: string;
   color?: string;
   icon?: string;
-  project_id?: string;
-  is_general?: boolean;
+  projectId?: string;
+  isGeneral?: boolean;
 }
 
 /**
@@ -18,11 +18,11 @@ export interface Entity extends BaseEntity {
 export interface Property extends BaseEntity {
   name: string;
   description?: string;
-  entity_id: string;
+  entityId: string;
   type: string;
-  is_required?: boolean;
-  is_unique?: boolean;
-  default_value?: any;
+  isRequired?: boolean;
+  isUnique?: boolean;
+  defaultValue?: any;
 }
 
 /**
@@ -31,8 +31,8 @@ export interface Property extends BaseEntity {
 export interface Relationship extends BaseEntity {
   name: string;
   description?: string;
-  source_entity_id: string;
-  target_entity_id: string;
+  sourceEntityId: string;
+  targetEntityId: string;
   cardinality?: string;
 }
 
@@ -40,7 +40,7 @@ export interface Relationship extends BaseEntity {
  * Entity with mention types
  */
 export interface EntityMentionTypes extends Entity {
-  mention_types: string[];
+  mentionTypes: string[];
 }
 
 /**
@@ -51,8 +51,8 @@ export interface CreateEntityRequest {
   description?: string;
   color?: string;
   icon?: string;
-  project_id?: string;
-  is_general?: boolean;
+  projectId?: string;
+  isGeneral?: boolean;
 }
 
 /**
@@ -63,8 +63,8 @@ export interface UpdateEntityRequest {
   description?: string;
   color?: string;
   icon?: string;
-  project_id?: string;
-  is_general?: boolean;
+  projectId?: string;
+  isGeneral?: boolean;
 }
 
 /**
@@ -73,11 +73,11 @@ export interface UpdateEntityRequest {
 export interface CreatePropertyRequest {
   name: string;
   description?: string;
-  entity_id: string;
+  entityId: string;
   type: string;
-  is_required?: boolean;
-  is_unique?: boolean;
-  default_value?: any;
+  isRequired?: boolean;
+  isUnique?: boolean;
+  defaultValue?: any;
 }
 
 /**
@@ -87,9 +87,9 @@ export interface UpdatePropertyRequest {
   name?: string;
   description?: string;
   type?: string;
-  is_required?: boolean;
-  is_unique?: boolean;
-  default_value?: any;
+  isRequired?: boolean;
+  isUnique?: boolean;
+  defaultValue?: any;
 }
 
 /**
@@ -98,8 +98,8 @@ export interface UpdatePropertyRequest {
 export interface CreateRelationshipRequest {
   name: string;
   description?: string;
-  source_entity_id: string;
-  target_entity_id: string;
+  sourceEntityId: string;
+  targetEntityId: string;
   cardinality?: string;
 }
 
@@ -116,5 +116,5 @@ export interface UpdateRelationshipRequest {
  * Request to generate an ontology
  */
 export interface GenerateOntologyRequest {
-  project_id: string;
+  projectId: string;
 }

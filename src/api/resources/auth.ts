@@ -1,15 +1,14 @@
-import { get, patch, post, del } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 
 export interface ApiKey {
   id: string;
   name: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  last_used: string | null;
-  display_value?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  lastUsed: string | null;
+  displayValue?: string;
 }
 
 export const authApi = {
@@ -17,7 +16,7 @@ export const authApi = {
    * Get all API keys for the current user
    */
   getApiKeys: async (): Promise<ApiResponse<ApiKey[]>> => {
-    return await get<ApiKey[]>('/v1/authentication/api-keys');
+    return await sharedClient.get<ApiKey[]>('/v1/authentication/api-keys');
   },
 
   /**
@@ -27,9 +26,12 @@ export const authApi = {
   createApiKey: async (
     name: string,
   ): Promise<ApiResponse<[ApiKey, string]>> => {
-    return await post<[ApiKey, string]>('/v1/authentication/api-key', {
-      params: { name },
-    });
+    return await sharedClient.post<[ApiKey, string]>(
+      '/v1/authentication/api-key',
+      {
+        params: { name },
+      },
+    );
   },
 
   /**
@@ -41,9 +43,12 @@ export const authApi = {
     keyId: string,
     name: string,
   ): Promise<ApiResponse<ApiKey>> => {
-    return await patch<ApiKey>(`/v1/authentication/api-key/${keyId}`, {
-      params: { name },
-    });
+    return await sharedClient.patch<ApiKey>(
+      `/v1/authentication/api-key/${keyId}`,
+      {
+        params: { name },
+      },
+    );
   },
 
   /**
@@ -51,7 +56,9 @@ export const authApi = {
    * @param keyId The id of the API key to enable
    */
   enableApiKey: async (keyId: string): Promise<ApiResponse<ApiKey>> => {
-    return await patch<ApiKey>(`/v1/authentication/api-key/${keyId}/enable`);
+    return await sharedClient.patch<ApiKey>(
+      `/v1/authentication/api-key/${keyId}/enable`,
+    );
   },
 
   /**
@@ -59,14 +66,18 @@ export const authApi = {
    * @param keyId The id of the API key to disable
    */
   disableApiKey: async (keyId: string): Promise<ApiResponse<ApiKey>> => {
-    return await patch<ApiKey>(`/v1/authentication/api-key/${keyId}/disable`);
+    return await sharedClient.patch<ApiKey>(
+      `/v1/authentication/api-key/${keyId}/disable`,
+    );
   },
 
   /**
    * Delete an API key
    * @param keyId The id of the API key to delete
    */
-  deleteApiKey: async (keyId: string): Promise<ApiResponse<any>> => {
-    return del(`/v1/authentication/api-key/${keyId}`);
+  deleteApiKey: async (keyId: string): Promise<ApiResponse<void>> => {
+    return await sharedClient.delete<void>(
+      `/v1/authentication/api-key/${keyId}`,
+    );
   },
 };

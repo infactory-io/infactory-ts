@@ -1,11 +1,10 @@
-import { fetchApi } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 
 export interface TableInfo {
   name: string;
-  estimated_rows: number;
-  estimated_size: string;
-  column_count: number;
+  estimatedRows: number;
+  estimatedSize: string;
+  columnCount: number;
 }
 
 export interface TestConnectionResponse {
@@ -14,33 +13,33 @@ export interface TestConnectionResponse {
 }
 
 export interface SampleTablesRequest {
-  connection_string: string;
-  table_names: string[];
-  project_id: string;
-  datasource_id: string;
+  connectionString: string;
+  tableNames: string[];
+  projectId: string;
+  datasourceId: string;
   name: string;
 }
 
 export interface I7YPendingJob {
-  job_type: string;
-  project_id: string;
-  user_id: string | null;
-  parent_job_id: string | null;
+  jobType: string;
+  projectId: string;
+  userId: string | null;
+  parentJobId: string | null;
   metadata: any;
   payload: Record<string, any>;
 }
 
 export interface SampleTablesResponse {
-  data_objects: Record<string, string>; // table_name -> data_object_id mapping
+  dataObjects: Record<string, string>; // table_name -> data_object_id mapping
   jobs: I7YPendingJob[];
 }
 
 export interface ExecuteCustomSqlRequest {
-  connection_string: string;
-  sql_query: string;
-  sampling_sql_query: string;
-  project_id: string;
-  datasource_id: string;
+  connectionString: string;
+  sqlQuery: string;
+  samplingSqlQuery: string;
+  projectId: string;
+  datasourceId: string;
   name: string;
 }
 
@@ -49,12 +48,12 @@ export interface ExecuteCustomSqlResponse {
 }
 
 export interface ValidateSqlQueryRequest {
-  connection_string: string;
-  sql_query: string;
+  connectionString: string;
+  sqlQuery: string;
 }
 
 export interface ValidateSqlQueryResponse {
-  row_count: number;
+  rowCount: number;
   valid: boolean;
   message?: string;
 }
@@ -64,48 +63,48 @@ export interface SqlParameter {
   field: string;
   operator: string;
   value: string;
-  display_name: string;
+  displayName: string;
 }
 
 export interface ExtractSqlParametersRequest {
-  sql_query: string;
+  sqlQuery: string;
 }
 
 export interface ExtractSqlParametersResponse {
   parameters: SqlParameter[];
-  parsed_query: string;
+  parsedQuery: string;
 }
 
 export const databaseApi = {
   testConnection: async (
     connectionString: string,
   ): Promise<ApiResponse<TestConnectionResponse>> => {
-    return fetchApi<TestConnectionResponse>('/v1/database/test-connection', {
-      method: 'POST',
-      body: JSON.stringify({ connectionString }),
-    });
+    return sharedClient.post<TestConnectionResponse>(
+      '/v1/database/test-connection',
+      {
+        body: { connectionString },
+      },
+    );
   },
 
   validateSqlQuery: async (
     request: ValidateSqlQueryRequest,
   ): Promise<ApiResponse<ValidateSqlQueryResponse>> => {
-    return fetchApi<ValidateSqlQueryResponse>(
+    return sharedClient.post<ValidateSqlQueryResponse>(
       '/v1/database/validate-sql-query',
       {
-        method: 'POST',
-        body: JSON.stringify(request),
+        body: request,
       },
     );
   },
 
   extractSqlParameters: async (
-    sql_query: string,
+    sqlQuery: string,
   ): Promise<ApiResponse<ExtractSqlParametersResponse>> => {
-    return fetchApi<ExtractSqlParametersResponse>(
+    return sharedClient.post<ExtractSqlParametersResponse>(
       '/v1/database/extract-sql-parameters',
       {
-        method: 'POST',
-        body: JSON.stringify({ sql_query }),
+        body: { sqlQuery },
       },
     );
   },
@@ -113,20 +112,21 @@ export const databaseApi = {
   sampleTables: async (
     request: SampleTablesRequest,
   ): Promise<ApiResponse<SampleTablesResponse>> => {
-    return fetchApi<SampleTablesResponse>('/v1/database/sample-tables', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+    return sharedClient.post<SampleTablesResponse>(
+      '/v1/database/sample-tables',
+      {
+        body: request,
+      },
+    );
   },
 
   executeCustomSql: async (
     request: ExecuteCustomSqlRequest,
   ): Promise<ApiResponse<ExecuteCustomSqlResponse>> => {
-    return fetchApi<ExecuteCustomSqlResponse>(
+    return sharedClient.post<ExecuteCustomSqlResponse>(
       '/v1/database/execute-custom-sql',
       {
-        method: 'POST',
-        body: JSON.stringify(request),
+        body: request,
       },
     );
   },

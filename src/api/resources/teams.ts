@@ -40,7 +40,7 @@ export const teamsApi = {
     return await sharedClient.post<TeamMembership>(
       `/v1/teams/${teamId}/memberships`,
       {
-        user_id: userId,
+        userId: userId,
       },
     );
   },

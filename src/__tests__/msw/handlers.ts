@@ -12,10 +12,10 @@ export const handlers = [
         id: 'user-test-1',
         email: 'test@example.com',
         name: 'Test User',
-        clerk_user_id: 'clerk-test-id',
-        organization_id: 'org-test-1',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
+        clerk_userId: 'clerk-test-id',
+        organizationId: 'org-test-1',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
       },
       { status: 200 },
     );
@@ -29,17 +29,17 @@ export const handlers = [
           id: 'proj-test-1',
           name: 'Test Project 1',
           description: 'Test project for MSW testing',
-          team_id: 'team-test-1',
-          created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-01-01T00:00:00Z',
+          teamId: 'team-test-1',
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z',
         },
         {
           id: 'proj-test-2',
           name: 'Test Project 2',
           description: 'Another test project for MSW testing',
-          team_id: 'team-test-1',
-          created_at: '2023-02-01T00:00:00Z',
-          updated_at: '2023-02-01T00:00:00Z',
+          teamId: 'team-test-1',
+          createdAt: '2023-02-01T00:00:00Z',
+          updatedAt: '2023-02-01T00:00:00Z',
         },
       ],
       { status: 200 },
@@ -59,9 +59,9 @@ export const handlers = [
         id: projectId,
         name: `Test Project ${String(projectId)}`,
         description: 'Test project retrieved with MSW',
-        team_id: 'team-test-1',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
+        teamId: 'team-test-1',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
       },
       { status: 200 },
     );
@@ -77,8 +77,8 @@ export const handlers = [
       {
         id: 'new-proj-test-1',
         ...body,
-        created_at: '2023-03-01T00:00:00Z',
-        updated_at: '2023-03-01T00:00:00Z',
+        createdAt: '2023-03-01T00:00:00Z',
+        updatedAt: '2023-03-01T00:00:00Z',
       },
       { status: 200 },
     );
@@ -87,11 +87,11 @@ export const handlers = [
   // Mock getQueryProgramsByProject endpoint
   http.get(`${API_BASE_URL}/v1/queryprograms`, ({ request }) => {
     const url = new URL(request.url);
-    const projectId = url.searchParams.get('project_id');
+    const projectId = url.searchParams.get('projectId');
 
     if (!projectId) {
       return HttpResponse.json(
-        { error: 'Missing project_id parameter' },
+        { error: 'Missing projectId parameter' },
         { status: 400 },
       );
     }
@@ -101,16 +101,16 @@ export const handlers = [
         {
           id: 'qp-test-1',
           name: 'Test Query Program 1',
-          project_id: projectId,
-          created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-01-01T00:00:00Z',
+          projectId: projectId,
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z',
         },
         {
           id: 'qp-test-2',
           name: 'Test Query Program 2',
-          project_id: projectId,
-          created_at: '2023-01-05T00:00:00Z',
-          updated_at: '2023-01-05T00:00:00Z',
+          projectId: projectId,
+          createdAt: '2023-01-05T00:00:00Z',
+          updatedAt: '2023-01-05T00:00:00Z',
         },
       ],
       { status: 200 },
@@ -142,9 +142,9 @@ export const handlers = [
           id: queryProgramId,
           name: 'Test Query Program',
           published: true,
-          project_id: 'proj-test-1',
-          created_at: '2023-01-01T00:00:00Z',
-          updated_at: '2023-03-01T00:00:00Z',
+          projectId: 'proj-test-1',
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-03-01T00:00:00Z',
         },
         { status: 200 },
       );

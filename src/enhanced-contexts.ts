@@ -111,7 +111,7 @@ export class ProjectContext {
     try {
       return await this.client.datasources.createDatasource({
         ...params,
-        project_id: this.projectId,
+        projectId: this.projectId,
       });
     } catch (error) {
       return {
@@ -157,7 +157,7 @@ export class ProjectContext {
     try {
       return await this.client.queryprograms.createQueryProgram({
         ...params,
-        project_id: this.projectId,
+        projectId: this.projectId,
       });
     } catch (error) {
       return {
@@ -175,7 +175,7 @@ export class ProjectContext {
   async getQueryPrograms(): Promise<ApiResponse<QueryProgram[]>> {
     try {
       return await this.client.queryprograms.listQueryPrograms({
-        project_id: this.projectId,
+        projectId: this.projectId,
       });
     } catch (error) {
       return {
@@ -210,7 +210,7 @@ export class ProjectContext {
     try {
       return await this.client.apis.createApi({
         ...params,
-        project_id: this.projectId,
+        projectId: this.projectId,
       });
     } catch (error) {
       return {
@@ -516,11 +516,11 @@ export class OrganizationContext {
    * Creates a team in the current organization
    */
   async createTeam(
-    params: Omit<CreateTeamParams, 'organization_id'>,
+    params: Omit<CreateTeamParams, 'organizationId'>,
   ): Promise<ApiResponse<Team>> {
     return this.client.teams.createTeam({
       ...params,
-      organization_id: this.organizationId,
+      organizationId: this.organizationId,
     });
   }
 
@@ -555,11 +555,11 @@ export class TeamContext {
    * Creates a project in the current team
    */
   async createProject(
-    params: Omit<CreateProjectParams, 'team_id'>,
+    params: Omit<CreateProjectParams, 'teamId'>,
   ): Promise<ApiResponse<Project>> {
     return this.client.projects.createProject({
       ...params,
-      team_id: this.teamId,
+      teamId: this.teamId,
     });
   }
 
@@ -711,7 +711,7 @@ export class ApiContext {
   async createEndpoint(params: any): Promise<ApiResponse<APIEndpoint>> {
     return this.client.apis.createApiEndpoint({
       ...params,
-      api_id: this.apiId,
+      apiId: this.apiId,
     });
   }
 }
@@ -773,11 +773,11 @@ export class QueryProgramBuilder {
       // since it's not directly in the CreateQueryProgramParams interface
       const createResponse = await this.client.queryprograms.createQueryProgram(
         {
-          project_id: this.projectId,
+          projectId: this.projectId,
           name: this.name || `Query: ${this.question.substring(0, 30)}...`,
           query: this.question, // Use query field instead of question to match the API
-          datasource_ids: [this.datasourceId], // Add the datasource ID to the API call
-        } as CreateQueryProgramParams & { datasource_ids: string[] },
+          datasourceIds: [this.datasourceId], // Add the datasource ID to the API call
+        } as CreateQueryProgramParams & { datasourceIds: string[] },
       );
 
       if (createResponse.error) {

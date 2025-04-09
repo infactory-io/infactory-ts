@@ -105,7 +105,7 @@ The SDK provides access to the following Infactory API resources:
 // Create a new project
 const projectResponse = await client.projects.createProject({
   name: 'Stock Analysis Project',
-  team_id: teamId,
+  teamId: teamId,
   description: 'Project for analyzing stock data',
 });
 const project = projectResponse.data;
@@ -113,7 +113,7 @@ const project = projectResponse.data;
 // Create a datasource
 const datasourceResponse = await client.datasources.createDatasource({
   name: 'Stock Data',
-  project_id: project.id,
+  projectId: project.id,
   type: 'csv',
 });
 const datasource = datasourceResponse.data;
@@ -124,7 +124,7 @@ formData.append('file', fs.createReadStream('./data/stocks.csv'));
 
 // Upload using the datasource
 await fetch(
-  `${client.getBaseURL()}/v1/actions/load/${project.id}?datasource_id=${datasource.id}`,
+  `${client.getBaseURL()}/v1/actions/load/${project.id}?datasourceId=${datasource.id}`,
   {
     method: 'POST',
     headers: {

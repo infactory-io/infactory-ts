@@ -331,46 +331,46 @@ async function waitForQueryPrograms(
 async function customSubmitJob(
   client: InfactoryClient,
   params: {
-    project_id: string;
-    job_type: string;
+    projectId: string;
+    jobType: string;
     payload?: Record<string, any>;
-    do_not_send_to_queue?: boolean;
-    source_id?: string;
+    doNotSendToQueue?: boolean;
+    sourceId?: string;
     source?: string;
-    source_event_type?: string;
-    source_metadata?: Record<string, any> | string;
+    sourceEventType?: string;
+    sourceMetadata?: Record<string, any> | string;
   },
 ): Promise<string> {
   const jobLogger = new Logger('job_submit');
 
   // Prepare the job data
   const data: Record<string, any> = {
-    project_id: params.project_id,
-    job_type: params.job_type,
-    do_not_send_to_queue: params.do_not_send_to_queue !== false,
+    projectId: params.projectId,
+    jobType: params.jobType,
+    doNotSendToQueue: params.doNotSendToQueue !== false,
   };
 
   if (params.payload) {
     data.payload = params.payload;
   }
 
-  if (params.source_id) {
-    data.source_id = params.source_id;
+  if (params.sourceId) {
+    data.sourceId = params.sourceId;
   }
 
   if (params.source) {
     data.source = params.source;
   }
 
-  if (params.source_event_type) {
-    data.source_event_type = params.source_event_type;
+  if (params.sourceEventType) {
+    data.sourceEventType = params.sourceEventType;
   }
 
-  if (params.source_metadata) {
-    if (typeof params.source_metadata === 'object') {
-      data.source_metadata = JSON.stringify(params.source_metadata);
+  if (params.sourceMetadata) {
+    if (typeof params.sourceMetadata === 'object') {
+      data.sourceMetadata = JSON.stringify(params.sourceMetadata);
     } else {
-      data.source_metadata = params.source_metadata;
+      data.sourceMetadata = params.sourceMetadata;
     }
   }
 
@@ -454,7 +454,7 @@ async function main() {
       console.log('No teams found. Creating a new team...');
       const teamResponse = await client.teams.createTeam({
         name: `Team_${organization.id}`,
-        organization_id: organization.id,
+        organizationId: organization.id,
       });
       if (teamResponse.error) {
         console.error(`Error creating team: ${teamResponse.error.message}`);
@@ -478,7 +478,7 @@ async function main() {
 
     const projectResponse = await client.projects.createProject({
       name: projectName,
-      team_id: team.id,
+      teamId: team.id,
       description: 'Test project for stock data analysis',
     });
 
@@ -512,7 +512,7 @@ async function main() {
     // Create the datasource
     const datasourceResponse = await client.datasources.createDatasource({
       name: datasourceName,
-      project_id: project.id,
+      projectId: project.id,
       type: datasourceType,
     });
 
@@ -541,29 +541,29 @@ async function main() {
 
     // Create a job for the upload
     const jobPayload = {
-      datasource_id: datasource.id,
-      file_name: fileName,
-      file_size: fileSize,
-      dataset_name: datasourceName,
+      datasourceId: datasource.id,
+      fileName: fileName,
+      fileSize: fileSize,
+      datasetName: datasourceName,
     };
 
     const jobMetadata = {
-      file_name: fileName,
-      file_size: fileSize,
-      dataset_name: datasourceName,
+      fileName: fileName,
+      fileSize: fileSize,
+      datasetName: datasourceName,
     };
 
     // Submit the job using our custom function
     console.log('Submitting job for upload tracking...');
     const jobId = await customSubmitJob(client, {
-      project_id: project.id,
-      job_type: 'upload',
+      projectId: project.id,
+      jobType: 'upload',
       payload: jobPayload,
-      do_not_send_to_queue: true,
-      source_id: datasource.id,
+      doNotSendToQueue: true,
+      sourceId: datasource.id,
       source: 'datasource',
-      source_event_type: 'file_upload',
-      source_metadata: jobMetadata,
+      sourceEventType: 'file_upload',
+      sourceMetadata: jobMetadata,
     });
 
     if (!jobId) {
@@ -579,12 +579,12 @@ async function main() {
     // Create FormData with the file
     const formData = new FormData();
     formData.append('file', fs.createReadStream(CSV_FILE));
-    formData.append('datasource_id', datasource.id);
+    formData.append('datasourceId', datasource.id);
     formData.append('job_id', jobId);
 
     // Use the correct endpoint format
     const uploadResponse = await fetch(
-      `https://daily-api.infactory.ai/v1/actions/load/${project.id}?job_id=${jobId}&datasource_id=${datasource.id}`,
+      `https://daily-api.infactory.ai/v1/actions/load/${project.id}?job_id=${jobId}&datasourceId=${datasource.id}`,
       {
         method: 'POST',
         headers: {
@@ -724,7 +724,7 @@ async function main() {
       for (let i = 0; i < apis.length; i++) {
         const api = apis[i];
         console.log(`  ${i + 1}. API ID: ${api.id}`);
-        console.log(`     Path: ${api.base_path || 'Unknown'}`);
+        console.log(`     Path: ${api.basePath || 'Unknown'}`);
         console.log(`     Name: ${api.name || 'Unnamed'}`);
         console.log(`     Description: ${api.description || 'Unknown'}`);
         console.log(`     Version: ${api.version || 'v1'}`);
@@ -743,18 +743,18 @@ async function main() {
           for (let j = 0; j < endpoints.length; j++) {
             const endpoint = endpoints[j];
             console.log(
-              `       ${j + 1}. ${endpoint.http_method} ${endpoint.path} - ${endpoint.name || 'Unnamed'}`,
+              `       ${j + 1}. ${endpoint.httpMethod} ${endpoint.path} - ${endpoint.name || 'Unnamed'}`,
             );
           }
 
           // Try to get OpenAPI spec if available
           console.log('\n     API Documentation (OpenAPI):');
           console.log(
-            `       URL: ${client.getBaseURL()}/live/${api.base_path}/${api.version}/openapi.json`,
+            `       URL: ${client.getBaseURL()}/live/${api.basePath}/${api.version}/openapi.json`,
           );
           console.log('\n     LLM Tools Compatibility:');
           console.log(
-            `       URL: ${client.getBaseURL()}/live/${api.base_path}/${api.version}/tools.json`,
+            `       URL: ${client.getBaseURL()}/live/${api.basePath}/${api.version}/tools.json`,
           );
 
           // Step 10: Make API requests with default parameters
@@ -765,12 +765,12 @@ async function main() {
 
             for (let j = 0; j < endpoints.length; j++) {
               const endpoint = endpoints[j];
-              const url = `${client.getBaseURL()}/live/${api.base_path}/${api.version}/${endpoint.path}`;
-              console.log(`  ${j + 1}. ${endpoint.http_method} ${url}`);
+              const url = `${client.getBaseURL()}/live/${api.basePath}/${api.version}/${endpoint.path}`;
+              console.log(`  ${j + 1}. ${endpoint.httpMethod} ${url}`);
 
               try {
                 const response = await fetch(url, {
-                  method: endpoint.http_method,
+                  method: endpoint.httpMethod,
                   headers: {
                     Authorization: `Bearer ${client.getApiKey()}`,
                     'Content-Type': 'application/json',

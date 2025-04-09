@@ -17,6 +17,68 @@ export const SDK_VERSION = '0.5.3';
 const API_BASE_URL = '/api/infactory';
 
 /**
+ * Converts a camelCase string to snake_case.
+ * @param key - The string to convert.
+ * @returns The snake_case string.
+ */
+function toSnakeCase(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/**
+ * Converts a snake_case string to camelCase.
+ * @param key - The string to convert.
+ * @returns The camelCase string.
+ */
+function toCamelCase(key: string): string {
+  return key.replace(/_([a-z])/g, (_, letter: string): string =>
+    letter.toUpperCase(),
+  );
+}
+
+/**
+ * Recursively converts all object keys from camelCase to snake_case.
+ * @param obj - The object to convert.
+ * @returns The converted object.
+ */
+function decamelizeKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map(decamelizeKeys) as unknown;
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result: Record<string, unknown>, key) => {
+      const newKey = toSnakeCase(key);
+      const newResult = decamelizeKeys((obj as Record<string, unknown>)[key]);
+      result[newKey] = newResult;
+      return result;
+    }, {});
+  }
+  return obj;
+}
+
+/**
+ * Recursively converts all object keys from snake_case to camelCase.
+ * @param obj - The object to convert.
+ * @returns The converted object.
+ */
+function camelizeKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map(camelizeKeys);
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce(
+      (result: Record<string, unknown>, key) => {
+        const newKey = toCamelCase(key);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        (result as any)[newKey] = camelizeKeys((obj as any)[key]);
+        delete (result as any)[key];
+        return result;
+      },
+      {} as Record<string, unknown>,
+    );
+  }
+  return obj;
+}
+
+/**
  * Represents a request interceptor function.
  * @template T - The type of the request data.
  */
@@ -101,6 +163,44 @@ export class HttpClient {
 
     // Add default SDK version header
     this.defaultHeaders['x-infactory-sdk-version'] = SDK_VERSION;
+
+    // Add case conversion interceptor
+    this.addRequestInterceptor((request: HttpRequest) => {
+      // Convert query parameters to snake_case
+      if (request.params) {
+        request.params = decamelizeKeys(request.params) || {};
+      }
+
+      // Convert JSON body to snake_case
+      if (request.jsonBody) {
+        request.jsonBody = decamelizeKeys(request.jsonBody);
+      }
+
+      return request;
+    });
+
+    // Add response case conversion interceptor
+    this.addResponseInterceptor(
+      async (response: Response, _request: HttpRequest) => {
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          // Clone the response to avoid consuming the body stream
+          const clonedResponse = response.clone();
+          const data = await clonedResponse.json();
+
+          // Convert the response data from snake_case to camelCase
+          const camelizedData = camelizeKeys(data);
+
+          // Create a new response with the converted data
+          return new Response(JSON.stringify(camelizedData), {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+        }
+        return response;
+      },
+    );
   }
 
   /**

@@ -1,9 +1,8 @@
-import { get, post, put, del } from '@/core/client.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 import {
   API,
   CreateAPIParams,
   APIEndpoint,
-  ApiResponse,
   QueryProgram,
   CreateAPIEndpointParams,
 } from '@/types/common.js';
@@ -11,7 +10,7 @@ import {
 export const apisApi = {
   // Get all APIs for a project
   getProjectApis: async (projectId: string): Promise<ApiResponse<API[]>> => {
-    return await get<API[]>(`/v1/apis/project/${projectId}`);
+    return await sharedClient.get<API[]>(`/v1/apis/project/${projectId}`);
   },
 
   // Get all published query programs for a project
@@ -21,19 +20,19 @@ export const apisApi = {
     if (!projectId) {
       throw new Error('Project ID is required');
     }
-    return await get<QueryProgram[]>(
+    return await sharedClient.get<QueryProgram[]>(
       `/v1/apis/project/${projectId}/published-programs`,
     );
   },
 
   // Get a specific API
   getApi: async (apiId: string): Promise<ApiResponse<API>> => {
-    return await get<API>(`/v1/apis/${apiId}`);
+    return await sharedClient.get<API>(`/v1/apis/${apiId}`);
   },
 
   // Create a new API
   createApi: async (params: CreateAPIParams): Promise<ApiResponse<API>> => {
-    return await post<API, CreateAPIParams>('/v1/apis', {
+    return await sharedClient.post<API>('/v1/apis', {
       body: params,
     });
   },
@@ -43,13 +42,13 @@ export const apisApi = {
     apiId: string,
     params: Partial<API>,
   ): Promise<ApiResponse<API>> => {
-    return await put<API>(`/v1/apis/${apiId}`, { params: params });
+    return await sharedClient.patch<API>(`/v1/apis/${apiId}`, { body: params });
   },
 
   // Delete an API
   deleteApi: async (apiId: string): Promise<ApiResponse<void>> => {
-    return await del<void>(`/v1/apis/${apiId}`, {
-      params: { hard_delete: true },
+    return await sharedClient.delete<void>(`/v1/apis/${apiId}`, {
+      params: { hardDelete: true },
     });
   },
 
@@ -57,14 +56,18 @@ export const apisApi = {
   getApiEndpoints: async (
     apiId: string,
   ): Promise<ApiResponse<APIEndpoint[]>> => {
-    return await get<APIEndpoint[]>(`/v1/apis/endpoints/api/${apiId}`);
+    return await sharedClient.get<APIEndpoint[]>(
+      `/v1/apis/endpoints/api/${apiId}`,
+    );
   },
 
   // Get a specific endpoint
   getApiEndpoint: async (
     endpointId: string,
   ): Promise<ApiResponse<APIEndpoint>> => {
-    return await get<APIEndpoint>(`/v1/apis/endpoints/${endpointId}`);
+    return await sharedClient.get<APIEndpoint>(
+      `/v1/apis/endpoints/${endpointId}`,
+    );
   },
 
   // Update an endpoint
@@ -72,15 +75,18 @@ export const apisApi = {
     endpointId: string,
     params: Partial<APIEndpoint>,
   ): Promise<ApiResponse<APIEndpoint>> => {
-    return await put<APIEndpoint>(`/v1/apis/endpoints/${endpointId}`, {
-      params: params,
-    });
+    return await sharedClient.patch<APIEndpoint>(
+      `/v1/apis/endpoints/${endpointId}`,
+      {
+        body: params,
+      },
+    );
   },
 
   // Delete an endpoint
   deleteApiEndpoint: async (endpointId: string): Promise<ApiResponse<void>> => {
-    return await del<void>(`/v1/apis/endpoints/${endpointId}`, {
-      params: { hard_delete: true },
+    return await sharedClient.delete<void>(`/v1/apis/endpoints/${endpointId}`, {
+      params: { hardDelete: true },
     });
   },
 
@@ -92,25 +98,22 @@ export const apisApi = {
 
     // Body parameters
     const bodyParams = {
-      api_id: params.api_id,
-      endpoint_name: params.endpoint_name,
-      http_method: params.http_method,
+      apiId: params.apiId,
+      endpointName: params.endpointName,
+      httpMethod: params.httpMethod,
       path: params.path,
-      queryprogram_id: params.queryprogram_id,
+      queryprogramId: params.queryprogramId,
       description: params.description,
-      operation_id: params.operation_id,
+      operationId: params.operationId,
       tags: params.tags || undefined,
       parameters: params.parameters || undefined,
-      request_body: params.request_body || undefined,
+      requestBody: params.requestBody || undefined,
       responses: params.responses || undefined,
       security: params.security || undefined,
     };
 
-    return await post<APIEndpoint, CreateAPIEndpointParams>(
-      `/v1/apis/endpoints`,
-      {
-        body: bodyParams,
-      },
-    );
+    return await sharedClient.post<APIEndpoint>(`/v1/apis/endpoints`, {
+      body: bodyParams,
+    });
   },
 };

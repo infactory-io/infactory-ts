@@ -1,19 +1,18 @@
-import { fetchApi } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 import { I7YPendingJob } from './database.js';
 
 export interface ContainerInfo {
   name: string;
-  document_count: number;
-  size_in_kb: number;
-  partition_key: string;
+  documentCount: number;
+  sizeInKb: number;
+  partitionKey: string;
 }
 
 export interface TestCosmosConnectionRequest {
   endpoint: string;
   key: string;
-  database_name: string;
-  max_containers?: number;
+  databaseName: string;
+  maxContainers?: number;
 }
 
 export interface TestCosmosConnectionResponse {
@@ -25,10 +24,10 @@ export interface TestCosmosConnectionResponse {
 export interface SampleContainerRequest {
   endpoint: string;
   key: string;
-  database_name: string;
-  container_names: string[];
-  project_id: string;
-  datasource_id: string;
+  databaseName: string;
+  containerNames: string[];
+  projectId: string;
+  datasourceId: string;
   name?: string;
 }
 
@@ -39,34 +38,34 @@ export interface SampleContainersResponse {
 export interface ExecuteCosmosQueryRequest {
   endpoint: string;
   key: string;
-  database_name: string;
-  container_name: string;
+  databaseName: string;
+  containerName: string;
   query: string;
-  project_id: string;
-  datasource_id: string;
-  query_metadata?: Record<string, any>;
+  projectId: string;
+  datasourceId: string;
+  queryMetadata?: Record<string, any>;
   name?: string;
 }
 
 export interface ExecuteCosmosQueryResponse {
-  query_id: string;
-  data_id: string;
-  row_count: number;
-  sql_query?: string;
+  queryId: string;
+  dataId: string;
+  rowCount: number;
+  sqlQuery?: string;
 }
 
 export interface ValidateCosmosQueryRequest {
   endpoint: string;
   key: string;
-  database_name: string;
-  container_name: string;
+  databaseName: string;
+  containerName: string;
   query: string;
 }
 
 export interface ValidateCosmosQueryResponse {
   valid: boolean;
   message?: string;
-  row_count?: number;
+  rowCount?: number;
 }
 
 export interface CosmosQueryParameter {
@@ -74,7 +73,7 @@ export interface CosmosQueryParameter {
   field: string;
   operator: string;
   value: string;
-  display_name: string;
+  displayName: string;
 }
 
 export interface ExtractCosmosParametersRequest {
@@ -83,25 +82,24 @@ export interface ExtractCosmosParametersRequest {
 
 export interface ExtractCosmosParametersResponse {
   parameters: CosmosQueryParameter[];
-  parsed_query: string;
+  parsedQuery: string;
 }
 
 export interface ExtractParametersResponse {
   parameters?: { name: string; value: string }[];
-  parsed_query?: string;
+  parsedQuery?: string;
 }
 
 export const cosmosApi = {
   testConnection: async (connectionDetails: {
     endpoint: string;
     key: string;
-    database_name: string;
+    databaseName: string;
   }): Promise<ApiResponse<TestCosmosConnectionResponse>> => {
-    return fetchApi<TestCosmosConnectionResponse>(
+    return sharedClient.post<TestCosmosConnectionResponse>(
       '/v1/cosmos/cosmos/test-connection',
       {
-        method: 'POST',
-        body: JSON.stringify(connectionDetails),
+        body: connectionDetails,
       },
     );
   },
@@ -109,15 +107,14 @@ export const cosmosApi = {
   validateQuery: async (params: {
     endpoint: string;
     key: string;
-    database_name: string;
-    container_name: string;
+    databaseName: string;
+    containerName: string;
     query: string;
   }): Promise<ApiResponse<ValidateCosmosQueryResponse>> => {
-    return fetchApi<ValidateCosmosQueryResponse>(
+    return sharedClient.post<ValidateCosmosQueryResponse>(
       '/v1/cosmos/cosmos/validate-query',
       {
-        method: 'POST',
-        body: JSON.stringify(params),
+        body: params,
       },
     );
   },
@@ -125,11 +122,10 @@ export const cosmosApi = {
   extractParameters: async (
     query: string,
   ): Promise<ApiResponse<ExtractParametersResponse>> => {
-    return fetchApi<ExtractParametersResponse>(
+    return sharedClient.post<ExtractParametersResponse>(
       '/v1/cosmos/cosmos/extract-parameters',
       {
-        method: 'POST',
-        body: JSON.stringify({ query }),
+        body: { query },
       },
     );
   },
@@ -137,17 +133,16 @@ export const cosmosApi = {
   sampleContainers: async (params: {
     endpoint: string;
     key: string;
-    database_name: string;
-    container_names: string[];
-    project_id: string;
-    datasource_id: string;
+    databaseName: string;
+    containerNames: string[];
+    projectId: string;
+    datasourceId: string;
     name?: string;
   }): Promise<ApiResponse<SampleContainersResponse>> => {
-    return fetchApi<SampleContainersResponse>(
+    return sharedClient.post<SampleContainersResponse>(
       '/v1/cosmos/cosmos/sample-containers',
       {
-        method: 'POST',
-        body: JSON.stringify(params),
+        body: params,
       },
     );
   },
@@ -155,19 +150,18 @@ export const cosmosApi = {
   executeQuery: async (params: {
     endpoint: string;
     key: string;
-    database_name: string;
-    container_name: string;
+    databaseName: string;
+    containerName: string;
     query: string;
-    project_id: string;
-    datasource_id: string;
-    query_metadata?: Record<string, any>;
+    projectId: string;
+    datasourceId: string;
+    queryMetadata?: Record<string, any>;
     name?: string;
   }): Promise<ApiResponse<ExecuteCosmosQueryResponse>> => {
-    return fetchApi<ExecuteCosmosQueryResponse>(
+    return sharedClient.post<ExecuteCosmosQueryResponse>(
       '/v1/cosmos/cosmos/execute-query',
       {
-        method: 'POST',
-        body: JSON.stringify(params),
+        body: params,
       },
     );
   },

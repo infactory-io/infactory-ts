@@ -2,36 +2,36 @@
 
 export interface ChatMessage {
   id: string;
-  author_user_id: string | null;
-  node_id: string | null;
-  conversation_id: string;
-  author_role: string;
-  author_name: string | null;
-  author_metadata: string | null;
-  created_at: string;
-  updated_at: string;
-  content_type: string;
-  content_text: string | null;
+  authorUserId: string | null;
+  nodeId: string | null;
+  conversationId: string;
+  authorRole: string;
+  authorName: string | null;
+  authorMetadata: string | null;
+  createdAt: string;
+  updatedAt: string;
+  contentType: string;
+  contentText: string | null;
   data: Record<string, any> | null; // TODO replace with specific types
-  react_element: any; // Generic replacement for ReactNode
-  response_format: string | null;
+  reactElement: any; // Generic replacement for ReactNode
+  responseFormat: string | null;
   status: string;
-  end_turn: boolean | null;
+  endTurn: boolean | null;
   weight: number;
   recipient: string;
   channel: string | null;
 
   // Enhanced metadata fields
-  request_id: string | null;
+  requestId: string | null;
 
   // Tool usage and execution results
-  aggregate_result: string | null;
-  tool_messages: string | null;
-  finish_details: string | null;
+  aggregateResult: string | null;
+  toolMessages: string | null;
+  finishDetails: string | null;
   attachments: string | null;
-  formatted_content: string | null;
+  formattedContent: string | null;
   thinking: string | null;
-  result_type: string | null;
+  resultType: string | null;
   text: string | null;
 
   // Relations - these will be populated by Prisma
@@ -42,13 +42,13 @@ export interface ChatMessage {
 
 interface BaseGraphItem {
   id: string;
-  created_at: string; // ISO datetime string
+  createdAt: string; // ISO datetime string
   kind: 'node' | 'group';
 }
 
 export interface MessageStatus {
   kind: 'thinking' | 'done' | 'stopped' | 'error';
-  content_type?: string;
+  contentType?: string;
   content: string | null;
   data: Record<string, any> | null;
 }
@@ -67,6 +67,6 @@ export interface GroupItem extends BaseGraphItem {
 export type GraphItem = NodeItem | GroupItem;
 
 export interface ConversationGraph {
-  conversation_id: string; // UUID string
+  conversationId: string; // UUID string
   items: GraphItem[];
 }

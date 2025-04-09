@@ -90,7 +90,7 @@ export class InfactoryClient {
 
     // Initialize the HTTP client
     this.httpClient = new HttpClient({
-      baseUrl: baseURL?.replace(/\/$/, '') ?? getConfig().base_url,
+      baseUrl: baseURL?.replace(/\/$/, '') ?? getConfig().baseUrl,
       apiKey,
       fetch,
       defaultHeaders: {

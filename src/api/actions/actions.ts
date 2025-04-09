@@ -1,5 +1,4 @@
-import { post } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 
 interface LoadAnalyzeResponse {
   result: string;
@@ -40,7 +39,7 @@ export const actionsApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return await post<LoadAnalyzeResponse, FormData>(
+    return await sharedClient.post<LoadAnalyzeResponse>(
       `/v1/actions/load/analyze/${projectId}/${dataobjectId}`,
       {
         body: formData,
@@ -55,9 +54,12 @@ export const actionsApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return await post<LoadResponse, FormData>(`/v1/actions/load/${projectId}`, {
-      body: formData,
-    });
+    return await sharedClient.post<LoadResponse>(
+      `/v1/actions/load/${projectId}`,
+      {
+        body: formData,
+      },
+    );
   },
 
   askEvaluate: async (
@@ -66,7 +68,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<AskEvaluateResponse>> => {
-    return await post<AskEvaluateResponse, string>(
+    return await sharedClient.post<AskEvaluateResponse>(
       `/v1/actions/ask/evaluate/${queryProgramId}/${transformFileId}/${datalineId}`,
       {
         body: query,
@@ -79,7 +81,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<AskResponse>> => {
-    return await post<AskResponse, string>(
+    return await sharedClient.post<AskResponse>(
       `/v1/actions/ask/${transformFileId}/${datalineId}`,
       {
         body: query,
@@ -92,7 +94,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<GenerateQueriesResponse>> => {
-    return await post<GenerateQueriesResponse, string>(
+    return await sharedClient.post<GenerateQueriesResponse>(
       `/v1/actions/generate/queries/${transformFileId}/${datalineId}`,
       {
         body: query,
@@ -106,7 +108,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<CompileResponse>> => {
-    return await post<CompileResponse, string>(
+    return await sharedClient.post<CompileResponse>(
       `/v1/actions/ask/compile/generate/${queryProgramId}/${transformFileId}/${datalineId}`,
       {
         body: query,
@@ -119,7 +121,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<CompileResponse>> => {
-    return await post<CompileResponse, string>(
+    return await sharedClient.post<CompileResponse>(
       `/v1/actions/ask/compile/${transformFileId}/${datalineId}`,
       {
         body: query,
@@ -133,7 +135,7 @@ export const actionsApi = {
     datalineId: string,
     query: string,
   ): Promise<ApiResponse<CompileResponse>> => {
-    return await post<CompileResponse, string>(
+    return await sharedClient.post<CompileResponse>(
       `/v1/actions/ask/compile/update/${queryProgramId}/${transformFileId}/${datalineId}`,
       {
         body: query,

@@ -54,7 +54,7 @@ export class AuthManager {
   constructor(options?: AuthOptions) {
     // Try to load API key from config if not provided in options
     const config = getConfig(false, false);
-    this.apiKey = options?.apiKey || config?.api_key || null;
+    this.apiKey = options?.apiKey || config?.apiKey || null;
     this.authHeaderName = options?.authHeaderName || 'Authorization';
     this.authScheme = options?.authScheme || 'Bearer';
 

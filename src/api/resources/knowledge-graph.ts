@@ -23,7 +23,7 @@ export const knowledgeGraphApi = {
    * @returns A list of knowledge graphs
    */
   listKnowledgeGraphs: async (
-    params?: PaginationParams & { project_id?: string },
+    params?: PaginationParams & { projectId?: string },
   ): Promise<ApiResponse<any[]>> => {
     return await sharedClient.get<any[]>(`/v1/knowledge-graph`, { params });
   },
@@ -36,7 +36,7 @@ export const knowledgeGraphApi = {
    */
   createKnowledgeGraph: async (params: {
     name: string;
-    project_id: string;
+    projectId: string;
     description?: string;
     schema?: any;
     config?: Record<string, any>;

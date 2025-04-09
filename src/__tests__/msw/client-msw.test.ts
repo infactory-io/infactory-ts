@@ -68,7 +68,7 @@ describe('InfactoryClient with MSW', () => {
       const projectData = {
         name: 'New MSW Test Project',
         description: 'Created during MSW testing',
-        team_id: 'team-test-1',
+        teamId: 'team-test-1',
       };
 
       const response = await client.projects.createProject(projectData);
@@ -99,7 +99,7 @@ describe('InfactoryClient with MSW', () => {
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
       expect(response.data?.length).toBe(2);
-      expect(response.data?.[0].project_id).toBe(projectId);
+      expect(response.data?.[0].projectId).toBe(projectId);
     });
 
     it('should execute a query program', async () => {

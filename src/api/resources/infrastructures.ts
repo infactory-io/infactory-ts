@@ -6,7 +6,7 @@ import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export const infrastructuresApi = {
   listInfrastructures: async (params?: {
-    organization_id?: string;
+    organizationId?: string;
     type?: string;
     page?: number;
     limit?: number;
@@ -70,13 +70,13 @@ export const infrastructuresApi = {
   ): Promise<
     ApiResponse<{
       status: 'active' | 'inactive' | 'error';
-      last_check: string;
+      lastCheck: string;
       error?: string;
     }>
   > => {
     return await sharedClient.get<{
       status: 'active' | 'inactive' | 'error';
-      last_check: string;
+      lastCheck: string;
       error?: string;
     }>(`/v1/infrastructures/${id}/status`);
   },
@@ -159,7 +159,7 @@ export const infrastructuresApi = {
   updateInfrastructureCredentials: async (
     id: string,
     params: {
-      credentials_id: string;
+      credentialsId: string;
     },
   ): Promise<ApiResponse<Infrastructure>> => {
     return await sharedClient.post<Infrastructure>(

@@ -1,5 +1,5 @@
-import { get, postStream } from '@/core/client.js';
-import { ApiResponse, FunctionMessageReference } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
+import { FunctionMessageReference } from '@/types/common.js';
 
 export interface OpenAPISpec {
   openapi: string;
@@ -27,14 +27,18 @@ export const liveApi = {
     apiSlug: string,
     version: string,
   ): Promise<ApiResponse<OpenAPISpec>> => {
-    return await get<OpenAPISpec>(`/live/${apiSlug}/${version}/openapi.json`);
+    return await sharedClient.get<OpenAPISpec>(
+      `/live/${apiSlug}/${version}/openapi.json`,
+    );
   },
 
   getTools: async (
     apiSlug: string,
     version: string,
   ): Promise<ApiResponse<ChatGPTTool[]>> => {
-    const res = await get<any>(`/live/${apiSlug}/${version}/tools.json`);
+    const res = await sharedClient.get<any>(
+      `/live/${apiSlug}/${version}/tools.json`,
+    );
     if (res.error) return res;
 
     const data = res.data;
@@ -76,7 +80,9 @@ export const liveApi = {
     if (host) {
       params['host'] = host;
     }
-    return await get<string>(`/live/${apiSlug}/${version}`, { params: params });
+    return await sharedClient.get<string>(`/live/${apiSlug}/${version}`, {
+      params: params,
+    });
   },
 
   callCustomEndpoint: async (
@@ -91,9 +97,12 @@ export const liveApi = {
         params[key] = value;
       });
     }
-    return await get<any>(`/live/${apiSlug}/${version}/${endpointPath}`, {
-      params: params,
-    });
+    return await sharedClient.get<any>(
+      `/live/${apiSlug}/${version}/${endpointPath}`,
+      {
+        params: params,
+      },
+    );
   },
 
   callCustomEndpointFromChat: async (
@@ -109,9 +118,12 @@ export const liveApi = {
         params[key] = value;
       });
     }
-    return postStream<any>(`/live/${apiSlug}/${version}/${endpointPath}`, {
+    const url = `/live/${apiSlug}/${version}/${endpointPath}`;
+    return sharedClient.createStream(url, {
+      url,
+      method: 'POST',
       params: params,
-      body: messageReference,
+      body: JSON.stringify(messageReference),
     });
   },
 };

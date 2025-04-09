@@ -9,22 +9,22 @@ import { BaseEntity } from './common.js';
 export interface DataObjectModel extends BaseEntity {
   bucket: string;
   key: string;
-  file_type: string;
-  file_size: number;
+  fileType: string;
+  fileSize: number;
   etag: string;
-  mime_type: string;
+  mimeType: string;
   metadata: Record<string, any> | null;
-  datasource_id: string;
-  downstream_lineage: LineageModel[] | null;
-  upstream_lineage: Record<string, any> | null;
+  datasourceId: string;
+  downstreamLineage: LineageModel[] | null;
+  upstreamLineage: Record<string, any> | null;
 }
 
 /**
  * Model for Lineage matching the OpenAPI schema
  */
 export interface LineageModel extends BaseEntity {
-  upstream_id: string | null;
-  downstream_id: string;
+  upstreamId: string | null;
+  downstreamId: string;
   transformation: string;
   metadata: Record<string, any> | null;
   downstream: Record<string, any> | null;
@@ -38,7 +38,7 @@ export interface DatasourceWithDataLinesModel extends BaseEntity {
   name: string | null;
   type: string | null;
   uri: string | null;
-  project_id: string;
+  projectId: string;
   credentials: Record<string, any> | null;
   status:
     | 'created'
@@ -56,12 +56,12 @@ export interface DatasourceWithDataLinesModel extends BaseEntity {
  * Model for FivetranWebhookPayload matching the OpenAPI schema
  */
 export interface FivetranWebhookPayload {
-  event_type: string;
-  created_at: string;
-  connector_id: string;
-  group_id: string;
-  connector_type: string;
-  destination_id: string;
+  eventType: string;
+  createdAt: string;
+  connectorId: string;
+  groupId: string;
+  connectorType: string;
+  destinationId: string;
   service: string;
   data: Record<string, any>;
 }

@@ -1,5 +1,4 @@
-import { post } from '@/core/client.js';
-import { ApiResponse } from '@/types/common.js';
+import { sharedClient, ApiResponse } from '@/core/shared-client.js';
 
 /**
  * Integration API endpoints
@@ -17,7 +16,7 @@ export const integrationsApi = {
     payload: Record<string, any>,
     signatureHeader: string,
   ): Promise<ApiResponse<any>> => {
-    return await post<any>('/v1/integrations/fivetran/webhook', {
+    return await sharedClient.post<any>('/v1/integrations/fivetran/webhook', {
       body: payload,
       headers: { 'X-Fivetran-Signature-256': signatureHeader },
     });

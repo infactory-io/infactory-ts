@@ -66,7 +66,7 @@ export const datasourcesApi = {
     return await sharedClient.post<Datasource>(
       `/v1/datasources/${datasourceId}/clone`,
       {
-        new_project_id: newProjectId,
+        new_projectId: newProjectId,
       },
     );
   },
@@ -80,7 +80,7 @@ export const datasourcesApi = {
     return await sharedClient.createStream(`/v1/actions/load/${projectId}`, {
       url: `/v1/actions/load/${projectId}`,
       method: 'POST',
-      params: { datasource_id: datasourceId, job_id: jobId },
+      params: { datasourceId: datasourceId, jobId: jobId },
       body: formData as unknown as BodyInit,
       headers: {
         Accept: 'text/event-stream',
@@ -128,7 +128,7 @@ export const datasourcesApi = {
       `/v1/datasources`,
       {
         name: actualDatasourceName,
-        project_id: projectId,
+        projectId: projectId,
         type: datasourceType,
       },
     );
@@ -147,16 +147,16 @@ export const datasourcesApi = {
 
     // Create a job payload for the upload
     const jobPayload = {
-      datasource_id: datasource.id,
-      file_name: fileName,
-      file_size: fileSize,
-      dataset_name: actualDatasourceName,
+      datasourceId: datasource.id,
+      fileName: fileName,
+      fileSize: fileSize,
+      datasetName: actualDatasourceName,
     };
 
     const jobMetadata = {
-      file_name: fileName,
-      file_size: fileSize,
-      dataset_name: actualDatasourceName,
+      fileName: fileName,
+      fileSize: fileSize,
+      datasetName: actualDatasourceName,
     };
 
     // Submit the job using custom function or default approach
@@ -165,26 +165,26 @@ export const datasourcesApi = {
     if (customSubmitJob) {
       // Use the provided custom submit job function
       jobId = await customSubmitJob(null, {
-        project_id: projectId,
-        job_type: 'upload',
+        projectId: projectId,
+        jobType: 'upload',
         payload: jobPayload,
-        do_not_send_to_queue: true,
-        source_id: datasource.id,
+        doNotSendToQueue: true,
+        sourceId: datasource.id,
         source: 'datasource',
-        source_event_type: 'file_upload',
-        source_metadata: JSON.stringify(jobMetadata),
+        sourceEventType: 'file_upload',
+        sourceMetadata: JSON.stringify(jobMetadata),
       });
     } else {
       // Use standard job submission
       const jobResponse = await sharedClient.post<string>('/v1/jobs/submit', {
-        project_id: projectId,
-        job_type: 'upload',
+        projectId: projectId,
+        jobType: 'upload',
         payload: jobPayload,
-        do_not_send_to_queue: true,
-        source_id: datasource.id,
+        doNotSendToQueue: true,
+        sourceId: datasource.id,
         source: 'datasource',
-        source_event_type: 'file_upload',
-        source_metadata: JSON.stringify(jobMetadata),
+        sourceEventType: 'file_upload',
+        sourceMetadata: JSON.stringify(jobMetadata),
       });
 
       if (jobResponse.error) {
@@ -201,6 +201,7 @@ export const datasourcesApi = {
     // Create FormData with the file
     const formData = new FormData();
     formData.append('file', fs.createReadStream(csvFilePath));
+    // NOTE: Keep the form data in snake case because the API expects it
     formData.append('datasource_id', datasource.id);
     formData.append('job_id', jobId);
 
@@ -209,8 +210,8 @@ export const datasourcesApi = {
       url: `/v1/actions/load/${projectId}`,
       method: 'POST',
       params: {
-        job_id: jobId,
-        datasource_id: datasource.id,
+        jobId: jobId,
+        datasourceId: datasource.id,
       },
       body: formData as unknown as BodyInit,
     });

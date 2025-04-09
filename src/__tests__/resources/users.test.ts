@@ -20,9 +20,9 @@ describe('Users API', () => {
         id: 'user-1',
         email: 'test@example.com',
         name: 'Test User',
-        clerk_user_id: 'clerk-123',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
+        clerk_userId: 'clerk-123',
+        createdAt: '2023-01-01T00:00:00Z',
+        updatedAt: '2023-01-01T00:00:00Z',
       };
 
       // Use the proper mock method from jest-fetch-mock

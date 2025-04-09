@@ -8,7 +8,7 @@ import { sharedClient, type ApiResponse } from '@/core/shared-client.js';
 
 export const queryProgramsApi = {
   listQueryPrograms: async (
-    params?: PaginationParams & { project_id?: string },
+    params?: PaginationParams & { projectId?: string },
   ): Promise<ApiResponse<QueryProgram[]>> => {
     return await sharedClient.get<QueryProgram[]>(`/v1/queryprograms`, {
       params,
@@ -20,10 +20,10 @@ export const queryProgramsApi = {
   },
 
   getQueryProgramsByProject: async (
-    project_id?: string,
+    projectId?: string,
   ): Promise<ApiResponse<QueryProgram[]>> => {
     return await sharedClient.get<QueryProgram[]>(`/v1/queryprograms`, {
-      project_id,
+      projectId: projectId,
     });
   },
 

@@ -143,29 +143,29 @@ async function uploadFileWithJob(
 
   // Create a job for the upload
   const jobPayload = {
-    datasource_id: datasourceId,
-    file_name: fileName,
-    file_size: fileSize,
-    dataset_name: datasourceName,
+    datasourceId: datasourceId,
+    fileName: fileName,
+    fileSize: fileSize,
+    datasetName: datasourceName,
   };
 
   const jobMetadata = {
-    file_name: fileName,
-    file_size: fileSize,
-    dataset_name: datasourceName,
+    fileName: fileName,
+    fileSize: fileSize,
+    datasetName: datasourceName,
   };
 
   // Submit the job
   logger.info('Submitting job for upload tracking...');
   const jobId = await client.submitJob({
-    project_id: projectId,
-    job_type: 'upload',
+    projectId: projectId,
+    jobType: 'upload',
     payload: jobPayload,
-    do_not_send_to_queue: true,
-    source_id: datasourceId,
+    doNotSendToQueue: true,
+    sourceId: datasourceId,
     source: 'datasource',
-    source_event_type: 'file_upload',
-    source_metadata: JSON.stringify(jobMetadata),
+    sourceEventType: 'file_upload',
+    sourceMetadata: JSON.stringify(jobMetadata),
   });
 
   if (!jobId) {
@@ -180,12 +180,12 @@ async function uploadFileWithJob(
   // Create FormData with the file
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filePath));
-  formData.append('datasource_id', datasourceId);
+  formData.append('datasourceId', datasourceId);
   formData.append('job_id', jobId);
 
   // Use the correct endpoint format
   const uploadResponse = await fetch(
-    `https://daily-api.infactory.ai/v1/actions/load/${projectId}?job_id=${jobId}&datasource_id=${datasourceId}`,
+    `https://daily-api.infactory.ai/v1/actions/load/${projectId}?job_id=${jobId}&datasourceId=${datasourceId}`,
     {
       method: 'POST',
       headers: {
@@ -321,7 +321,7 @@ async function main() {
     const datasourceResponse = await projectContext.createDatasource({
       name: datasourceName,
       type: datasourceType,
-      project_id: project.id, // Add the project_id which is required
+      projectId: project.id, // Add the projectId which is required
     });
 
     if (datasourceResponse.error) {
@@ -481,7 +481,7 @@ async function main() {
       for (let i = 0; i < apis.length; i++) {
         const api = apis[i];
         console.log(`  ${i + 1}. API ID: ${api.id}`);
-        console.log(`     Path: ${api.base_path || 'Unknown'}`);
+        console.log(`     Path: ${api.basePath || 'Unknown'}`);
         console.log(`     Name: ${api.name || 'Unnamed'}`);
         console.log(`     Description: ${api.description || 'Unknown'}`);
         console.log(`     Version: ${api.version || 'v1'}`);
@@ -503,18 +503,18 @@ async function main() {
           for (let j = 0; j < endpoints.length; j++) {
             const endpoint = endpoints[j];
             console.log(
-              `       ${j + 1}. ${endpoint.http_method} ${endpoint.path} - ${endpoint.name || 'Unnamed'}`,
+              `       ${j + 1}. ${endpoint.httpMethod} ${endpoint.path} - ${endpoint.name || 'Unnamed'}`,
             );
           }
 
           // Try to get OpenAPI spec if available
           console.log('\n     API Documentation (OpenAPI):');
           console.log(
-            `       URL: ${client.getBaseURL()}/live/${api.base_path}/${api.version}/openapi.json`,
+            `       URL: ${client.getBaseURL()}/live/${api.basePath}/${api.version}/openapi.json`,
           );
           console.log('\n     LLM Tools Compatibility:');
           console.log(
-            `       URL: ${client.getBaseURL()}/live/${api.base_path}/${api.version}/tools.json`,
+            `       URL: ${client.getBaseURL()}/live/${api.basePath}/${api.version}/tools.json`,
           );
 
           // Step 10: Make API requests with default parameters
@@ -525,12 +525,12 @@ async function main() {
 
             for (let j = 0; j < endpoints.length; j++) {
               const endpoint = endpoints[j];
-              const url = `${client.getBaseURL()}/live/${api.base_path}/${api.version}/${endpoint.path}`;
-              console.log(`  ${j + 1}. ${endpoint.http_method} ${url}`);
+              const url = `${client.getBaseURL()}/live/${api.basePath}/${api.version}/${endpoint.path}`;
+              console.log(`  ${j + 1}. ${endpoint.httpMethod} ${url}`);
 
               try {
                 const response = await fetch(url, {
-                  method: endpoint.http_method,
+                  method: endpoint.httpMethod,
                   headers: {
                     Authorization: `Bearer ${client.getApiKey()}`,
                     'Content-Type': 'application/json',
