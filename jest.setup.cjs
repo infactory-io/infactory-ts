@@ -1,6 +1,5 @@
 // jest.setup.cjs
 const util = require('util');
-require('jest-fetch-mock').enableMocks();
 
 // Add TextEncoder and TextDecoder to global scope for tests
 global.TextEncoder = util.TextEncoder;
@@ -18,9 +17,8 @@ global.fetch = require('jest-fetch-mock');
 // };
 
 // Mock environment variables for tests
-global.process = {
-  env: {
-    NF_API_KEY: 'test-api-key',
-    NF_BASE_URL: 'https://api.test.infactory.ai',
-  },
+process.env = {
+  ...process.env, // Keep existing env vars
+  NF_API_KEY: 'test-api-key',
+  NF_BASE_URL: 'https://api.test.infactory.ai',
 };

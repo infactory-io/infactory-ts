@@ -1,10 +1,7 @@
 // src/__tests__/client.test.ts
 import { InfactoryClient, InfactoryClientError } from '../client.js';
-import { enableFetchMocks } from 'jest-fetch-mock';
 import fetchMock from 'jest-fetch-mock';
 
-// Enable fetch mocks
-enableFetchMocks();
 // Mock the global fetch with proper typing
 global.fetch = fetchMock as unknown as typeof fetch;
 

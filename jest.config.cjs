@@ -3,7 +3,7 @@
 const config = {
   // Use CommonJS for Jest configuration (not ESM)
   preset: 'ts-jest/presets/default-esm', // Use ESM preset
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

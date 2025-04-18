@@ -1,9 +1,5 @@
 // src/__tests__/resources/users.test.ts
 import { usersApi } from '../../api/resources/users.js';
-import { enableFetchMocks } from 'jest-fetch-mock';
-
-// Enable fetch mocks
-enableFetchMocks();
 
 // The global.fetch is now handled by jest-fetch-mock
 
