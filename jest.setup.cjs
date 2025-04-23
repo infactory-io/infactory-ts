@@ -1,3 +1,5 @@
+/* eslint-env node, jest */
+/* global process */
 // jest.setup.cjs
 const util = require('util');
 
@@ -17,6 +19,7 @@ global.fetch = require('jest-fetch-mock');
 // };
 
 // Mock environment variables for tests
+// eslint-disable-next-line no-undef
 process.env = {
   ...process.env, // Keep existing env vars
   NF_API_KEY: 'test-api-key',

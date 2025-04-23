@@ -19,7 +19,15 @@ export const projectsApi = {
   createProject: async (
     params: CreateProjectParams,
   ): Promise<ApiResponse<Project>> => {
-    return await sharedClient.post<Project>('/v1/projects', params);
+    // Send team_id (snake_case) as expected by the backend API
+    const payload = {
+      ...params,
+      team_id: params.teamId, // Map camelCase to snake_case
+      // teamId: undefined, // Remove the original camelCase field
+    };
+    // delete payload.teamId; // Ensure it's fully removed
+
+    return await sharedClient.post<Project>('/v1/projects', payload);
   },
 
   updateProject: async (

@@ -62,6 +62,16 @@ export interface Project extends BaseEntity {
   name: string;
   description?: string;
   teamId?: string;
+  datasources?: any;
+  events?: any;
+  teams?: any;
+  datalines?: any;
+  api?: any;
+  jobs?: any;
+  conversations?: any;
+  queryprograms?: any;
+  ontologies?: any;
+  apiLogs?: any;
 }
 
 export interface CreateProjectParams {
@@ -268,6 +278,21 @@ export interface User extends BaseEntity {
   organizationId?: string;
 }
 
+export interface UserTeam {
+  userId: string;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface UserWithTeamsAndOrganization extends User {
+  userTeams: UserTeam[];
+  organization: Organization;
+  apiKeys: any;
+  apiLogs: any;
+}
+
 export interface RBACRole extends BaseEntity {
   name: string;
   description?: string;
@@ -337,8 +362,8 @@ export interface CreateAPIParams {
   basePath: string;
   version: string;
   description?: string;
-  servers?: string;
-  security?: string;
+  servers?: string[];
+  security?: SecurityRequirement[];
   tags?: string;
 }
 
@@ -375,7 +400,7 @@ export interface CreateAPIEndpointParams {
   parameters?: string;
   requestBody?: string;
   responses?: string;
-  security?: string;
+  security?: SecurityRequirement[];
 }
 
 export interface PaginationParams {
@@ -460,4 +485,21 @@ interface Edge {
   target: string;
   type: string;
   data?: any;
+}
+
+/** Security requirement in OpenAPI spec */
+export interface SecurityRequirement {
+  [scheme: string]: string[];
+}
+
+/** Security scheme object in OpenAPI components */
+export interface SecurityScheme {
+  type: 'http' | 'apiKey' | 'oauth2' | 'openIdConnect';
+  description?: string;
+  name?: string;
+  in?: 'query' | 'header' | 'cookie';
+  scheme?: string;
+  bearerFormat?: string;
+  flows?: Record<string, any>;
+  openIdConnectUrl?: string;
 }

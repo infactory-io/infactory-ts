@@ -1,5 +1,9 @@
 import { sharedClient, ApiResponse } from '@/core/shared-client.js';
-import { User, RBACRole } from '@/types/common.js';
+import {
+  User,
+  RBACRole,
+  UserWithTeamsAndOrganization,
+} from '@/types/common.js';
 
 export const usersApi = {
   getUsers: async (): Promise<ApiResponse<User[]>> => {
@@ -10,8 +14,12 @@ export const usersApi = {
     return await sharedClient.get<User>(`/v1/users/${userId}`);
   },
 
-  getCurrentUser: async (): Promise<ApiResponse<User>> => {
-    return await sharedClient.get<User>('/v1/authentication/me');
+  getCurrentUser: async (): Promise<
+    ApiResponse<UserWithTeamsAndOrganization>
+  > => {
+    return await sharedClient.get<UserWithTeamsAndOrganization>(
+      '/v1/authentication/me',
+    );
   },
 
   getOrCreateUserTeamOrganization: async ({
