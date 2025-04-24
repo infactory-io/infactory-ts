@@ -286,6 +286,16 @@ describe('TeamsClient', () => {
   });
 
   describe('getTeamMemberships', () => {
+    it('should validate teamId is provided', async () => {
+      // Call without teamId
+      await expect(teamsClient.getTeamMemberships('')).rejects.toThrow(
+        'Team ID is required',
+      );
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.get).not.toHaveBeenCalled();
+    });
+
     it('should call the correct endpoint to get team memberships', async () => {
       // Mock response data
       const mockMemberships = [
@@ -324,6 +334,44 @@ describe('TeamsClient', () => {
   });
 
   describe('createTeamMembership', () => {
+    it('should validate teamId is provided', async () => {
+      // Call without teamId
+      await expect(
+        teamsClient.createTeamMembership(
+          '',
+          'user-3',
+          TeamMembershipRole.VIEWER,
+        ),
+      ).rejects.toThrow('Team ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should validate userId is provided', async () => {
+      // Call without userId
+      await expect(
+        teamsClient.createTeamMembership(
+          'team-1',
+          '',
+          TeamMembershipRole.VIEWER,
+        ),
+      ).rejects.toThrow('User ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should validate role is provided', async () => {
+      // Call without role
+      await expect(
+        teamsClient.createTeamMembership('team-1', 'user-3', null as any),
+      ).rejects.toThrow('Role is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
+    });
+
     it('should call the correct endpoint to create a team membership', async () => {
       // Mock response data
       const mockResponse = {
@@ -347,17 +395,11 @@ describe('TeamsClient', () => {
       );
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/team-memberships',
-        undefined,
-        {
-          params: {
-            team_id: 'team-1',
-            user_id: 'user-3',
-            role: TeamMembershipRole.VIEWER,
-          },
-        },
-      );
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/team-memberships', {
+        teamId: 'team-1',
+        userId: 'user-3',
+        role: TeamMembershipRole.VIEWER,
+      });
 
       // Verify the result
       expect(result.data).toEqual(mockResponse);
@@ -365,6 +407,44 @@ describe('TeamsClient', () => {
   });
 
   describe('updateTeamMembership', () => {
+    it('should validate teamId is provided', async () => {
+      // Call without teamId
+      await expect(
+        teamsClient.updateTeamMembership(
+          '',
+          'user-2',
+          TeamMembershipRole.ADMIN,
+        ),
+      ).rejects.toThrow('Team ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.patch).not.toHaveBeenCalled();
+    });
+
+    it('should validate userId is provided', async () => {
+      // Call without userId
+      await expect(
+        teamsClient.updateTeamMembership(
+          'team-1',
+          '',
+          TeamMembershipRole.ADMIN,
+        ),
+      ).rejects.toThrow('User ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.patch).not.toHaveBeenCalled();
+    });
+
+    it('should validate role is provided', async () => {
+      // Call without role
+      await expect(
+        teamsClient.updateTeamMembership('team-1', 'user-2', null as any),
+      ).rejects.toThrow('Role is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.patch).not.toHaveBeenCalled();
+    });
+
     it('should call the correct endpoint to update a team membership', async () => {
       // Mock response data
       const mockResponse = {
@@ -390,10 +470,7 @@ describe('TeamsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
         '/v1/team-memberships/user-2/team-1',
-        undefined,
-        {
-          params: { role: TeamMembershipRole.ADMIN },
-        },
+        { role: TeamMembershipRole.ADMIN },
       );
 
       // Verify the result
@@ -402,6 +479,26 @@ describe('TeamsClient', () => {
   });
 
   describe('deleteTeamMembership', () => {
+    it('should validate teamId is provided', async () => {
+      // Call without teamId
+      await expect(
+        teamsClient.deleteTeamMembership('', 'user-2'),
+      ).rejects.toThrow('Team ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should validate userId is provided', async () => {
+      // Call without userId
+      await expect(
+        teamsClient.deleteTeamMembership('team-1', ''),
+      ).rejects.toThrow('User ID is required');
+
+      // Verify HTTP client was not called
+      expect(mockHttpClient.delete).not.toHaveBeenCalled();
+    });
+
     it('should call the correct endpoint to delete a team membership', async () => {
       // Mock response data
       const mockResponse = {

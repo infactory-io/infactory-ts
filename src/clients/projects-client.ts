@@ -57,10 +57,10 @@ export class ProjectsClient {
   ): Promise<ApiResponse<Project[]>> {
     const params: Record<string, any> = {};
     if (teamId) {
-      params.team_id = teamId;
+      params.teamId = teamId;
     }
     if (includeDeleted) {
-      params.include_deleted = includeDeleted;
+      params.includeDeleted = includeDeleted;
     }
     return this.httpClient.get<Project[]>('/v1/projects', params);
   }
@@ -93,7 +93,7 @@ export class ProjectsClient {
   ): Promise<ApiResponse<Project>> {
     const params: Record<string, any> = {};
     if (teamId) {
-      params.team_id = teamId;
+      params.teamId = teamId;
     }
     return this.httpClient.get<Project>(`/v1/projects/${projectId}`, params);
   }
@@ -114,10 +114,10 @@ export class ProjectsClient {
       throw new Error('Team ID is required');
     }
 
-    // The API expects team_id (snake_case) instead of teamId (camelCase)
+    // The API expects teamId (snake_case) instead of teamId (camelCase)
     const payload = {
       ...params,
-      team_id: params.teamId,
+      teamId: params.teamId,
     };
 
     return this.httpClient.post<Project>('/v1/projects', payload);
@@ -136,11 +136,11 @@ export class ProjectsClient {
     if (!params.teamId) {
       throw new Error('Team ID is required for updating a project');
     }
-    // Prepare payload with snake_case team_id
+    // Prepare payload with snake_case teamId
     const { teamId, ...rest } = params;
     const payload = {
       ...rest,
-      team_id: teamId,
+      teamId: teamId,
     };
     return this.httpClient.patch<Project>(`/v1/projects/${projectId}`, payload);
   }
@@ -173,7 +173,7 @@ export class ProjectsClient {
     return this.httpClient.post<Project>(
       `/v1/projects/${projectId}/move`,
       undefined,
-      { new_team_id: newTeamId },
+      { newTeamId },
     );
   }
 

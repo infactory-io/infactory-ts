@@ -148,8 +148,8 @@ export class TeamsClient {
       throw new Error('Role is required');
     }
     return this.httpClient.post<TeamMembership>('/v1/team-memberships', {
-      team_id: teamId,
-      user_id: userId,
+      teamId: teamId,
+      userId: userId,
       role: role,
     });
   }

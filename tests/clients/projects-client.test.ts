@@ -83,7 +83,7 @@ describe('ProjectsClient', () => {
 
       // Verify the HTTP client was called with the teamId parameter
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/projects', {
-        team_id: 'team-1',
+        teamId: 'team-1',
       });
     });
 
@@ -98,7 +98,7 @@ describe('ProjectsClient', () => {
 
       // Verify the HTTP client was called with the includeDeleted parameter
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/projects', {
-        include_deleted: true,
+        includeDeleted: true,
       });
     });
 
@@ -137,7 +137,7 @@ describe('ProjectsClient', () => {
 
       // Verify the HTTP client was called with the correct parameters
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/projects', {
-        team_id: 'team-1',
+        teamId: 'team-1',
       });
     });
 
@@ -194,7 +194,7 @@ describe('ProjectsClient', () => {
       // Verify the HTTP client was called with the teamId parameter
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         '/v1/projects/project-1',
-        { team_id: 'team-1' },
+        { teamId: 'team-1' },
       );
     });
   });
@@ -229,7 +229,7 @@ describe('ProjectsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/projects', {
         ...createParams,
-        team_id: 'team-1',
+        teamId: 'team-1',
       });
 
       // Verify the result
@@ -295,7 +295,7 @@ describe('ProjectsClient', () => {
 
       // Verify the HTTP client was called with the correct URL and parameters
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/v1\/projects\/project-1\?.*teamId=team-1.*/),
+        '/v1/projects/project-1',
         updateParams,
       );
 
@@ -380,7 +380,7 @@ describe('ProjectsClient', () => {
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         '/v1/projects/project-1/move',
         undefined,
-        { new_team_id: 'new-team-1' },
+        { newTeamId: 'new-team-1' },
       );
 
       // Verify the result
