@@ -1,6 +1,7 @@
 /**
- * Ensure this aligns with the schema components of openapi schema and infactory database schemas 
+ * Ensure this aligns with the schema components of openapi schema and infactory database schemas
  */
+
 import { InfactoryAPIError } from '@/errors/index.js';
 
 /**
@@ -20,7 +21,6 @@ export interface BaseEntity {
   deletedAt?: string | null;
 }
 
-
 // This could extent BaseEntity, but going to avoid this for clarity at the moment
 export interface Platform {
   id: string;
@@ -31,7 +31,6 @@ export interface Platform {
   deletedAt?: string | null;
   metadata?: Record<string, any>;
 }
-
 
 // Organization types
 export interface Organization {
@@ -46,15 +45,43 @@ export interface Organization {
   teams: Team[];
 }
 
-// Team types
-export interface Team extends BaseEntity {
+/**
+ * Team object as returned by the API
+ */
+export interface Team {
+  id: string;
   name: string;
   organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  credentials?: any;
+  projects?: any;
+  rbac?: any;
+  secrets?: any;
+  organizations?: any;
+  userTeams?: any;
 }
 
-export interface CreateTeamParams {
-  name: string;
-  organizationId: string;
+/**
+ * Team Membership object as returned by the API
+ */
+export interface TeamMembership {
+  userId: string;
+  teamId: string;
+  role: TeamMembershipRole;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+/**
+ * Valid roles for team memberships
+ */
+export enum TeamMembershipRole {
+  ADMIN = 'admin',
+  MEMBER = 'member',
+  VIEWER = 'viewer',
 }
 
 // Project types
@@ -330,19 +357,6 @@ export interface CreateEventParams {
   type: string;
   status: string;
   metadata?: Record<string, any>;
-}
-
-// Team Membership types
-export interface TeamMembership extends BaseEntity {
-  teamId: string;
-  userId: string;
-  role: string;
-}
-
-export interface CreateTeamMembershipParams {
-  teamId: string;
-  userId: string;
-  role: string;
 }
 
 // API types

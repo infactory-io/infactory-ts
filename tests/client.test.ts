@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InfactoryClient, InfactoryClientError } from '../src/client.js';
-import { PlatformsClient } from '../src/clients/index.js';
+import { PlatformsClient } from '../src/clients/platforms-client.js';
+import { OrganizationsClient } from '../src/clients/organizations-client.js';
+import { TeamsClient } from '../src/clients/teams-client.js';
 
 // Mock the HttpClient
 vi.mock('../src/core/http-client', () => {
@@ -12,8 +14,8 @@ vi.mock('../src/core/http-client', () => {
   };
 });
 
-// Mock PlatformsClient
-vi.mock('../src/clients', () => {
+// Mock resource clients
+vi.mock('../src/clients/platforms-client', () => {
   return {
     PlatformsClient: vi.fn().mockImplementation(() => ({
       list: vi.fn(),
@@ -21,6 +23,37 @@ vi.mock('../src/clients', () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn()
+    }))
+  };
+});
+
+vi.mock('../src/clients/organizations-client', () => {
+  return {
+    OrganizationsClient: vi.fn().mockImplementation(() => ({
+      list: vi.fn(),
+      get: vi.fn(),
+      getByClerkId: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      move: vi.fn()
+    }))
+  };
+});
+
+vi.mock('../src/clients/teams-client', () => {
+  return {
+    TeamsClient: vi.fn().mockImplementation(() => ({
+      getTeams: vi.fn(),
+      getTeam: vi.fn(),
+      createTeam: vi.fn(),
+      updateTeam: vi.fn(),
+      deleteTeam: vi.fn(),
+      moveTeam: vi.fn(),
+      getTeamMemberships: vi.fn(),
+      createTeamMembership: vi.fn(),
+      updateTeamMembership: vi.fn(),
+      deleteTeamMembership: vi.fn()
     }))
   };
 });
@@ -48,12 +81,18 @@ describe('InfactoryClient', () => {
       expect(client.getBaseURL()).toBe(customUrl);
     });
 
-    it('should initialize resource clients', () => {
+    it('should initialize all resource clients', () => {
       const client = new InfactoryClient({ apiKey: 'test-api-key' });
       
-      // Check that PlatformsClient was initialized
+      // Check that all client classes were initialized
       expect(PlatformsClient).toHaveBeenCalledTimes(1);
+      expect(OrganizationsClient).toHaveBeenCalledTimes(1);
+      expect(TeamsClient).toHaveBeenCalledTimes(1);
+      
+      // Check that all clients are accessible on the instance
       expect(client.platforms).toBeDefined();
+      expect(client.organizations).toBeDefined();
+      expect(client.teams).toBeDefined();
     });
   });
 

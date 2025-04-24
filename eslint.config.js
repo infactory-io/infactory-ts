@@ -40,7 +40,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
-      'no-console': ['warn', { allow: ['warn', 'error','info'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       // Add any other type-aware rule configurations if needed
     },
   },
@@ -69,6 +69,13 @@ export default tseslint.config(
 
   {
     // Global ignore patterns
-    ignores: ['dist/', 'node_modules/', '**/*.js', 'eslint.config.js', 'vitest.config.ts', 'examples/**/*.ts'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '**/*.js',
+      'eslint.config.js',
+      'vitest.config.ts',
+      'examples/**/*.ts',
+    ],
   },
 );

@@ -23,7 +23,7 @@ const client = new InfactoryClient({
 async function platformsExample() {
   try {
     console.log('=== Platforms API Example ===');
-    
+
     // List all platforms
     console.log('\n1. Listing all platforms:');
     const platformsResponse = await client.platforms.list();
@@ -35,11 +35,11 @@ async function platformsExample() {
         platformsResponse.data.forEach((platform) => {
           console.log(`- ${platform.name} (ID: ${platform.id})`);
         });
-        
+
         // Get details for the first platform
         const firstPlatformId = platformsResponse.data[0].id;
         console.log(`\n2. Getting details for platform ${firstPlatformId}:`);
-        
+
         const platformResponse = await client.platforms.get(firstPlatformId);
         if (platformResponse.error) {
           console.error('Error getting platform:', platformResponse.error);
@@ -93,7 +93,6 @@ async function platformsExample() {
       }
     }
     */
-    
   } catch (error) {
     console.error('Unexpected error:', error);
   }
@@ -102,4 +101,4 @@ async function platformsExample() {
 // Run the example
 platformsExample()
   .then(() => console.log('\nPlatforms example completed'))
-  .catch(error => console.error('Fatal error:', error));
+  .catch((error) => console.error('Fatal error:', error));

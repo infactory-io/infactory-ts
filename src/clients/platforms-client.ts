@@ -1,8 +1,14 @@
 import { HttpClient } from '../core/http-client.js';
 import { ApiResponse, Platform } from '../types/common.js';
 
-export type CreatePlatformParams = Pick<Platform, 'name' | 'description' | 'metadata'>;
-export type UpdatePlatformParams = Pick<Platform, 'name' | 'description' | 'metadata'>;
+export type CreatePlatformParams = Pick<
+  Platform,
+  'name' | 'description' | 'metadata'
+>;
+export type UpdatePlatformParams = Pick<
+  Platform,
+  'name' | 'description' | 'metadata'
+>;
 
 /**
  * Client for managing platforms in the Infactory API
@@ -46,7 +52,10 @@ export class PlatformsClient {
    * @param params - The parameters for updating the platform
    * @returns A promise that resolves to an API response containing the updated platform
    */
-  async update(id: string, params: UpdatePlatformParams): Promise<ApiResponse<Platform>> {
+  async update(
+    id: string,
+    params: UpdatePlatformParams,
+  ): Promise<ApiResponse<Platform>> {
     return this.httpClient.patch<Platform>(`/v1/platforms/${id}`, params);
   }
 

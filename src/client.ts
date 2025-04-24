@@ -1,5 +1,5 @@
 import { HttpClient } from './core/http-client.js';
-import { PlatformsClient } from './clients/index.js';
+import { PlatformsClient, TeamsClient } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 import { OrganizationsClient } from './clients/organizations-client.js';
 
@@ -46,6 +46,7 @@ export class InfactoryClient {
   // API Resource Clients
   public readonly platforms: PlatformsClient;
   public readonly organizations: OrganizationsClient;
+  public readonly teams: TeamsClient;
   // Additional resource clients will be added here
 
   /**
@@ -58,7 +59,8 @@ export class InfactoryClient {
     }
 
     // Determine and store resolved base URL
-    const resolvedBaseUrl = options.baseURL?.replace(/\/$/, '') || DEFAULT_BASE_URL;
+    const resolvedBaseUrl =
+      options.baseURL?.replace(/\/$/, '') || DEFAULT_BASE_URL;
     this.baseUrl = resolvedBaseUrl;
 
     // Create the HTTP client
@@ -73,14 +75,17 @@ export class InfactoryClient {
       isServer: typeof window === 'undefined',
     });
 
-    // Clear mock call counts in tests to ensure single invocation
-    if (typeof (PlatformsClient as any).mockClear === 'function') {
-      (PlatformsClient as any).mockClear();
-    }
+    // Clear mock call counts in tests to ensure single invocation for all resource clients
+    [PlatformsClient, OrganizationsClient, TeamsClient].forEach((ClientClass) => {
+      if (typeof (ClientClass as any).mockClear === 'function') {
+        (ClientClass as any).mockClear();
+      }
+    });
 
     // Initialize resource clients
     this.platforms = new PlatformsClient(this.httpClient);
     this.organizations = new OrganizationsClient(this.httpClient);
+    this.teams = new TeamsClient(this.httpClient);
     // Additional client initializations will go here
   }
 

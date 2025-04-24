@@ -10,8 +10,8 @@ vi.mock('../../src/core/http-client.js', () => {
       get: vi.fn(),
       post: vi.fn(),
       patch: vi.fn(),
-      delete: vi.fn()
-    }))
+      delete: vi.fn(),
+    })),
   };
 });
 
@@ -22,13 +22,13 @@ describe('OrganizationsClient', () => {
   beforeEach(() => {
     // Clear all mocks
     vi.clearAllMocks();
-    
+
     // Create a new mock HttpClient instance
     mockHttpClient = new HttpClient({
       baseUrl: 'https://api.infactory.ai',
-      apiKey: 'test-api-key'
+      apiKey: 'test-api-key',
     });
-    
+
     // Create a new OrganizationsClient with the mock HttpClient
     organizationsClient = new OrganizationsClient(mockHttpClient);
   });
@@ -43,7 +43,7 @@ describe('OrganizationsClient', () => {
           description: 'Test Organization 1',
           platformId: 'platform-1',
           createdAt: '2025-01-01T00:00:00Z',
-          updatedAt: '2025-01-01T00:00:00Z'
+          updatedAt: '2025-01-01T00:00:00Z',
         },
         {
           id: 'org-2',
@@ -51,13 +51,13 @@ describe('OrganizationsClient', () => {
           description: 'Test Organization 2',
           platformId: 'platform-1',
           createdAt: '2025-01-02T00:00:00Z',
-          updatedAt: '2025-01-02T00:00:00Z'
-        }
+          updatedAt: '2025-01-02T00:00:00Z',
+        },
       ];
 
       // Setup the mock response
       vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        data: mockOrganizations
+        data: mockOrganizations,
       });
 
       // Call the method
@@ -65,17 +65,21 @@ describe('OrganizationsClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/orgs');
-      
+
       // Verify the result
       expect(result.data).toEqual(mockOrganizations);
     });
 
     it('should handle errors when listing organizations', async () => {
       // Setup the mock to return an error
-      const mockError = createErrorFromStatus(500, 'server_error', 'Internal server error');
+      const mockError = createErrorFromStatus(
+        500,
+        'server_error',
+        'Internal server error',
+      );
 
       vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        error: mockError
+        error: mockError,
       });
 
       // Call the method
@@ -83,7 +87,7 @@ describe('OrganizationsClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/orgs');
-      
+
       // Verify the error was returned
       expect(result.error).toEqual(mockError);
     });
@@ -98,12 +102,12 @@ describe('OrganizationsClient', () => {
         description: 'Test Organization 1',
         platformId: 'platform-1',
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z'
+        updatedAt: '2025-01-01T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        data: mockOrganization
+        data: mockOrganization,
       });
 
       // Call the method
@@ -111,25 +115,31 @@ describe('OrganizationsClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/orgs/org-1');
-      
+
       // Verify the result
       expect(result.data).toEqual(mockOrganization);
     });
 
     it('should handle errors when getting an organization by ID', async () => {
       // Setup the mock to return an error
-      const mockError = createErrorFromStatus(404, 'not_found', 'Organization not found');
+      const mockError = createErrorFromStatus(
+        404,
+        'not_found',
+        'Organization not found',
+      );
 
       vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        error: mockError
+        error: mockError,
       });
 
       // Call the method
       const result = await organizationsClient.get('non-existent-org');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/orgs/non-existent-org');
-      
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/orgs/non-existent-org',
+      );
+
       // Verify the error was returned
       expect(result.error).toEqual(mockError);
     });
@@ -145,20 +155,22 @@ describe('OrganizationsClient', () => {
         platformId: 'platform-1',
         clerkOrgId: 'clerk-org-123',
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z'
+        updatedAt: '2025-01-01T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        data: mockOrganization
+        data: mockOrganization,
       });
 
       // Call the method
       const result = await organizationsClient.getByClerkId('clerk-org-123');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/orgs/clerk/clerk-org-123');
-      
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/orgs/clerk/clerk-org-123',
+      );
+
       // Verify the result
       expect(result.data).toEqual(mockOrganization);
     });
@@ -171,7 +183,7 @@ describe('OrganizationsClient', () => {
         name: 'New Organization',
         description: 'New Test Organization',
         platformId: 'platform-1',
-        clerkOrgId: 'clerk-org-456'
+        clerkOrgId: 'clerk-org-456',
       };
 
       // Mock response data
@@ -182,20 +194,23 @@ describe('OrganizationsClient', () => {
         platformId: 'platform-1',
         clerkOrgId: 'clerk-org-456',
         createdAt: '2025-01-03T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z'
+        updatedAt: '2025-01-03T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse
+        data: mockResponse,
       });
 
       // Call the method
       const result = await organizationsClient.create(createParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/orgs', createParams);
-      
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/orgs',
+        createParams,
+      );
+
       // Verify the result
       expect(result.data).toEqual(mockResponse);
     });
@@ -206,7 +221,7 @@ describe('OrganizationsClient', () => {
       // Mock request data
       const updateParams = {
         name: 'Updated Organization',
-        description: 'Updated Test Organization'
+        description: 'Updated Test Organization',
       };
 
       // Mock response data
@@ -216,20 +231,23 @@ describe('OrganizationsClient', () => {
         description: 'Updated Test Organization',
         platformId: 'platform-1',
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-04T00:00:00Z'
+        updatedAt: '2025-01-04T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
-        data: mockResponse
+        data: mockResponse,
       });
 
       // Call the method
       const result = await organizationsClient.update('org-1', updateParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/orgs/org-1', updateParams);
-      
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/orgs/org-1',
+        updateParams,
+      );
+
       // Verify the result
       expect(result.data).toEqual(mockResponse);
     });
@@ -245,12 +263,12 @@ describe('OrganizationsClient', () => {
         platformId: 'platform-1',
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-01T00:00:00Z',
-        deletedAt: '2025-01-05T00:00:00Z'
+        deletedAt: '2025-01-05T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.delete).mockResolvedValueOnce({
-        data: mockResponse
+        data: mockResponse,
       });
 
       // Call the method
@@ -258,7 +276,7 @@ describe('OrganizationsClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/orgs/org-1');
-      
+
       // Verify the result
       expect(result.data).toEqual(mockResponse);
     });
@@ -273,23 +291,22 @@ describe('OrganizationsClient', () => {
         description: 'Test Organization 1',
         platformId: 'new-platform-1',
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-05T00:00:00Z'
+        updatedAt: '2025-01-05T00:00:00Z',
       };
 
       // Setup the mock response
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse
+        data: mockResponse,
       });
 
       // Call the method
       const result = await organizationsClient.move('org-1', 'new-platform-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/orgs/org-1/move', 
-        { new_platform_id: 'new-platform-1' }
-      );
-      
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/orgs/org-1/move', {
+        new_platform_id: 'new-platform-1',
+      });
+
       // Verify the result
       expect(result.data).toEqual(mockResponse);
     });
