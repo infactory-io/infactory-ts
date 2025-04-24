@@ -1,6 +1,7 @@
 import { HttpClient } from './core/http-client.js';
 import { PlatformsClient } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
+import { OrganizationsClient } from './clients/organizations-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -44,6 +45,7 @@ export class InfactoryClient {
 
   // API Resource Clients
   public readonly platforms: PlatformsClient;
+  public readonly organizations: OrganizationsClient;
   // Additional resource clients will be added here
 
   /**
@@ -78,6 +80,7 @@ export class InfactoryClient {
 
     // Initialize resource clients
     this.platforms = new PlatformsClient(this.httpClient);
+    this.organizations = new OrganizationsClient(this.httpClient);
     // Additional client initializations will go here
   }
 

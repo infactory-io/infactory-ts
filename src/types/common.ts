@@ -1,3 +1,6 @@
+/**
+ * Ensure this aligns with the schema components of openapi schema and infactory database schemas 
+ */
 import { InfactoryAPIError } from '@/errors/index.js';
 
 /**
@@ -17,33 +20,30 @@ export interface BaseEntity {
   deletedAt?: string | null;
 }
 
-// Platform types
-export interface Platform extends BaseEntity {
+
+// This could extent BaseEntity, but going to avoid this for clarity at the moment
+export interface Platform {
+  id: string;
   name: string;
   description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
   metadata?: Record<string, any>;
 }
 
-export interface CreatePlatformParams {
-  name: string;
-  description?: string;
-  metadata?: Record<string, any>;
-}
 
 // Organization types
-export interface Organization extends BaseEntity {
+export interface Organization {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
   name: string;
   description?: string;
   platformId: string;
   clerkOrgId?: string;
   teams: Team[];
-}
-
-export interface CreateOrganizationParams {
-  name: string;
-  description?: string;
-  platformId?: string;
-  clerkOrgId?: string;
 }
 
 // Team types

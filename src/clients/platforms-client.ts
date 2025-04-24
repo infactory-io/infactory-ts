@@ -1,36 +1,8 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse } from '../types/common.js';
+import { ApiResponse, Platform } from '../types/common.js';
 
-/**
- * Platform object as returned by the API
- */
-export interface Platform {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
-  metadata?: Record<string, any>;
-}
-
-/**
- * Parameters for creating a platform
- */
-export interface CreatePlatformParams {
-  name: string;
-  description?: string;
-  metadata?: Record<string, any>;
-}
-
-/**
- * Parameters for updating a platform
- */
-export interface UpdatePlatformParams {
-  name?: string;
-  description?: string;
-  metadata?: Record<string, any>;
-}
+export type CreatePlatformParams = Pick<Platform, 'name' | 'description' | 'metadata'>;
+export type UpdatePlatformParams = Pick<Platform, 'name' | 'description' | 'metadata'>;
 
 /**
  * Client for managing platforms in the Infactory API
