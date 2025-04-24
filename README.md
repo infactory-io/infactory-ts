@@ -391,10 +391,7 @@ For contributors writing tests:
 ### Testing Dependencies
 
 The test suite uses several tools:
-
-- **Jest**: Test runner and assertion library
-- **ts-jest**: TypeScript support for Jest
-- **jest-fetch-mock**: Mocking fetch requests
+- **vitest**: Test runner and assertion library
 - **nock**: HTTP server mocking
 - **MSW**: API mocking via request interception
 

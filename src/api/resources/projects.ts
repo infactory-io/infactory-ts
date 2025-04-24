@@ -73,7 +73,7 @@ export const projectsApi = {
     file: File,
   ): Promise<ApiResponse<Project>> => {
     try {
-      console.log('Importing project file:', file.name, file.type, file.size);
+      console.info('Importing project file:', file.name, file.type, file.size);
 
       // Create FormData
       const formData = new FormData();
@@ -82,9 +82,9 @@ export const projectsApi = {
       formData.append('conflict_strategy', 'rename');
 
       // Log FormData contents
-      console.log('FormData entries:');
+      console.info('FormData entries:');
       for (const pair of formData.entries()) {
-        console.log(pair[0], typeof pair[1], pair[1]);
+        console.info(pair[0], typeof pair[1], pair[1]);
       }
 
       return await sharedClient.request<Project>({
@@ -100,16 +100,16 @@ export const projectsApi = {
 
   validateImport: async (file: File): Promise<ApiResponse<any>> => {
     try {
-      console.log('Validating file:', file.name, file.type, file.size);
+      console.info('Validating file:', file.name, file.type, file.size);
 
       // Create FormData
       const formData = new FormData();
       formData.append('file', file);
 
       // Log FormData contents
-      console.log('FormData entries:');
+      console.info('FormData entries:');
       for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
+        console.info(pair[0], pair[1]);
       }
 
       return await sharedClient.request<any>({

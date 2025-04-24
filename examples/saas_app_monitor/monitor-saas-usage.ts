@@ -45,16 +45,16 @@ if (!DB_CONNECTION_STRING) {
 
 // --- Helper Function ---
 function logStep(step: number, title: string) {
-  console.log(`\n✅ Step ${step}: ${title}`);
-  console.log('--------------------------------------------------');
+  console.info(`\n✅ Step ${step}: ${title}`);
+  console.info('--------------------------------------------------');
 }
 
 function logInfo(message: string) {
-  console.log(`   🔵 ${message}`);
+  console.info(`   🔵 ${message}`);
 }
 
 function logSuccess(message: string) {
-  console.log(`   🟢 ${message}`);
+  console.info(`   🟢 ${message}`);
 }
 
 function logWarning(message: string) {
@@ -349,9 +349,9 @@ async function runSaaSMonitoringExample() {
   if (!openapiSpec) return;
 
   // Log the OpenAPI spec clearly for copy-pasting
-  console.log('\n--- BEGIN OPENAPI SPECIFICATION ---');
-  console.log(JSON.stringify(openapiSpec, null, 2));
-  console.log('--- END OPENAPI SPECIFICATION ---\n');
+  console.info('\n--- BEGIN OPENAPI SPECIFICATION ---');
+  console.info(JSON.stringify(openapiSpec, null, 2));
+  console.info('--- END OPENAPI SPECIFICATION ---\n');
   logSuccess('OpenAPI specification retrieved.');
 
   // === Step 5: Use the project chat endpoint ===
@@ -411,7 +411,7 @@ async function runSaaSMonitoringExample() {
     'Paste this specification into Claude (or another LLM/tool) and ask it to generate a single-page web application (HTML, CSS, JavaScript) to create a dashboard visualizing the data from these endpoints.',
   );
   logInfo('Example prompt for Claude:');
-  console.log(`
+  console.info(`
       "Here is an OpenAPI specification for an API that provides SaaS usage metrics:
   
       <PASTE_OPENAPI_SPEC_HERE>

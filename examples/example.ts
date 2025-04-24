@@ -24,44 +24,44 @@ process.env.NEXT_PUBLIC_API_BASE_URL =
 
 async function testClient() {
   try {
-    console.log('Testing InfactoryClient...');
+    console.info('Testing InfactoryClient...');
 
     // 1. Get current user information
-    console.log('\n--- Getting current user info ---');
+    console.info('\n--- Getting current user info ---');
     const userResponse = await client.users.getCurrentUser();
     if (userResponse.error) {
       console.error('Error getting user:', userResponse.error);
     } else {
-      console.log('Current user:', userResponse.data);
+      console.info('Current user:', userResponse.data);
     }
 
     // 2. List projects
-    console.log('\n--- Listing projects ---');
+    console.info('\n--- Listing projects ---');
     const projectsResponse = await client.projects.getProjects();
     if (projectsResponse.error) {
       console.error('Error listing projects:', projectsResponse.error);
     } else {
-      console.log(`Found ${projectsResponse.data?.length || 0} projects`);
+      console.info(`Found ${projectsResponse.data?.length || 0} projects`);
       if (projectsResponse.data && projectsResponse.data.length > 0) {
         // Display project names and IDs
         projectsResponse.data.forEach((project) => {
-          console.log(`- ${project.name} (ID: ${project.id})`);
+          console.info(`- ${project.name} (ID: ${project.id})`);
         });
 
         // Select the first project for further operations
         const projectId = projectsResponse.data[0].id;
 
         // 3. Get project details
-        console.log(`\n--- Getting details for project ${projectId} ---`);
+        console.info(`\n--- Getting details for project ${projectId} ---`);
         const projectResponse = await client.projects.getProject(projectId);
         if (projectResponse.error) {
           console.error('Error getting project:', projectResponse.error);
         } else {
-          console.log('Project details:', projectResponse.data);
+          console.info('Project details:', projectResponse.data);
         }
 
         // 4. List datasources for the project
-        console.log(`\n--- Listing datasources for project ${projectId} ---`);
+        console.info(`\n--- Listing datasources for project ${projectId} ---`);
         const datasourcesResponse =
           await client.datasources.getProjectDatasources(projectId);
         if (datasourcesResponse.error) {
@@ -70,18 +70,18 @@ async function testClient() {
             datasourcesResponse.error,
           );
         } else {
-          console.log(
+          console.info(
             `Found ${datasourcesResponse.data?.length || 0} datasources`,
           );
           datasourcesResponse.data?.forEach((datasource) => {
-            console.log(
+            console.info(
               `- ${datasource.name} (ID: ${datasource.id}, Type: ${datasource.type})`,
             );
           });
         }
 
         // 5. List query programs for the project
-        console.log(
+        console.info(
           `\n--- Listing query programs for project ${projectId} ---`,
         );
         const queryProgramsResponse =
@@ -92,11 +92,11 @@ async function testClient() {
             queryProgramsResponse.error,
           );
         } else {
-          console.log(
+          console.info(
             `Found ${queryProgramsResponse.data?.length || 0} query programs`,
           );
           queryProgramsResponse.data?.forEach((program) => {
-            console.log(
+            console.info(
               `- ${program.name || 'Unnamed program'} (ID: ${program.id})`,
             );
           });
@@ -108,7 +108,7 @@ async function testClient() {
           ) {
             const programId = queryProgramsResponse.data[0].id;
 
-            console.log(
+            console.info(
               `\n--- Getting details for query program ${programId} ---`,
             );
             const programResponse =
@@ -119,7 +119,7 @@ async function testClient() {
                 programResponse.error,
               );
             } else {
-              console.log('Query program details:', programResponse.data);
+              console.info('Query program details:', programResponse.data);
             }
           }
         }
@@ -128,18 +128,18 @@ async function testClient() {
 
     // 6. List teams
     if (userResponse.data?.organizationId) {
-      console.log('\n--- Listing teams ---');
+      console.info('\n--- Listing teams ---');
       const teamsResponse = await client.teams.getTeams();
       if (teamsResponse.error) {
         console.error('Error listing teams:', teamsResponse.error);
       } else {
-        console.log(`Found ${teamsResponse.data?.length || 0} teams`);
+        console.info(`Found ${teamsResponse.data?.length || 0} teams`);
         teamsResponse.data?.forEach((team) => {
-          console.log(`- ${team.name} (ID: ${team.id})`);
+          console.info(`- ${team.name} (ID: ${team.id})`);
         });
       }
     } else {
-      console.log(
+      console.info(
         '\n--- Skipping teams list - no organization ID available ---',
       );
     }
@@ -150,5 +150,5 @@ async function testClient() {
 
 // Run the test function
 testClient()
-  .then(() => console.log('\nInfactoryClient test completed'))
+  .then(() => console.info('\nInfactoryClient test completed'))
   .catch((error) => console.error('Fatal error:', error));

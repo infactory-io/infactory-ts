@@ -44,7 +44,7 @@ export async function processErrorResponse(
       const errorBody = await response.text();
       errorMessage = `API ${method} request failed ${response.status}: ${errorBody}`;
     }
-  } catch (e) {
+  } catch {
     errorMessage = `API request failed with status: ${response.status}`;
   }
 

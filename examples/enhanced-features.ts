@@ -38,22 +38,22 @@ async function run() {
       throw new Error('Not authenticated. Please check your API key.');
     }
 
-    console.log('Authentication successful!');
+    console.info('Authentication successful!');
 
     // Get current user information using MCP resource
     const userResponse = await client.mcpResource.getCurrentUser();
     if (isReadableStream(userResponse)) {
-      console.log('Current user: [Stream response]');
+      console.info('Current user: [Stream response]');
     } else {
-      console.log('Current user:', userResponse.data);
+      console.info('Current user:', userResponse.data);
     }
 
     // List projects using MCP resource
     const projectsResponse = await client.mcpResource.listProjects();
     if (isReadableStream(projectsResponse)) {
-      console.log('Found projects: [Stream response]');
+      console.info('Found projects: [Stream response]');
     } else {
-      console.log(`Found ${projectsResponse.data?.length ?? 0} projects`);
+      console.info(`Found ${projectsResponse.data?.length ?? 0} projects`);
     }
 
     // Only proceed if we have project data (not a stream) and at least one project
@@ -64,15 +64,15 @@ async function run() {
     ) {
       // Since we've already checked data exists and has length > 0, we can safely assert it's not undefined
       const projectId = projectsResponse.data[0].id;
-      console.log(`Using project ID: ${projectId}`);
+      console.info(`Using project ID: ${projectId}`);
 
       // List query programs for the project
       const queryProgramsResponse =
         await client.mcpResource.listQueryPrograms(projectId);
       if (isReadableStream(queryProgramsResponse)) {
-        console.log('Found query programs: [Stream response]');
+        console.info('Found query programs: [Stream response]');
       } else {
-        console.log(
+        console.info(
           `Found ${queryProgramsResponse.data?.length ?? 0} query programs`,
         );
       }
@@ -86,13 +86,13 @@ async function run() {
             projectId: projectId,
           });
 
-        console.log('Created knowledge graph:', createKgResponse.data);
+        console.info('Created knowledge graph:', createKgResponse.data);
 
         // List knowledge graphs
         const kgListResponse = await client.knowledgeGraph.listKnowledgeGraphs({
           projectId: projectId,
         });
-        console.log(
+        console.info(
           `Project has ${kgListResponse.data?.length ?? 0} knowledge graphs`,
         );
       } catch (error) {
@@ -120,7 +120,7 @@ async function run() {
       ) {
         // Since we've already checked data exists and has length > 0, we can safely assert it's not undefined
         const queryProgramId = queryProgramsResponse.data[0].id;
-        console.log(`Executing query program: ${queryProgramId}`);
+        console.info(`Executing query program: ${queryProgramId}`);
 
         try {
           const result = await client.queryprograms.executeQueryProgram(
@@ -133,7 +133,7 @@ async function run() {
           );
 
           if (isReadableStream(result)) {
-            console.log('Received streaming response, processing events:');
+            console.info('Received streaming response, processing events:');
 
             // Process events from the stream manually since we can't use for await
             const reader = result.getReader();
@@ -146,7 +146,7 @@ async function run() {
 
                 // Process the chunk
                 const chunk = new TextDecoder().decode(value);
-                console.log('Received chunk:', chunk);
+                console.info('Received chunk:', chunk);
 
                 // Here you would normally parse and handle events
                 // For simplicity, we're just logging the raw chunks
@@ -156,7 +156,7 @@ async function run() {
             }
           } else {
             // This is part of the if-else for isReadableStream(result)
-            console.log('Received regular response:', result.data);
+            console.info('Received regular response:', result.data);
           }
         } catch (error) {
           console.error(

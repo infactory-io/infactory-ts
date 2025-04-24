@@ -67,10 +67,8 @@ function camelizeKeys(obj: unknown): unknown {
   } else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce(
       (result: Record<string, unknown>, key) => {
-        const newKey = toCamelCase(key);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const newKey = key === '_id' ? 'id' : toCamelCase(key);
         (result as any)[newKey] = camelizeKeys((obj as any)[key]);
-        delete (result as any)[key];
         return result;
       },
       {} as Record<string, unknown>,
@@ -522,7 +520,7 @@ export class HttpClient {
           const errorBody = await response.text();
           errorMessage = `API ${requestOptions.method} request failed ${response.status}: ${errorBody}`;
         }
-      } catch (e) {
+      } catch {
         errorMessage = `API request failed with status: ${response.status}`;
       }
 
@@ -645,7 +643,7 @@ export class HttpClient {
           const errorBody = await response.text();
           errorMessage = `API request failed with status ${response.status}: ${errorBody}`;
         }
-      } catch (e) {
+      } catch {
         errorMessage = `API request failed with status: ${response.status}`;
       }
 

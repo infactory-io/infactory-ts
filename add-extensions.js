@@ -28,7 +28,7 @@ function addJsExtensions(filePath) {
 
   if (content !== updatedContent) {
     fs.writeFileSync(filePath, updatedContent);
-    console.log(`Updated: ${filePath}`);
+    console.info(`Updated: ${filePath}`);
   }
 }
 
@@ -50,4 +50,4 @@ function processDirectory(dir) {
 
 // Start processing from src directory
 processDirectory(path.join(__dirname, 'src'));
-console.log('Finished adding .js extensions to imports');
+console.info('Finished adding .js extensions to imports');
