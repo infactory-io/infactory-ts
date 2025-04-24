@@ -3,6 +3,8 @@ import { PlatformsClient, TeamsClient } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 import { OrganizationsClient } from './clients/organizations-client.js';
 import { ProjectsClient } from './clients/projects-client.js';
+import { UsersClient } from './clients/users-client.js';
+import { QueryProgramsClient } from './clients/queryprograms-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -49,6 +51,8 @@ export class InfactoryClient {
   public readonly organizations: OrganizationsClient;
   public readonly teams: TeamsClient;
   public readonly projects: ProjectsClient;
+  public readonly users: UsersClient;
+  public readonly queryPrograms: QueryProgramsClient;
   // Additional resource clients will be added here
 
   /**
@@ -91,6 +95,8 @@ export class InfactoryClient {
     this.organizations = new OrganizationsClient(this.httpClient);
     this.teams = new TeamsClient(this.httpClient);
     this.projects = new ProjectsClient(this.httpClient);
+    this.users = new UsersClient(this.httpClient);
+    this.queryPrograms = new QueryProgramsClient(this.httpClient);
     // Additional client initializations will go here
   }
 

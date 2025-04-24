@@ -38,7 +38,8 @@
     "example:organizations": "tsx examples/organizations-example.ts",
     "example:teams": "tsx examples/teams-example.ts",
     "example:projects": "tsx examples/projects-example.ts",
-    "examples": "npm run example:platforms && npm run example:organizations && npm run example:teams && npm run example:projects",
+    "example:users": "tsx examples/users-example.ts",
+    "examples": "npm run example:platforms && npm run example:organizations && npm run example:teams && npm run example:projects && npm run example:users",
     "e2e-test": "tsx tests/infactory-e2e-test.ts",
     "e2e-test2": "tsx tests/enhanced-e2e-test.ts"
   },

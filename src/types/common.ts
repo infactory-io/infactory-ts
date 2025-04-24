@@ -113,6 +113,21 @@ export interface CreateProjectParams {
   teamId: string;
 }
 
+// Make sure the User interface is properly defined
+export interface User extends BaseEntity {
+  email: string;
+  name?: string;
+  clerkUserId: string;
+  organizationId?: string;
+}
+
+// Make sure the RBACRole interface is properly defined
+export interface RBACRole extends BaseEntity {
+  name: string;
+  description?: string;
+  permissions: string[];
+}
+
 // Infrastructure types
 export interface Infrastructure extends BaseEntity {
   name: string;
@@ -522,4 +537,33 @@ export interface SecurityScheme {
   bearerFormat?: string;
   flows?: Record<string, any>;
   openIdConnectUrl?: string;
+}
+
+/**
+ * Coverage status for query programs
+ */
+export interface CoverageStatus {
+  slots_count: number;
+  columns_count: number;
+  columns: string[];
+}
+
+/**
+ * Coverage by publish status
+ */
+export interface CoverageByStatus {
+  published: CoverageStatus;
+  unpublished: CoverageStatus;
+}
+
+/**
+ * Response for the coverage endpoint
+ */
+export interface GetCoverageResponse {
+  total_columns: number;
+  used_columns_count: number;
+  coverage_percentage: number;
+  all_columns: string[];
+  used_columns: string[];
+  coverage_by_status: CoverageByStatus;
 }
