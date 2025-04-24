@@ -3,14 +3,15 @@ import { InfactoryClient, InfactoryClientError } from '../src/client.js';
 import { PlatformsClient } from '../src/clients/platforms-client.js';
 import { OrganizationsClient } from '../src/clients/organizations-client.js';
 import { TeamsClient } from '../src/clients/teams-client.js';
+import { ProjectsClient } from '../src/clients/projects-client.js';
 
 // Mock the HttpClient
 vi.mock('../src/core/http-client', () => {
   return {
     HttpClient: vi.fn().mockImplementation(() => ({
       getApiKey: vi.fn().mockReturnValue('test-api-key'),
-      getBaseUrl: vi.fn().mockReturnValue('https://api.infactory.ai')
-    }))
+      getBaseUrl: vi.fn().mockReturnValue('https://api.infactory.ai'),
+    })),
   };
 });
 
@@ -22,8 +23,8 @@ vi.mock('../src/clients/platforms-client', () => {
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
-      delete: vi.fn()
-    }))
+      delete: vi.fn(),
+    })),
   };
 });
 
@@ -36,8 +37,8 @@ vi.mock('../src/clients/organizations-client', () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-      move: vi.fn()
-    }))
+      move: vi.fn(),
+    })),
   };
 });
 
@@ -53,8 +54,25 @@ vi.mock('../src/clients/teams-client', () => {
       getTeamMemberships: vi.fn(),
       createTeamMembership: vi.fn(),
       updateTeamMembership: vi.fn(),
-      deleteTeamMembership: vi.fn()
-    }))
+      deleteTeamMembership: vi.fn(),
+    })),
+  };
+});
+
+vi.mock('../src/clients/projects-client', () => {
+  return {
+    ProjectsClient: vi.fn().mockImplementation(() => ({
+      getProjects: vi.fn(),
+      getTeamProjects: vi.fn(),
+      getProject: vi.fn(),
+      createProject: vi.fn(),
+      updateProject: vi.fn(),
+      deleteProject: vi.fn(),
+      moveProject: vi.fn(),
+      exportProject: vi.fn(),
+      importProject: vi.fn(),
+      validateImport: vi.fn(),
+    })),
   };
 });
 
@@ -83,16 +101,18 @@ describe('InfactoryClient', () => {
 
     it('should initialize all resource clients', () => {
       const client = new InfactoryClient({ apiKey: 'test-api-key' });
-      
+
       // Check that all client classes were initialized
       expect(PlatformsClient).toHaveBeenCalledTimes(1);
       expect(OrganizationsClient).toHaveBeenCalledTimes(1);
       expect(TeamsClient).toHaveBeenCalledTimes(1);
-      
+      expect(ProjectsClient).toHaveBeenCalledTimes(1);
+
       // Check that all clients are accessible on the instance
       expect(client.platforms).toBeDefined();
       expect(client.organizations).toBeDefined();
       expect(client.teams).toBeDefined();
+      expect(client.projects).toBeDefined();
     });
   });
 

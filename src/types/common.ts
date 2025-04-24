@@ -84,21 +84,27 @@ export enum TeamMembershipRole {
   VIEWER = 'viewer',
 }
 
-// Project types
-export interface Project extends BaseEntity {
+/**
+ * Project object as returned by the API
+ */
+export interface Project {
+  id: string;
   name: string;
   description?: string;
   teamId?: string;
-  datasources?: any;
-  events?: any;
-  teams?: any;
-  datalines?: any;
-  api?: any;
-  jobs?: any;
-  conversations?: any;
-  queryprograms?: any;
-  ontologies?: any;
-  apiLogs?: any;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  datasources?: any[];
+  events?: any[];
+  teams?: any[];
+  datalines?: any[];
+  api?: any[];
+  jobs?: any[];
+  conversations?: any[];
+  queryprograms?: any[];
+  ontologies?: any[];
+  apiLogs?: any[];
 }
 
 export interface CreateProjectParams {

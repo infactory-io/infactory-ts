@@ -76,30 +76,38 @@ async function teamsExample() {
 
           // Get team memberships
           console.log(`\n4. Listing members of team ${firstTeam.id}:`);
-          const membershipsResponse = await client.teams.getTeamMemberships(
-            firstTeam.id,
-          );
-          if (membershipsResponse.error) {
-            console.error(
-              'Error getting team memberships:',
-              membershipsResponse.error,
+          try {
+            const membershipsResponse = await client.teams.getTeamMemberships(
+              firstTeam.id,
             );
-          } else {
-            console.log(
-              `Found ${membershipsResponse.data?.length || 0} team members`,
-            );
-            if (
-              membershipsResponse.data &&
-              membershipsResponse.data.length > 0
-            ) {
-              membershipsResponse.data.forEach((membership) => {
-                console.log(
-                  `- User ID: ${membership.userId}, Role: ${membership.role}`,
-                );
-              });
+            if (membershipsResponse.error) {
+              console.error(
+                'Error getting team memberships:',
+                membershipsResponse.error.message,
+              );
             } else {
-              console.log('No team members found');
+              console.log(
+                `Found ${membershipsResponse.data?.length || 0} team members`,
+              );
+              if (
+                membershipsResponse.data &&
+                membershipsResponse.data.length > 0
+              ) {
+                membershipsResponse.data.forEach((membership) => {
+                  console.log(
+                    `- User ID: ${membership.userId}, Role: ${membership.role}`,
+                  );
+                });
+              } else {
+                console.log('No team members found');
+              }
             }
+          } catch (error) {
+            console.error('Error getting team memberships:', error);
+            console.error(
+              'Details:',
+              JSON.stringify((error as any).details ?? error, null, 2),
+            );
           }
         }
       } else {

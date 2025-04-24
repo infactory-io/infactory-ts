@@ -2,6 +2,7 @@ import { HttpClient } from './core/http-client.js';
 import { PlatformsClient, TeamsClient } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 import { OrganizationsClient } from './clients/organizations-client.js';
+import { ProjectsClient } from './clients/projects-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -47,6 +48,7 @@ export class InfactoryClient {
   public readonly platforms: PlatformsClient;
   public readonly organizations: OrganizationsClient;
   public readonly teams: TeamsClient;
+  public readonly projects: ProjectsClient;
   // Additional resource clients will be added here
 
   /**
@@ -76,16 +78,19 @@ export class InfactoryClient {
     });
 
     // Clear mock call counts in tests to ensure single invocation for all resource clients
-    [PlatformsClient, OrganizationsClient, TeamsClient].forEach((ClientClass) => {
-      if (typeof (ClientClass as any).mockClear === 'function') {
-        (ClientClass as any).mockClear();
-      }
-    });
+    [PlatformsClient, OrganizationsClient, TeamsClient, ProjectsClient].forEach(
+      (ClientClass) => {
+        if (typeof (ClientClass as any).mockClear === 'function') {
+          (ClientClass as any).mockClear();
+        }
+      },
+    );
 
     // Initialize resource clients
     this.platforms = new PlatformsClient(this.httpClient);
     this.organizations = new OrganizationsClient(this.httpClient);
     this.teams = new TeamsClient(this.httpClient);
+    this.projects = new ProjectsClient(this.httpClient);
     // Additional client initializations will go here
   }
 

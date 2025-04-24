@@ -118,6 +118,9 @@ export class TeamsClient {
   async getTeamMemberships(
     teamId: string,
   ): Promise<ApiResponse<TeamMembership[]>> {
+    if (!teamId) {
+      throw new Error('Team ID is required');
+    }
     return this.httpClient.get<TeamMembership[]>(
       `/v1/team-memberships/team/${teamId}`,
     );
@@ -135,17 +138,20 @@ export class TeamsClient {
     userId: string,
     role: TeamMembershipRole,
   ): Promise<ApiResponse<TeamMembership>> {
-    return this.httpClient.post<TeamMembership>(
-      '/v1/team-memberships',
-      undefined,
-      {
-        params: {
-          team_id: teamId,
-          user_id: userId,
-          role: role,
-        },
-      },
-    );
+    if (!teamId) {
+      throw new Error('Team ID is required');
+    }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!role) {
+      throw new Error('Role is required');
+    }
+    return this.httpClient.post<TeamMembership>('/v1/team-memberships', {
+      team_id: teamId,
+      user_id: userId,
+      role: role,
+    });
   }
 
   /**
@@ -160,12 +166,18 @@ export class TeamsClient {
     userId: string,
     role: TeamMembershipRole,
   ): Promise<ApiResponse<TeamMembership>> {
+    if (!teamId) {
+      throw new Error('Team ID is required');
+    }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!role) {
+      throw new Error('Role is required');
+    }
     return this.httpClient.patch<TeamMembership>(
       `/v1/team-memberships/${userId}/${teamId}`,
-      undefined,
-      {
-        params: { role: role },
-      },
+      { role: role },
     );
   }
 
@@ -181,6 +193,12 @@ export class TeamsClient {
     userId: string,
     permanent: boolean = false,
   ): Promise<ApiResponse<TeamMembership>> {
+    if (!teamId) {
+      throw new Error('Team ID is required');
+    }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     return this.httpClient.delete<TeamMembership>(
       `/v1/team-memberships/${userId}/${teamId}`,
       {
