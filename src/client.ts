@@ -5,6 +5,7 @@ import { OrganizationsClient } from './clients/organizations-client.js';
 import { ProjectsClient } from './clients/projects-client.js';
 import { UsersClient } from './clients/users-client.js';
 import { QueryProgramsClient } from './clients/queryprograms-client.js';
+import { DatasourcesClient } from './clients/datasources-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -53,6 +54,7 @@ export class InfactoryClient {
   public readonly projects: ProjectsClient;
   public readonly users: UsersClient;
   public readonly queryPrograms: QueryProgramsClient;
+  public readonly datasources: DatasourcesClient;
   // Additional resource clients will be added here
 
   /**
@@ -97,6 +99,7 @@ export class InfactoryClient {
     this.projects = new ProjectsClient(this.httpClient);
     this.users = new UsersClient(this.httpClient);
     this.queryPrograms = new QueryProgramsClient(this.httpClient);
+    this.datasources = new DatasourcesClient(this.httpClient);
     // Additional client initializations will go here
   }
 
