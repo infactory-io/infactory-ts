@@ -137,7 +137,7 @@ export async function poll<T>(
       const result = await operation();
 
       if (debug) {
-        console.log(`Polling attempt ${attempts}: received result`, result);
+        console.info(`Polling attempt ${attempts}: received result`, result);
       }
 
       // Check for errors if an error checker was provided
@@ -171,7 +171,7 @@ export async function poll<T>(
       const waitTime = Math.min(currentPollInterval, remainingTime);
 
       if (debug) {
-        console.log(`Waiting ${waitTime / 1000}s before next poll attempt`);
+        console.info(`Waiting ${waitTime / 1000}s before next poll attempt`);
       }
 
       // Wait before polling again

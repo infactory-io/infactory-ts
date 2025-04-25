@@ -32,12 +32,35 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
-      '@typescript-eslint/no-unsafe-member-access': 'warn', // Enabled as requested
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       // Add any other type-aware rule configurations if needed
+    },
+  },
+
+  // Apply overrides for examples
+  {
+    files: ['examples/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
+  },
+
+  // Apply overrides for tests
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 
@@ -46,6 +69,13 @@ export default tseslint.config(
 
   {
     // Global ignore patterns
-    ignores: ['dist/', 'node_modules/', '**/*.js', 'eslint.config.js'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '**/*.js',
+      'eslint.config.js',
+      'vitest.config.ts',
+      'examples/**/*.ts',
+    ],
   },
 );

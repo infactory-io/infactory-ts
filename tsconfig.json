@@ -19,13 +19,6 @@
     },
     "baseUrl": "."
   },
-  "include": [
-    "src/**/*",
-    "tsup.config.ts",
-    "tests/**/*",
-    "examples/example.ts",
-    "tests/**/*",
-    "examples/**/*"
-  ],
+  "include": ["src/**/*", "tsup.config.ts", "tests/**/*", "examples/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

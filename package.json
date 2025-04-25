@@ -1,6 +1,6 @@
 {
   "name": "@infactory/infactory-ts",
-  "version": "0.5.4",
+  "version": "0.6.0",
   "type": "module",
   "description": "Infactory TypeScript SDK for use with Infactory Workshop, MCP Server and API",
   "license": "MIT",
@@ -29,16 +29,24 @@
     "prebuild": "npm run clean",
     "prepare": "husky",
     "prepublishOnly": "npm run build",
-    "test": "jest",
-    "test:unit": "jest --testPathPattern='/__tests__/(?!msw|integration).*\\.test\\.ts$'",
-    "test:integration": "jest --testPathPattern='/__tests__/integration/.*\\.test\\.ts$'",
-    "test:msw": "jest --testPathPattern='/__tests__/msw/.*\\.test\\.ts$'",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch",
+    "test": "vitest --run --exclude=\"tests/e2e/**\"",
+    "test:watch": "vitest --watch --exclude=\"tests/e2e/**\"",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage --exclude=\"tests/e2e/**\"",
+    "test:e2e": "vitest --run tests/e2e/**",
+    "test:e2e:coverage": "vitest run --coverage tests/e2e/**",
+    "test:all": "vitest --run",
+    "test:all:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
-    "example": "tsx examples/example.ts",
-    "e2e-test": "tsx tests/infactory-e2e-test.ts",
-    "e2e-test2": "tsx tests/enhanced-e2e-test.ts"
+    "example:platforms": "tsx examples/platforms-example.ts",
+    "example:organizations": "tsx examples/organizations-example.ts",
+    "example:teams": "tsx examples/teams-example.ts",
+    "example:projects": "tsx examples/projects-example.ts",
+    "example:users": "tsx examples/users-example.ts",
+    "example:datasources": "tsx examples/datasources-example.ts",
+    "example:datalines": "tsx examples/datalines-example.ts",
+    "example:apis": "tsx examples/apis-example.ts",
+    "example:database": "tsx examples/database-example.ts"
   },
   "keywords": [
     "infactory",
@@ -52,33 +60,39 @@
     "url": "https://github.com/infactory-io/infactory-ts.git"
   },
   "devDependencies": {
-    "@types/jest": "29.5.14",
     "@types/node": "20.17.30",
     "@typescript-eslint/eslint-plugin": "8.29.0",
     "@typescript-eslint/parser": "8.29.0",
+    "@vitest/coverage-v8": "3.1.2",
+    "@vitest/ui": "3.1.2",
     "esbuild": "0.25.2",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
     "eslint-plugin-prettier": "5.2.6",
     "husky": "9.1.7",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "jest-fetch-mock": "3.0.3",
     "lint-staged": "15.5.0",
     "msw": "2.7.3",
     "nock": "14.0.2",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
-    "ts-jest": "29.3.1",
     "ts-node": "10.9.2",
     "ts-prune": "0.10.3",
     "tsup": "8.4.0",
     "typescript": "5.8.2",
     "typescript-eslint": "8.29.0",
+    "vitest": "3.1.2",
     "zod": "3.24.2"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "src/clients/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "tests/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "examples/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ]

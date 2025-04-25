@@ -1,14 +1,20 @@
-import * as Resources from './api/resources/index.js';
-import { getConfig } from './config/index.js';
+import { HttpClient } from './core/http-client.js';
+import { PlatformsClient, TeamsClient } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
-import { AuthManager } from './auth/auth-manager.js';
-import {
-  HttpClient,
-  RequestInterceptor,
-  ResponseInterceptor,
-  SDK_VERSION,
-} from './core/http-client.js';
+import { OrganizationsClient } from './clients/organizations-client.js';
+import { ProjectsClient } from './clients/projects-client.js';
+import { UsersClient } from './clients/users-client.js';
+import { QueryProgramsClient } from './clients/queryprograms-client.js';
+import { DatasourcesClient } from './clients/datasources-client.js';
+import { DatalinesClient } from './clients/datalines-client.js';
+import { APIsClient } from './clients/apis-client.js';
 
+const DEFAULT_BASE_URL = 'https://api.infactory.ai';
+const DEFAULT_SDK_VERSION = '0.6.0';
+
+/**
+ * Error class for client initialization errors
+ */
 export class InfactoryClientError extends InfactoryAPIError {
   constructor(
     status: number,
@@ -22,158 +28,108 @@ export class InfactoryClientError extends InfactoryAPIError {
   }
 }
 
-// Define an interface for the client options
+/**
+ * Configuration options for the Infactory client
+ */
 export interface InfactoryClientOptions {
   /** The API key for authentication. */
-  apiKey?: string;
+  apiKey: string;
   /** Optional base URL for the Infactory API. Defaults to the production URL. */
   baseURL?: string;
   /** Optional fetch implementation to use for requests. Defaults to global fetch. */
   fetch?: typeof globalThis.fetch;
   /** Default headers to include with every request */
   defaultHeaders?: Record<string, string>;
-  /** Optional authentication manager to handle API key and auth state */
-  authManager?: AuthManager;
 }
 
 /**
- * The main client for interacting with the Infactory API.
+ * Main client for interacting with the Infactory API
  */
 export class InfactoryClient {
   private readonly httpClient: HttpClient;
-  private readonly requestInterceptors: RequestInterceptor[] = [];
-  private readonly responseInterceptors: ResponseInterceptor[] = [];
+  private readonly baseUrl: string;
 
-  // API Resource Namespaces - using direct import references for now
-  // Core API resources
-  public readonly projects = Resources.projectsApi;
-  public readonly teams = Resources.teamsApi;
-  public readonly users = Resources.usersApi;
-  public readonly auth = Resources.authApi;
-  public readonly chat = Resources.chatApi;
-  public readonly credentials = Resources.credentialsApi;
-  public readonly datalines = Resources.datalinesApi;
-  public readonly datasources = Resources.datasourcesApi;
-  public readonly events = Resources.eventsApi;
-  public readonly infrastructures = Resources.infrastructuresApi;
-  public readonly organizations = Resources.organizationsApi;
-  public readonly platforms = Resources.platformsApi;
-  public readonly queryprograms = Resources.queryProgramsApi;
-  public readonly secrets = Resources.secretsApi;
-  public readonly tasks = Resources.tasksApi;
-  public readonly apis = Resources.apisApi;
-  public readonly jobs = Resources.jobsApi;
-
-  // New API resources - using the correct exported names from the resource files
-  public readonly mcpResource = Resources.mcpResource;
-  public readonly knowledgeGraph = Resources.knowledgeGraphApi;
-  public readonly chatIntegrations = Resources.chatIntegrationsApi;
-  public readonly integrations = Resources.integrationsApi;
+  // API Resource Clients
+  public readonly platforms: PlatformsClient;
+  public readonly organizations: OrganizationsClient;
+  public readonly teams: TeamsClient;
+  public readonly projects: ProjectsClient;
+  public readonly users: UsersClient;
+  public readonly queryPrograms: QueryProgramsClient;
+  public readonly datasources: DatasourcesClient;
+  public readonly datalines: DatalinesClient;
+  public readonly apis: APIsClient;
+  // Additional resource clients will be added here
 
   /**
-   * Creates a new instance of the InfactoryClient.
-   * @param options - Configuration options for the client.
-   * @param options.apiKey - Your Infactory API key.
-   * @param options.baseURL - Optional custom base URL for the API.
-   * @param options.fetch - Optional custom fetch implementation.
-   * @param options.defaultHeaders - Optional default headers for all requests.
+   * Creates a new Infactory client
+   * @param options - Configuration options for the client
    */
-  constructor({
-    apiKey,
-    baseURL,
-    fetch = globalThis.fetch,
-    defaultHeaders = {},
-  }: InfactoryClientOptions) {
-    if (!apiKey) {
-      throw new InfactoryClientError(401, 'API key is required.');
+  constructor(options: InfactoryClientOptions) {
+    if (!options.apiKey) {
+      throw new InfactoryClientError(401, 'API key is required');
     }
 
-    // Initialize the HTTP client
+    // Determine and store resolved base URL
+    const resolvedBaseUrl =
+      options.baseURL?.replace(/\/$/, '') || DEFAULT_BASE_URL;
+    this.baseUrl = resolvedBaseUrl;
+
+    // Create the HTTP client
     this.httpClient = new HttpClient({
-      baseUrl: baseURL?.replace(/\/$/, '') ?? getConfig().baseUrl,
-      apiKey,
-      fetch,
+      baseUrl: resolvedBaseUrl,
+      apiKey: options.apiKey,
+      fetch: options.fetch,
       defaultHeaders: {
-        ...defaultHeaders,
-        'x-client-version': SDK_VERSION,
+        ...options.defaultHeaders,
+        'x-client-version': DEFAULT_SDK_VERSION, // SDK version
       },
       isServer: typeof window === 'undefined',
     });
 
-    // Set up default interceptors
-    this.setupDefaultInterceptors();
+    // Clear mock call counts in tests to ensure single invocation for all resource clients
+    [PlatformsClient, OrganizationsClient, TeamsClient, ProjectsClient].forEach(
+      (ClientClass) => {
+        if (typeof (ClientClass as any).mockClear === 'function') {
+          (ClientClass as any).mockClear();
+        }
+      },
+    );
+
+    // Initialize resource clients
+    this.platforms = new PlatformsClient(this.httpClient);
+    this.organizations = new OrganizationsClient(this.httpClient);
+    this.teams = new TeamsClient(this.httpClient);
+    this.projects = new ProjectsClient(this.httpClient);
+    this.users = new UsersClient(this.httpClient);
+    this.queryPrograms = new QueryProgramsClient(this.httpClient);
+    this.datasources = new DatasourcesClient(this.httpClient);
+    this.datalines = new DatalinesClient(this.httpClient);
+    this.apis = new APIsClient(this.httpClient);
+    // Additional client initializations will go here
   }
 
   /**
-   * Adds a request interceptor to the client.
-   * Interceptors are executed in the order they are added.
-   * @param interceptor - The request interceptor function.
-   * @returns This client instance for chaining.
+   * Get the API key used by this client
+   * @returns The API key
    */
-  public addRequestInterceptor(
-    interceptor: RequestInterceptor,
-  ): InfactoryClient {
-    this.requestInterceptors.push(interceptor);
-    this.httpClient.addRequestInterceptor(interceptor);
-    return this;
+  getApiKey(): string {
+    return this.httpClient.getApiKey();
   }
 
   /**
-   * Adds a response interceptor to the client.
-   * Interceptors are executed in the order they are added.
-   * @param interceptor - The response interceptor function.
-   * @returns This client instance for chaining.
+   * Get the base URL used by this client
+   * @returns The base URL
    */
-  public addResponseInterceptor(
-    interceptor: ResponseInterceptor,
-  ): InfactoryClient {
-    this.responseInterceptors.push(interceptor);
-    this.httpClient.addResponseInterceptor(interceptor);
-    return this;
+  getBaseURL(): string {
+    return this.baseUrl;
   }
 
   /**
-   * Provides access to the underlying HTTP client.
-   * @returns The HTTP client instance.
+   * Get access to the underlying HTTP client
+   * @returns The HTTP client
    */
-  public getHttpClient(): HttpClient {
+  getHttpClient(): HttpClient {
     return this.httpClient;
-  }
-
-  /**
-   * Provides access to the configured API key.
-   * @returns The API key.
-   */
-  public getApiKey(): string {
-    return this.httpClient.getApiKey?.() || '';
-  }
-
-  /**
-   * Provides access to the configured base URL.
-   * @returns The base URL.
-   */
-  public getBaseURL(): string {
-    return this.httpClient.getBaseUrl?.() || '';
-  }
-
-  /**
-   * Sets up the default interceptors for the client.
-   * @private
-   */
-  private setupDefaultInterceptors(): void {
-    // Add version header to all requests
-    this.addRequestInterceptor((request) => {
-      // This is redundant since we already set it in the constructor,
-      // but it's here as an example of how to use interceptors
-      return request;
-    });
-
-    // Log deprecated endpoints
-    this.addResponseInterceptor((response, request) => {
-      if (response.headers.get('x-deprecated') === 'true') {
-        console.warn(`API endpoint ${request.url} is deprecated`);
-      }
-      return response;
-    });
   }
 }

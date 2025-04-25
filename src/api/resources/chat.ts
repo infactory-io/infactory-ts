@@ -60,7 +60,7 @@ export const setChatMessageData = (message: ChatMessage): ChatMessage => {
     ) {
       message.data = JSON.parse(message.contentText);
     }
-  } catch (e) {
+  } catch {
     console.warn(
       'Error loading message.contentText as data:',
       message.contentText,
@@ -102,7 +102,7 @@ export async function processReadableChatResponseStream(
   const decoder = new TextDecoder();
 
   // Replace the loading message with the actual stream message
-  let i = 1;
+  // let i = 1;
   let buffer = '';
   let content = '';
   while (true) {
@@ -117,7 +117,7 @@ export async function processReadableChatResponseStream(
     for (const line of lines) {
       if (line.startsWith('event:')) {
         eventType = line.slice(6).trim();
-        i += 1;
+        // i += 1;
         continue; // Skip the event line
       }
       if (line.trim().length === 0) {
@@ -133,7 +133,7 @@ export async function processReadableChatResponseStream(
         try {
           status_data = JSON.parse(dataStr);
           if (!eventType?.endsWith('LLMContent')) {
-            console.log('ToolChat', eventType, status_data);
+            console.info('ToolChat', eventType, status_data);
           }
         } catch {
           console.warn('ToolChat - non-json data', eventType, dataStr);

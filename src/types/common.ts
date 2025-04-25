@@ -1,3 +1,7 @@
+/**
+ * Ensure this aligns with the schema components of openapi schema and infactory database schemas
+ */
+
 import { InfactoryAPIError } from '@/errors/index.js';
 
 /**
@@ -17,21 +21,23 @@ export interface BaseEntity {
   deletedAt?: string | null;
 }
 
-// Platform types
-export interface Platform extends BaseEntity {
+// This could extent BaseEntity, but going to avoid this for clarity at the moment
+export interface Platform {
+  id: string;
   name: string;
   description?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface CreatePlatformParams {
-  name: string;
-  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
   metadata?: Record<string, any>;
 }
 
 // Organization types
-export interface Organization extends BaseEntity {
+export interface Organization {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
   name: string;
   description?: string;
   platformId: string;
@@ -39,35 +45,87 @@ export interface Organization extends BaseEntity {
   teams: Team[];
 }
 
-export interface CreateOrganizationParams {
-  name: string;
-  description?: string;
-  platformId?: string;
-  clerkOrgId?: string;
-}
-
-// Team types
-export interface Team extends BaseEntity {
+/**
+ * Team object as returned by the API
+ */
+export interface Team {
+  id: string;
   name: string;
   organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  credentials?: any;
+  projects?: any;
+  rbac?: any;
+  secrets?: any;
+  organizations?: any;
+  userTeams?: any;
 }
 
-export interface CreateTeamParams {
-  name: string;
-  organizationId: string;
+/**
+ * Team Membership object as returned by the API
+ */
+export interface TeamMembership {
+  userId: string;
+  teamId: string;
+  role: TeamMembershipRole;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
 }
 
-// Project types
-export interface Project extends BaseEntity {
+/**
+ * Valid roles for team memberships
+ */
+export enum TeamMembershipRole {
+  ADMIN = 'admin',
+  MEMBER = 'member',
+  VIEWER = 'viewer',
+}
+
+/**
+ * Project object as returned by the API
+ */
+export interface Project {
+  id: string;
   name: string;
   description?: string;
   teamId?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  datasources?: any[];
+  events?: any[];
+  teams?: any[];
+  datalines?: any[];
+  api?: any[];
+  jobs?: any[];
+  conversations?: any[];
+  queryprograms?: any[];
+  ontologies?: any[];
+  apiLogs?: any[];
 }
 
 export interface CreateProjectParams {
   name: string;
   description?: string;
   teamId: string;
+}
+
+// Make sure the User interface is properly defined
+export interface User extends BaseEntity {
+  email: string;
+  name?: string;
+  clerkUserId: string;
+  organizationId?: string;
+}
+
+// Make sure the RBACRole interface is properly defined
+export interface RBACRole extends BaseEntity {
+  name: string;
+  description?: string;
+  permissions: string[];
 }
 
 // Infrastructure types
@@ -268,6 +326,21 @@ export interface User extends BaseEntity {
   organizationId?: string;
 }
 
+export interface UserTeam {
+  userId: string;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface UserWithTeamsAndOrganization extends User {
+  userTeams: UserTeam[];
+  organization: Organization;
+  apiKeys: any;
+  apiLogs: any;
+}
+
 export interface RBACRole extends BaseEntity {
   name: string;
   description?: string;
@@ -307,19 +380,6 @@ export interface CreateEventParams {
   metadata?: Record<string, any>;
 }
 
-// Team Membership types
-export interface TeamMembership extends BaseEntity {
-  teamId: string;
-  userId: string;
-  role: string;
-}
-
-export interface CreateTeamMembershipParams {
-  teamId: string;
-  userId: string;
-  role: string;
-}
-
 // API types
 export interface API extends BaseEntity {
   name: string;
@@ -337,8 +397,8 @@ export interface CreateAPIParams {
   basePath: string;
   version: string;
   description?: string;
-  servers?: string;
-  security?: string;
+  servers?: string[];
+  security?: SecurityRequirement[];
   tags?: string;
 }
 
@@ -375,7 +435,7 @@ export interface CreateAPIEndpointParams {
   parameters?: string;
   requestBody?: string;
   responses?: string;
-  security?: string;
+  security?: SecurityRequirement[];
 }
 
 export interface PaginationParams {
@@ -460,4 +520,230 @@ interface Edge {
   target: string;
   type: string;
   data?: any;
+}
+
+/** Security requirement in OpenAPI spec */
+export interface SecurityRequirement {
+  [scheme: string]: string[];
+}
+
+/** Security scheme object in OpenAPI components */
+export interface SecurityScheme {
+  type: 'http' | 'apiKey' | 'oauth2' | 'openIdConnect';
+  description?: string;
+  name?: string;
+  in?: 'query' | 'header' | 'cookie';
+  scheme?: string;
+  bearerFormat?: string;
+  flows?: Record<string, any>;
+  openIdConnectUrl?: string;
+}
+
+/**
+ * Coverage status for query programs
+ */
+export interface CoverageStatus {
+  slots_count: number;
+  columns_count: number;
+  columns: string[];
+}
+
+/**
+ * Coverage by publish status
+ */
+export interface CoverageByStatus {
+  published: CoverageStatus;
+  unpublished: CoverageStatus;
+}
+
+/**
+ * Response for the coverage endpoint
+ */
+export interface GetCoverageResponse {
+  total_columns: number;
+  used_columns_count: number;
+  coverage_percentage: number;
+  all_columns: string[];
+  used_columns: string[];
+  coverage_by_status: CoverageByStatus;
+}
+
+/**
+ * HTTP API Authentication Configuration
+ */
+export interface HttpAPIAuthConfig {
+  apiKey?: Record<string, any>;
+  bearerToken?: string;
+  basicAuth?: Record<string, any>;
+}
+
+/**
+ * Parameter Configuration
+ */
+export interface ParameterConfig {
+  value: string;
+  required?: boolean;
+}
+
+/**
+ * Parameter Group
+ */
+export interface ParameterGroup {
+  required?: boolean;
+  parameters: Array<Record<string, string>>;
+}
+
+/**
+ * HTTP Body Configuration
+ */
+export interface HttpBodyConfig {
+  type: string; // 'raw', 'form-data', 'x-www-form-urlencoded'
+  contentType?: string;
+  content?: string;
+  parameters?: Record<string, string>;
+}
+
+/**
+ * Test HTTP API Request
+ */
+export interface TestHttpAPIRequest {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  parameters?: Record<string, ParameterConfig>;
+  parameterGroups?: ParameterGroup[];
+  authType?: string;
+  auth?: HttpAPIAuthConfig;
+  body?: HttpBodyConfig;
+  responsePathExtractor?: string;
+}
+
+/**
+ * Database connection test request
+ */
+export interface TestConnectionRequest {
+  connection_string: string;
+}
+
+/**
+ * Sample tables request
+ */
+export interface SampleTablesRequest {
+  connection_string: string;
+  table_names: string[];
+  project_id: string;
+  datasource_id: string;
+  name: string;
+}
+
+/**
+ * Execute custom SQL request
+ */
+export interface ExecuteCustomSqlRequest {
+  connection_string: string;
+  sql_query: string;
+  sampling_sql_query: string;
+  project_id: string;
+  datasource_id: string;
+  name: string;
+}
+
+/**
+ * Validate SQL syntax request
+ */
+export interface ValidateSqlSyntaxRequest {
+  connection_string: string;
+  sql_query: string;
+}
+
+/**
+ * Validate SQL query request
+ */
+export interface ValidateSqlQueryRequest {
+  connection_string: string;
+  sql_query: string;
+  max_rows?: number;
+}
+
+/**
+ * Extract SQL parameters request
+ */
+export interface ExtractSqlParametersRequest {
+  sql_query: string;
+}
+
+
+export interface TableInfo {
+  name: string;
+  estimatedRows: number;
+  estimatedSize: string;
+  columnCount: number;
+}
+
+export interface TestConnectionResponse {
+  success: boolean;
+  tables: TableInfo[];
+}
+
+export interface SampleTablesRequest {
+  connectionString: string;
+  tableNames: string[];
+  projectId: string;
+  datasourceId: string;
+  name: string;
+}
+
+export interface I7YPendingJob {
+  jobType: string;
+  projectId: string;
+  userId: string | null;
+  parentJobId: string | null;
+  metadata: any;
+  payload: Record<string, any>;
+}
+
+export interface SampleTablesResponse {
+  dataObjects: Record<string, string>;
+  jobs: I7YPendingJob[];
+}
+
+export interface ExecuteCustomSqlRequest {
+  connectionString: string;
+  sqlQuery: string;
+  samplingSqlQuery: string;
+  projectId: string;
+  datasourceId: string;
+  name: string;
+}
+
+export interface ExecuteCustomSqlResponse {
+  jobs: I7YPendingJob[];
+}
+
+export interface ValidateSqlQueryRequest {
+  connectionString: string;
+  sqlQuery: string;
+}
+
+export interface ValidateSqlQueryResponse {
+  rowCount: number;
+  valid: boolean;
+  message?: string;
+}
+
+export interface SqlParameter {
+  type: string;
+  field: string;
+  operator: string;
+  value: string;
+  displayName: string;
+}
+
+export interface ExtractSqlParametersRequest {
+  sqlQuery: string;
+}
+
+export interface ExtractSqlParametersResponse {
+  parameters: SqlParameter[];
+  parsedQuery: string;
 }

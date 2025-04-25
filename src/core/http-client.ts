@@ -8,10 +8,11 @@ import {
   InfactoryAPIError,
   NetworkError,
   createErrorFromStatus,
+  AuthenticationError,
 } from '@/errors/index.js';
 
 // Define SDK version for request headers
-export const SDK_VERSION = '0.5.3';
+export const SDK_VERSION = '0.6.0';
 
 // Default API base path for client-side requests
 const API_BASE_URL = '/api/infactory';
@@ -46,6 +47,7 @@ function decamelizeKeys(obj: unknown): unknown {
     return obj.map(decamelizeKeys) as unknown;
   } else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result: Record<string, unknown>, key) => {
+      console.log('Decamelize:', key, toSnakeCase(key));
       const newKey = toSnakeCase(key);
       const newResult = decamelizeKeys((obj as Record<string, unknown>)[key]);
       result[newKey] = newResult;
@@ -66,10 +68,8 @@ function camelizeKeys(obj: unknown): unknown {
   } else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce(
       (result: Record<string, unknown>, key) => {
-        const newKey = toCamelCase(key);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const newKey = key === '_id' ? 'id' : toCamelCase(key);
         (result as any)[newKey] = camelizeKeys((obj as any)[key]);
-        delete (result as any)[key];
         return result;
       },
       {} as Record<string, unknown>,
@@ -106,6 +106,8 @@ export interface HttpClientOptions {
   fetch?: typeof globalThis.fetch;
   /** Default request headers */
   defaultHeaders?: Record<string, string>;
+  /** Authentication location: header (Bearer), query (nf_api_key), or cookie-based */
+  authIn?: 'header' | 'query' | 'cookie';
   /** Whether this client is running on the server side */
   isServer?: boolean;
 }
@@ -130,6 +132,7 @@ export class HttpClient {
   private apiKey?: string;
   private fetchImpl: typeof globalThis.fetch;
   private defaultHeaders: Record<string, string>;
+  private authIn: 'header' | 'query' | 'cookie';
   private isServer: boolean;
   private requestInterceptors: RequestInterceptor[] = [];
   private responseInterceptors: ResponseInterceptor[] = [];
@@ -160,6 +163,7 @@ export class HttpClient {
     this.fetchImpl = options.fetch || globalThis.fetch;
     this.defaultHeaders = options.defaultHeaders || {};
     this.isServer = options.isServer ?? typeof window === 'undefined';
+    this.authIn = options.authIn || 'header';
 
     // Add default SDK version header
     this.defaultHeaders['x-infactory-sdk-version'] = SDK_VERSION;
@@ -517,7 +521,7 @@ export class HttpClient {
           const errorBody = await response.text();
           errorMessage = `API ${requestOptions.method} request failed ${response.status}: ${errorBody}`;
         }
-      } catch (e) {
+      } catch {
         errorMessage = `API request failed with status: ${response.status}`;
       }
 
@@ -532,6 +536,11 @@ export class HttpClient {
         requestId,
         errorData.details || errorData,
       );
+
+      // For server errors (5xx), throw the error
+      if (response.status >= 500) {
+        throw error;
+      }
 
       throw error;
     }
@@ -554,34 +563,46 @@ export class HttpClient {
     url: string;
     options: RequestInit;
   } {
-    const { url: endpoint, params, jsonBody, ...options } = request;
+    const {
+      url: endpoint,
+      params: requestParams,
+      jsonBody,
+      ...options
+    } = request;
+    let params = requestParams;
     options.method = (options.method || 'GET').toUpperCase();
 
     // Initialize headers with defaults
     const headers = new Headers(this.defaultHeaders);
 
-    // Add any headers from the request options
-    if (options.headers) {
-      const requestHeaders = options.headers as Record<string, string>;
-      Object.entries(requestHeaders).forEach(([key, value]) => {
-        headers.set(key, value);
-      });
-    }
-
-    // Set content type for JSON requests
-    if (jsonBody !== undefined) {
+    // Handle JSON body
+    if (jsonBody) {
       headers.set('Content-Type', 'application/json');
       options.body = JSON.stringify(jsonBody);
     }
 
-    // Add cookies header if available in browser
-    if (!this.isServer && typeof document !== 'undefined' && document.cookie) {
-      headers.set('Cookie', document.cookie);
-    }
-
-    // Add authorization header if API key is available
-    if (this.apiKey) {
-      headers.set('Authorization', `Bearer ${this.apiKey}`);
+    // Authentication
+    if (this.authIn === 'header') {
+      if (this.apiKey) {
+        headers.set('Authorization', `Bearer ${this.apiKey}`);
+      }
+    } else if (this.authIn === 'query') {
+      if (this.apiKey) {
+        params = { ...(params || {}), nf_api_key: this.apiKey };
+      }
+    } else if (this.authIn === 'cookie') {
+      // Cookie-based auth: include browser cookies
+      if (
+        !this.isServer &&
+        typeof document !== 'undefined' &&
+        document.cookie
+      ) {
+        headers.set('Cookie', document.cookie);
+      } else {
+        throw new AuthenticationError(
+          'Cookie-based authentication is only supported in browser environments',
+        );
+      }
     }
 
     // Build the full URL with query parameters
@@ -623,7 +644,7 @@ export class HttpClient {
           const errorBody = await response.text();
           errorMessage = `API request failed with status ${response.status}: ${errorBody}`;
         }
-      } catch (e) {
+      } catch {
         errorMessage = `API request failed with status: ${response.status}`;
       }
 
