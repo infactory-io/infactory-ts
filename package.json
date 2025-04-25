@@ -45,7 +45,8 @@
     "example:users": "tsx examples/users-example.ts",
     "example:datasources": "tsx examples/datasources-example.ts",
     "example:datalines": "tsx examples/datalines-example.ts",
-    "example:apis": "tsx examples/apis-example.ts"
+    "example:apis": "tsx examples/apis-example.ts",
+    "example:database": "tsx examples/database-example.ts"
   },
   "keywords": [
     "infactory",

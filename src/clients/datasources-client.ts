@@ -1,5 +1,5 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse } from '../types/common.js';
+import { ApiResponse, TestConnectionResponse } from '../types/common.js';
 import {
   Datasource,
   CreateDatasourceParams,
@@ -10,6 +10,17 @@ import { SubmitJobParams } from '../api/jobs.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import FormData from 'form-data';
+
+// Import database-related interfaces
+import {
+  SampleTablesRequest as DatabaseSampleTablesRequest,
+  SampleTablesResponse,
+  ExecuteCustomSqlRequest,
+  ExecuteCustomSqlResponse,
+  ValidateSqlQueryRequest,
+  ValidateSqlQueryResponse,
+  ExtractSqlParametersResponse
+} from '../types/common.js';
 
 /**
  * Client for managing datasources in the Infactory API
@@ -286,5 +297,125 @@ export class DatasourcesClient {
       jobId,
       uploadResponse: uploadResponse as unknown as Response,
     };
+  }
+
+  /**
+   * Test a database connection
+   * @param connectionString - The database connection string to test
+   * @returns A promise that resolves to an API response containing the test results
+   */
+  async testDatabaseConnection(
+    connectionString: string,
+  ): Promise<ApiResponse<TestConnectionResponse>> {
+    return await this.httpClient.post<TestConnectionResponse>(
+      '/v1/database/test-connection',
+      {
+        body: { connection_string: connectionString },
+      },
+    );
+  }
+
+  /**
+   * Sample tables from a database
+   * @param request - The request parameters for sampling tables
+   * @returns A promise that resolves to an API response containing the sampled tables
+   */
+  async sampleDatabaseTables(
+    request: DatabaseSampleTablesRequest,
+  ): Promise<ApiResponse<SampleTablesResponse>> {
+    // Convert camelCase to snake_case for API request
+    return await this.httpClient.post<SampleTablesResponse>(
+      '/v1/database/sample-tables',
+      {
+        body: {
+          connection_string: request.connectionString,
+          table_names: request.tableNames,
+          project_id: request.projectId,
+          datasource_id: request.datasourceId,
+          name: request.name,
+        },
+      },
+    );
+  }
+
+  /**
+   * Execute custom SQL on a database
+   * @param request - The request parameters for executing custom SQL
+   * @returns A promise that resolves to an API response containing the execution results
+   */
+  async executeCustomSql(
+    request: ExecuteCustomSqlRequest,
+  ): Promise<ApiResponse<ExecuteCustomSqlResponse>> {
+    // Convert camelCase to snake_case for API request
+    return await this.httpClient.post<ExecuteCustomSqlResponse>(
+      '/v1/database/execute-custom-sql',
+      {
+        body: {
+          connection_string: request.connectionString,
+          sql_query: request.sqlQuery,
+          sampling_sql_query: request.samplingSqlQuery,
+          project_id: request.projectId,
+          datasource_id: request.datasourceId,
+          name: request.name,
+        },
+      },
+    );
+  }
+
+  /**
+   * Validate SQL query syntax and get row count
+   * @param request - The request parameters for validating the SQL query
+   * @returns A promise that resolves to an API response containing the validation results
+   */
+  async validateSqlQuery(
+    request: ValidateSqlQueryRequest,
+  ): Promise<ApiResponse<ValidateSqlQueryResponse>> {
+    // Convert camelCase to snake_case for API request
+    return await this.httpClient.post<ValidateSqlQueryResponse>(
+      '/v1/database/validate-sql-query',
+      {
+        body: {
+          connection_string: request.connectionString,
+          sql_query: request.sqlQuery,
+        },
+      },
+    );
+  }
+
+  /**
+   * Validate SQL syntax
+   * @param request - The request parameters for validating SQL syntax
+   * @returns A promise that resolves to an API response containing the validation results
+   */
+  async validateSqlSyntax(
+    request: { connectionString: string; sqlQuery: string },
+  ): Promise<ApiResponse<ValidateSqlQueryResponse>> {
+    // Convert camelCase to snake_case for API request
+    return await this.httpClient.post<ValidateSqlQueryResponse>(
+      '/v1/database/validate-sql-syntax',
+      {
+        body: {
+          connection_string: request.connectionString,
+          sql_query: request.sqlQuery,
+        },
+      },
+    );
+  }
+
+  /**
+   * Extract parameters from a SQL query
+   * @param sqlQuery - The SQL query to extract parameters from
+   * @returns A promise that resolves to an API response containing the extracted parameters
+   */
+  async extractSqlParameters(
+    sqlQuery: string,
+  ): Promise<ApiResponse<ExtractSqlParametersResponse>> {
+    // Convert camelCase to snake_case for API request
+    return await this.httpClient.post<ExtractSqlParametersResponse>(
+      '/v1/database/extract-sql-parameters',
+      {
+        body: { sql_query: sqlQuery },
+      },
+    );
   }
 }

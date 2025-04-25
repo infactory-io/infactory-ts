@@ -567,3 +567,183 @@ export interface GetCoverageResponse {
   used_columns: string[];
   coverage_by_status: CoverageByStatus;
 }
+
+/**
+ * HTTP API Authentication Configuration
+ */
+export interface HttpAPIAuthConfig {
+  apiKey?: Record<string, any>;
+  bearerToken?: string;
+  basicAuth?: Record<string, any>;
+}
+
+/**
+ * Parameter Configuration
+ */
+export interface ParameterConfig {
+  value: string;
+  required?: boolean;
+}
+
+/**
+ * Parameter Group
+ */
+export interface ParameterGroup {
+  required?: boolean;
+  parameters: Array<Record<string, string>>;
+}
+
+/**
+ * HTTP Body Configuration
+ */
+export interface HttpBodyConfig {
+  type: string; // 'raw', 'form-data', 'x-www-form-urlencoded'
+  contentType?: string;
+  content?: string;
+  parameters?: Record<string, string>;
+}
+
+/**
+ * Test HTTP API Request
+ */
+export interface TestHttpAPIRequest {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  parameters?: Record<string, ParameterConfig>;
+  parameterGroups?: ParameterGroup[];
+  authType?: string;
+  auth?: HttpAPIAuthConfig;
+  body?: HttpBodyConfig;
+  responsePathExtractor?: string;
+}
+
+/**
+ * Database connection test request
+ */
+export interface TestConnectionRequest {
+  connection_string: string;
+}
+
+/**
+ * Sample tables request
+ */
+export interface SampleTablesRequest {
+  connection_string: string;
+  table_names: string[];
+  project_id: string;
+  datasource_id: string;
+  name: string;
+}
+
+/**
+ * Execute custom SQL request
+ */
+export interface ExecuteCustomSqlRequest {
+  connection_string: string;
+  sql_query: string;
+  sampling_sql_query: string;
+  project_id: string;
+  datasource_id: string;
+  name: string;
+}
+
+/**
+ * Validate SQL syntax request
+ */
+export interface ValidateSqlSyntaxRequest {
+  connection_string: string;
+  sql_query: string;
+}
+
+/**
+ * Validate SQL query request
+ */
+export interface ValidateSqlQueryRequest {
+  connection_string: string;
+  sql_query: string;
+  max_rows?: number;
+}
+
+/**
+ * Extract SQL parameters request
+ */
+export interface ExtractSqlParametersRequest {
+  sql_query: string;
+}
+
+
+export interface TableInfo {
+  name: string;
+  estimatedRows: number;
+  estimatedSize: string;
+  columnCount: number;
+}
+
+export interface TestConnectionResponse {
+  success: boolean;
+  tables: TableInfo[];
+}
+
+export interface SampleTablesRequest {
+  connectionString: string;
+  tableNames: string[];
+  projectId: string;
+  datasourceId: string;
+  name: string;
+}
+
+export interface I7YPendingJob {
+  jobType: string;
+  projectId: string;
+  userId: string | null;
+  parentJobId: string | null;
+  metadata: any;
+  payload: Record<string, any>;
+}
+
+export interface SampleTablesResponse {
+  dataObjects: Record<string, string>;
+  jobs: I7YPendingJob[];
+}
+
+export interface ExecuteCustomSqlRequest {
+  connectionString: string;
+  sqlQuery: string;
+  samplingSqlQuery: string;
+  projectId: string;
+  datasourceId: string;
+  name: string;
+}
+
+export interface ExecuteCustomSqlResponse {
+  jobs: I7YPendingJob[];
+}
+
+export interface ValidateSqlQueryRequest {
+  connectionString: string;
+  sqlQuery: string;
+}
+
+export interface ValidateSqlQueryResponse {
+  rowCount: number;
+  valid: boolean;
+  message?: string;
+}
+
+export interface SqlParameter {
+  type: string;
+  field: string;
+  operator: string;
+  value: string;
+  displayName: string;
+}
+
+export interface ExtractSqlParametersRequest {
+  sqlQuery: string;
+}
+
+export interface ExtractSqlParametersResponse {
+  parameters: SqlParameter[];
+  parsedQuery: string;
+}

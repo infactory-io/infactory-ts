@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DatasourcesClient } from '../../src/clients/datasources-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
+import { SampleTablesRequest } from '@/types/common.js';
 
 // Mock dependencies
 vi.mock('fs', () => ({
@@ -751,7 +752,7 @@ describe('DatasourcesClient', () => {
       const result = await datasourcesClient.uploadDatasource(
         'project-1',
         'ds-1',
-        mockFormData,
+        mockFormData as any,
         'job-123',
       );
 
@@ -769,6 +770,346 @@ describe('DatasourcesClient', () => {
 
       // Verify the result is a stream
       expect(result).toBe(mockStream);
+    });
+  });
+
+  describe('testDatabaseConnection', () => {
+    it('should call the correct endpoint to test a database connection', async () => {
+      // Mock response data
+      const mockResponse = {
+        success: true,
+        tables: [
+          {
+            name: 'users',
+            estimatedRows: 1000,
+            estimatedSize: '1 MB',
+            columnCount: 5,
+          },
+          {
+            name: 'orders',
+            estimatedRows: 5000,
+            estimatedSize: '5 MB',
+            columnCount: 8,
+          },
+        ],
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method
+      const connectionString = 'postgresql://user:password@localhost:5432/mydb';
+      const result = await datasourcesClient.testDatabaseConnection(connectionString);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/test-connection',
+        {
+          body: { connection_string: connectionString },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle errors when testing a database connection', async () => {
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        500,
+        'server_error',
+        'Internal server error',
+      );
+
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        error: mockError,
+      });
+
+      // Call the method
+      const connectionString = 'postgresql://user:password@localhost:5432/mydb';
+      const result = await datasourcesClient.testDatabaseConnection(connectionString);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/test-connection',
+        {
+          body: { connection_string: connectionString },
+        },
+      );
+
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
+    });
+  });
+
+  describe('sampleDatabaseTables', () => {
+    it('should call the correct endpoint to sample tables from a database', async () => {
+      // Mock response data
+      const mockResponse = {
+        dataObjects: {
+          'users': 'data-obj-1',
+          'orders': 'data-obj-2',
+        },
+        jobs: [
+          {
+            jobType: 'sample_tables',
+            projectId: 'project-1',
+            userId: 'user-1',
+            parentJobId: null,
+            metadata: {},
+            payload: {},
+          },
+        ],
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with type assertion to handle the interface mismatch
+      const request = {
+        connectionString: 'postgresql://user:password@localhost:5432/mydb',
+        tableNames: ['users', 'orders'],
+        projectId: 'project-1',
+        datasourceId: 'ds-1',
+        name: 'sampled_tables',
+      } as SampleTablesRequest;
+      const result = await datasourcesClient.sampleDatabaseTables(request);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/sample-tables',
+        {
+          body: {
+            connection_string: request.connectionString,
+            table_names: request.tableNames,
+            project_id: request.projectId,
+            datasource_id: request.datasourceId,
+            name: request.name,
+          },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+  });
+
+  describe('executeCustomSql', () => {
+    it('should call the correct endpoint to execute custom SQL', async () => {
+      // Mock response data
+      const mockResponse = {
+        jobs: [
+          {
+            jobType: 'execute_sql',
+            projectId: 'project-1',
+            userId: 'user-1',
+            parentJobId: null,
+            metadata: {},
+            payload: {},
+          },
+        ],
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with type assertion to handle the interface mismatch
+      const request = {
+        connectionString: 'postgresql://user:password@localhost:5432/mydb',
+        sqlQuery: 'SELECT * FROM users LIMIT 10',
+        samplingSqlQuery: 'SELECT * FROM users LIMIT 5',
+        projectId: 'project-1',
+        datasourceId: 'ds-1',
+        name: 'custom_sql_run',
+      };
+      const result = await datasourcesClient.executeCustomSql(request as any);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/execute-custom-sql',
+        {
+          body: {
+            connection_string: request.connectionString,
+            sql_query: request.sqlQuery,
+            sampling_sql_query: request.samplingSqlQuery,
+            project_id: request.projectId,
+            datasource_id: request.datasourceId,
+            name: request.name,
+          },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+  });
+
+  describe('validateSqlQuery', () => {
+    it('should call the correct endpoint to validate a SQL query', async () => {
+      // Mock response data
+      const mockResponse = {
+        rowCount: 100,
+        valid: true,
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with type assertion to handle the interface mismatch
+      const request = {
+        connectionString: 'postgresql://user:password@localhost:5432/mydb',
+        sqlQuery: 'SELECT * FROM users',
+      };
+      const result = await datasourcesClient.validateSqlQuery(request as any);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/validate-sql-query',
+        {
+          body: {
+            connection_string: request.connectionString,
+            sql_query: request.sqlQuery,
+          },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle invalid SQL queries', async () => {
+      // Mock response data for invalid SQL
+      const mockResponse = {
+        rowCount: 0,
+        valid: false,
+        message: 'Syntax error in SQL statement',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with type assertion to handle the interface mismatch
+      const request = {
+        connectionString: 'postgresql://user:password@localhost:5432/mydb',
+        sqlQuery: 'SELECT * FROM non_existent_table',
+      };
+      const result = await datasourcesClient.validateSqlQuery(request as any);
+
+      // Verify the result indicates an invalid query
+      expect(result.data).toEqual(mockResponse);
+      expect(result.data?.valid).toBe(false);
+    });
+  });
+
+  describe('validateSqlSyntax', () => {
+    it('should call the correct endpoint to validate SQL syntax', async () => {
+      // Mock response data
+      const mockResponse = {
+        valid: true,
+        rowCount: 0,
+      };
+      
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with object parameter
+      const request = {
+        connectionString: 'postgresql://user:password@localhost:5432/mydb',
+        sqlQuery: 'SELECT * FROM users'
+      };
+      const result = await datasourcesClient.validateSqlSyntax(request);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/validate-sql-syntax',
+        {
+          body: {
+            connection_string: request.connectionString,
+            sql_query: request.sqlQuery,
+          },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+  });
+
+  describe('extractSqlParameters', () => {
+    it('should call the correct endpoint to extract parameters from a SQL query', async () => {
+      // Mock response data
+      const mockResponse = {
+        parameters: [
+          {
+            type: 'string',
+            field: 'status',
+            operator: '=',
+            value: '',
+            displayName: 'status',
+          },
+          {
+            type: 'date',
+            field: 'created_at',
+            operator: '>',
+            value: '',
+            displayName: 'start_date',
+          },
+        ],
+        parsedQuery: 'SELECT * FROM users WHERE status = ? AND created_at > ?',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method
+      const sqlQuery = "SELECT * FROM users WHERE status = '{{status}}' AND created_at > '{{start_date}}'";
+      const result = await datasourcesClient.extractSqlParameters(sqlQuery);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/database/extract-sql-parameters',
+        {
+          body: { sql_query: sqlQuery },
+        },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle SQL queries with no parameters', async () => {
+      // Mock response data for SQL with no parameters
+      const mockResponse = {
+        parameters: [],
+        parsedQuery: 'SELECT * FROM users',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method
+      const sqlQuery = 'SELECT * FROM users';
+      const result = await datasourcesClient.extractSqlParameters(sqlQuery);
+
+      // Verify the result has no parameters
+      expect(result.data).toEqual(mockResponse);
+      expect(result.data?.parameters).toHaveLength(0);
     });
   });
 });
