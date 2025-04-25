@@ -47,7 +47,6 @@ function decamelizeKeys(obj: unknown): unknown {
     return obj.map(decamelizeKeys) as unknown;
   } else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result: Record<string, unknown>, key) => {
-      console.log('Decamelize:', key, toSnakeCase(key));
       const newKey = toSnakeCase(key);
       const newResult = decamelizeKeys((obj as Record<string, unknown>)[key]);
       result[newKey] = newResult;

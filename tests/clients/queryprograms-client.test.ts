@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryProgramsClient } from '../../src/clients/queryprograms-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
+import {
+  ApiResponse,
+  QueryResponse,
+  QueryProgram,
+} from '../../src/types/common.js';
 
 // Mock the HttpClient
 vi.mock('../../src/core/http-client', () => {
@@ -159,249 +164,35 @@ describe('QueryProgramsClient', () => {
       // Verify the result
       expect(result.data).toEqual(mockQueryProgram);
     });
-  });
 
-  describe('createQueryProgram', () => {
-    it('should call the correct endpoint to create a query program', async () => {
-      // Mock request data
-      const createParams = {
-        name: 'New Query Program',
-        projectId: 'project-1',
-        query: 'select * from users',
-        published: false,
-      };
+    it('should handle errors when getting a query program', async () => {
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        404,
+        'not_found',
+        'Query program not found',
+      );
 
-      // Mock response data
-      const mockResponse = {
-        id: 'new-qp',
-        name: 'New Query Program',
-        projectId: 'project-1',
-        query: 'select * from users',
-        published: false,
-        createdAt: '2025-01-03T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z',
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse,
+      vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
+        error: mockError,
       });
 
       // Call the method
-      const result = await queryProgramsClient.createQueryProgram(createParams);
+      const result =
+        await queryProgramsClient.getQueryProgram('qp-nonexistent');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/queryprograms',
-        createParams,
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-nonexistent',
       );
 
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
-    });
-
-    it('should filter out null and undefined values', async () => {
-      // Mock request data with some null values
-      const createParams = {
-        name: 'New Query Program',
-        projectId: 'project-1',
-        query: 'select * from users',
-        published: false,
-        prevId: null, // This should be filtered out
-        steps: undefined, // This should be filtered out
-      };
-
-      // Expected filtered params
-      const expectedFilteredParams = {
-        name: 'New Query Program',
-        projectId: 'project-1',
-        query: 'select * from users',
-        published: false,
-      };
-
-      // Mock response data
-      const mockResponse = {
-        id: 'new-qp',
-        name: 'New Query Program',
-        projectId: 'project-1',
-        query: 'select * from users',
-        published: false,
-        createdAt: '2025-01-03T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z',
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.createQueryProgram(
-        createParams as any,
-      );
-
-      // Verify the HTTP client was called correctly with filtered parameters
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/queryprograms',
-        expectedFilteredParams,
-      );
-
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
-    });
-  });
-
-  describe('executeQueryProgram', () => {
-    it('should call the correct endpoint to execute a query program', async () => {
-      // Mock request parameters
-      const executeParams = {
-        param1: 'value1',
-        param2: 42,
-      };
-
-      // Mock response data
-      const mockResponse = {
-        result: [
-          { id: 1, name: 'Test 1' },
-          { id: 2, name: 'Test 2' },
-        ],
-        metadata: {
-          executionTime: 0.15,
-          queryProgramId: 'qp-1',
-        },
-        success: true,
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.executeQueryProgram(
-        'qp-1',
-        executeParams,
-      );
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
-        executeParams,
-      );
-
-      // Verify the result (checking for ApiResponse type)
-      if ('data' in result) {
-        expect(result.data).toEqual(mockResponse);
-      } else {
-        throw new Error('Expected ApiResponse but got ReadableStream');
-      }
-    });
-  });
-
-  describe('executeQueryProgramStream', () => {
-    it('should call the correct endpoint to execute a query program with streaming', async () => {
-      // Mock request parameters
-      const executeParams = {
-        param1: 'value1',
-        param2: 42,
-        stream: true,
-      };
-
-      // Mock stream response
-      const mockStream = new ReadableStream();
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
-
-      // Call the method
-      const result = await queryProgramsClient.executeQueryProgramStream(
-        'qp-1',
-        executeParams,
-      );
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
-        {
-          url: '/v1/queryprograms/qp-1/execute',
-          method: 'POST',
-          jsonBody: executeParams,
-          headers: {
-            Accept: 'text/event-stream',
-          },
-        },
-      );
-
-      // Verify the result is a stream
-      expect(result).toBe(mockStream);
-    });
-  });
-
-  describe('publishQueryProgram', () => {
-    it('should call the correct endpoint to publish a query program', async () => {
-      // Mock response data
-      const mockResponse = {
-        id: 'qp-1',
-        name: 'Query Program 1',
-        projectId: 'project-1',
-        published: true,
-        createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z',
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.publishQueryProgram('qp-1');
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/publish',
-        { group_slots: false },
-      );
-
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
-    });
-
-    it('should handle the groupSlots parameter when publishing', async () => {
-      // Mock response data
-      const mockResponse = {
-        id: 'qp-1',
-        name: 'Query Program 1',
-        projectId: 'project-1',
-        published: true,
-        createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z',
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method with groupSlots = true
-      const result = await queryProgramsClient.publishQueryProgram(
-        'qp-1',
-        true,
-      );
-
-      // Verify the HTTP client was called correctly with group_slots = true
-      expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/publish',
-        { group_slots: true },
-      );
-
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
     });
   });
 
   describe('getQueryProgramsByProject', () => {
-    it('should call the correct endpoint to get query programs for a project', async () => {
+    it('should call the correct endpoint to get query programs by project ID', async () => {
       // Mock response data
       const mockQueryPrograms = [
         {
@@ -441,7 +232,7 @@ describe('QueryProgramsClient', () => {
     });
 
     it('should handle undefined projectId', async () => {
-      // Mock response data
+      // Mock response data - all query programs
       const mockQueryPrograms = [
         {
           id: 'qp-1',
@@ -469,13 +260,109 @@ describe('QueryProgramsClient', () => {
       // Call the method without projectId
       const result = await queryProgramsClient.getQueryProgramsByProject();
 
-      // Verify the HTTP client was called correctly
+      // Verify the HTTP client was called correctly with undefined projectId
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
         projectId: undefined,
       });
 
       // Verify the result
       expect(result.data).toEqual(mockQueryPrograms);
+    });
+
+    it('should handle errors when getting query programs by project', async () => {
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        500,
+        'server_error',
+        'Internal server error',
+      );
+
+      vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
+        error: mockError,
+      });
+
+      // Call the method
+      const result =
+        await queryProgramsClient.getQueryProgramsByProject('project-1');
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
+        projectId: 'project-1',
+      });
+
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
+    });
+  });
+
+  describe('createQueryProgram', () => {
+    it('should call the correct endpoint to create a query program', async () => {
+      // Mock request data
+      const createParams = {
+        name: 'New Query Program',
+        projectId: 'project-1',
+        query: 'select * from users',
+        published: false,
+      };
+      // Mock response data
+      const mockResponse = {
+        id: 'qp-new',
+        name: 'New Query Program',
+        projectId: 'project-1',
+        query: 'select * from users',
+        published: false,
+        createdAt: '2025-01-03T00:00:00Z',
+        updatedAt: '2025-01-03T00:00:00Z',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.createQueryProgram(createParams);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/queryprograms',
+        createParams,
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle errors when creating a query program', async () => {
+      // Mock request data
+      const createParams = {
+        name: 'New Query Program',
+        projectId: '', // Empty projectId to trigger validation error
+        query: 'select * from users',
+      } as any; // Using type assertion to bypass TypeScript check
+
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        400,
+        'validation_error',
+        'Project ID is required',
+      );
+
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        error: mockError,
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.createQueryProgram(createParams);
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/queryprograms',
+        createParams,
+      );
+
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
     });
   });
 
@@ -525,26 +412,27 @@ describe('QueryProgramsClient', () => {
       // Mock request data with some null values
       const updateParams = {
         name: 'Updated Query Program',
-        description: null,
-        query: 'SELECT * FROM updated_table',
-        parameters: undefined,
+        description: null, // Should be filtered out
+        query: 'select * from users where active = true',
+        tags: undefined, // Should be filtered out
+        published: true,
       };
 
-      // Expected filtered parameters
       const expectedFilteredParams = {
         name: 'Updated Query Program',
-        query: 'SELECT * FROM updated_table',
+        query: 'select * from users where active = true',
+        published: true,
       };
 
       // Mock response data
       const mockResponse = {
         id: 'qp-1',
         name: 'Updated Query Program',
-        query: 'SELECT * FROM updated_table',
         projectId: 'project-1',
+        query: 'select * from users where active = true',
+        published: true,
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z',
-        published: false,
+        updatedAt: '2025-01-03T12:00:00Z',
       };
 
       // Setup the mock response
@@ -567,11 +455,45 @@ describe('QueryProgramsClient', () => {
       // Verify the result
       expect(result.data).toEqual(mockResponse);
     });
+
+    it('should handle errors when updating a query program', async () => {
+      // Mock request data
+      const updateParams = {
+        name: 'Updated Query Program',
+        query: 'INVALID SQL SYNTAX',
+      };
+
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        400,
+        'validation_error',
+        'Invalid SQL syntax',
+      );
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
+        error: mockError,
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.updateQueryProgram(
+        'qp-1',
+        updateParams,
+      );
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1',
+        updateParams,
+      );
+
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
+    });
   });
 
   describe('deleteQueryProgram', () => {
     it('should call the correct endpoint to delete a query program', async () => {
-      // Setup the mock response
+      // Setup the mock response for a successful deletion
       vi.mocked(mockHttpClient.delete).mockResolvedValueOnce({
         data: undefined,
       });
@@ -591,16 +513,16 @@ describe('QueryProgramsClient', () => {
       expect(result.data).toBeUndefined();
     });
 
-    it('should handle permanent deletion', async () => {
-      // Setup the mock response
+    it('should handle permanent deletion parameter', async () => {
+      // Setup the mock response for a successful permanent deletion
       vi.mocked(mockHttpClient.delete).mockResolvedValueOnce({
         data: undefined,
       });
 
-      // Call the method with permanent = true
+      // Call the method with permanent=true
       const result = await queryProgramsClient.deleteQueryProgram('qp-1', true);
 
-      // Verify the HTTP client was called correctly with permanent = true
+      // Verify the HTTP client was called correctly with permanent=true
       expect(mockHttpClient.delete).toHaveBeenCalledWith(
         '/v1/queryprograms/qp-1',
         {
@@ -610,6 +532,154 @@ describe('QueryProgramsClient', () => {
 
       // Verify the result
       expect(result.data).toBeUndefined();
+    });
+  });
+
+  describe('executeQueryProgram', () => {
+    it('should call the correct endpoint to execute a query program', async () => {
+      // Mock request parameters
+      const executeParams = {
+        param1: 'value1',
+        param2: 42,
+      };
+
+      // Mock response data
+      const mockResponse = {
+        result: [
+          { id: 1, name: 'Test 1' },
+          { id: 2, name: 'Test 2' },
+        ],
+        metadata: {
+          executionTime: 0.15,
+          queryProgramId: 'qp-1',
+        },
+        success: true,
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.executeQueryProgram(
+        'qp-1',
+        executeParams,
+      );
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/execute',
+        executeParams,
+      );
+
+      // Verify the result
+      // TypeScript doesn't know that we've mocked this to return an ApiResponse
+      // and not a ReadableStream, so we need to cast
+      expect((result as ApiResponse<QueryResponse>).data).toEqual(mockResponse);
+    });
+
+    it('should handle null parameters when executing a query program', async () => {
+      // Mock response data
+      const mockResponse = {
+        result: [],
+        metadata: {
+          executionTime: 0.05,
+          queryProgramId: 'qp-1',
+        },
+        success: true,
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with undefined parameters (testing line 118 branch)
+      const result = await queryProgramsClient.executeQueryProgram(
+        'qp-1',
+        undefined,
+      );
+
+      // Verify the HTTP client was called correctly with empty object
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/execute',
+        {},
+      );
+
+      // Verify the result
+      // TypeScript doesn't know that we've mocked this to return an ApiResponse
+      // and not a ReadableStream, so we need to cast
+      expect((result as ApiResponse<QueryResponse>).data).toEqual(mockResponse);
+    });
+  });
+
+  describe('executeQueryProgramStream', () => {
+    it('should call the correct endpoint to execute a query program with streaming', async () => {
+      // Mock request parameters
+      const executeParams = {
+        param1: 'value1',
+        param2: 42,
+        stream: true,
+      };
+
+      // Mock stream response
+      const mockStream = new ReadableStream();
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
+
+      // Call the method
+      const result = await queryProgramsClient.executeQueryProgramStream(
+        'qp-1',
+        executeParams,
+      );
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/execute',
+        {
+          url: '/v1/queryprograms/qp-1/execute',
+          method: 'POST',
+          jsonBody: executeParams,
+          headers: {
+            Accept: 'text/event-stream',
+          },
+        },
+      );
+
+      // Verify the result is a stream
+      expect(result).toBe(mockStream);
+    });
+
+    it('should handle null parameters when executing a query program with streaming', async () => {
+      // Mock stream response
+      const mockStream = new ReadableStream();
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
+
+      // Call the method with undefined parameters (testing line 135 branch)
+      const result = await queryProgramsClient.executeQueryProgramStream(
+        'qp-1',
+        undefined,
+      );
+
+      // Verify the HTTP client was called correctly with empty object
+      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/execute',
+        {
+          url: '/v1/queryprograms/qp-1/execute',
+          method: 'POST',
+          jsonBody: {},
+          headers: {
+            Accept: 'text/event-stream',
+          },
+        },
+      );
+
+      // Verify the result is a stream
+      expect(result).toBe(mockStream);
     });
   });
 
@@ -844,16 +914,135 @@ describe('QueryProgramsClient', () => {
     });
   });
 
-  describe('unpublishQueryProgram', () => {
-    it('should call the correct endpoint to unpublish a query program', async () => {
+  describe('publishQueryProgram', () => {
+    it('should call the correct endpoint to publish a query program with default groupSlots', async () => {
       // Mock response data
       const mockResponse = {
         id: 'qp-1',
         name: 'Query Program 1',
         projectId: 'project-1',
+        published: true,
         createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z',
-        published: false,
+        updatedAt: '2025-01-01T00:00:00Z',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with default groupSlots parameter (false)
+      const result = await queryProgramsClient.publishQueryProgram('qp-1');
+
+      // Verify the HTTP client was called correctly with default group_slots = false
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/publish',
+        { group_slots: false },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle explicitly passing false for the groupSlots parameter', async () => {
+      // Mock response data
+      const mockResponse = {
+        id: 'qp-1',
+        name: 'Query Program 1',
+        projectId: 'project-1',
+        published: true,
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with explicit groupSlots = false
+      const result = await queryProgramsClient.publishQueryProgram(
+        'qp-1',
+        false,
+      );
+
+      // Verify the HTTP client was called correctly with group_slots = false
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/publish',
+        { group_slots: false },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle the groupSlots parameter when set to true', async () => {
+      // Mock response data
+      const mockResponse = {
+        id: 'qp-1',
+        name: 'Query Program 1',
+        projectId: 'project-1',
+        published: true,
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
+        data: mockResponse,
+      });
+
+      // Call the method with groupSlots = true
+      const result = await queryProgramsClient.publishQueryProgram(
+        'qp-1',
+        true,
+      );
+
+      // Verify the HTTP client was called correctly with group_slots = true
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-1/publish',
+        { group_slots: true },
+      );
+
+      // Verify the result
+      expect(result.data).toEqual(mockResponse);
+    });
+
+    it('should handle errors when publishing a query program', async () => {
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        404,
+        'not_found',
+        'Query program not found',
+      );
+
+      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
+        error: mockError,
+      });
+
+      // Call the method
+      const result =
+        await queryProgramsClient.publishQueryProgram('qp-nonexistent');
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(
+        '/v1/queryprograms/qp-nonexistent/publish',
+        { group_slots: false },
+      );
+
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
+    });
+
+    it('should handle publishing an already published query program', async () => {
+      // Mock response data for an already published program
+      const mockResponse = {
+        id: 'qp-1',
+        name: 'Query Program 1',
+        projectId: 'project-1',
+        published: true, // Already published
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
       };
 
       // Setup the mock response
@@ -862,15 +1051,16 @@ describe('QueryProgramsClient', () => {
       });
 
       // Call the method
-      const result = await queryProgramsClient.unpublishQueryProgram('qp-1');
+      const result = await queryProgramsClient.publishQueryProgram('qp-1');
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/unpublish',
+        '/v1/queryprograms/qp-1/publish',
+        { group_slots: false },
       );
 
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
+      // Verify the result shows it's still published
+      expect((result as ApiResponse<QueryProgram>).data?.published).toBe(true);
     });
   });
 

@@ -672,7 +672,6 @@ export interface ExtractSqlParametersRequest {
   sql_query: string;
 }
 
-
 export interface TableInfo {
   name: string;
   estimatedRows: number;

@@ -801,7 +801,8 @@ describe('DatasourcesClient', () => {
 
       // Call the method
       const connectionString = 'postgresql://user:password@localhost:5432/mydb';
-      const result = await datasourcesClient.testDatabaseConnection(connectionString);
+      const result =
+        await datasourcesClient.testDatabaseConnection(connectionString);
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
@@ -829,7 +830,8 @@ describe('DatasourcesClient', () => {
 
       // Call the method
       const connectionString = 'postgresql://user:password@localhost:5432/mydb';
-      const result = await datasourcesClient.testDatabaseConnection(connectionString);
+      const result =
+        await datasourcesClient.testDatabaseConnection(connectionString);
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
@@ -849,8 +851,8 @@ describe('DatasourcesClient', () => {
       // Mock response data
       const mockResponse = {
         dataObjects: {
-          'users': 'data-obj-1',
-          'orders': 'data-obj-2',
+          users: 'data-obj-1',
+          orders: 'data-obj-2',
         },
         jobs: [
           {
@@ -1018,7 +1020,7 @@ describe('DatasourcesClient', () => {
         valid: true,
         rowCount: 0,
       };
-      
+
       // Setup the mock response
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
         data: mockResponse,
@@ -1027,7 +1029,7 @@ describe('DatasourcesClient', () => {
       // Call the method with object parameter
       const request = {
         connectionString: 'postgresql://user:password@localhost:5432/mydb',
-        sqlQuery: 'SELECT * FROM users'
+        sqlQuery: 'SELECT * FROM users',
       };
       const result = await datasourcesClient.validateSqlSyntax(request);
 
@@ -1076,7 +1078,8 @@ describe('DatasourcesClient', () => {
       });
 
       // Call the method
-      const sqlQuery = "SELECT * FROM users WHERE status = '{{status}}' AND created_at > '{{start_date}}'";
+      const sqlQuery =
+        "SELECT * FROM users WHERE status = '{{status}}' AND created_at > '{{start_date}}'";
       const result = await datasourcesClient.extractSqlParameters(sqlQuery);
 
       // Verify the HTTP client was called correctly

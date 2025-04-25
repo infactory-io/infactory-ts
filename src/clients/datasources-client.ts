@@ -19,7 +19,7 @@ import {
   ExecuteCustomSqlResponse,
   ValidateSqlQueryRequest,
   ValidateSqlQueryResponse,
-  ExtractSqlParametersResponse
+  ExtractSqlParametersResponse,
 } from '../types/common.js';
 
 /**
@@ -387,9 +387,10 @@ export class DatasourcesClient {
    * @param request - The request parameters for validating SQL syntax
    * @returns A promise that resolves to an API response containing the validation results
    */
-  async validateSqlSyntax(
-    request: { connectionString: string; sqlQuery: string },
-  ): Promise<ApiResponse<ValidateSqlQueryResponse>> {
+  async validateSqlSyntax(request: {
+    connectionString: string;
+    sqlQuery: string;
+  }): Promise<ApiResponse<ValidateSqlQueryResponse>> {
     // Convert camelCase to snake_case for API request
     return await this.httpClient.post<ValidateSqlQueryResponse>(
       '/v1/database/validate-sql-syntax',
