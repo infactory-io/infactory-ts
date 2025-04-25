@@ -50,10 +50,10 @@ async function main() {
     try {
       const questionsResponse = await client.generate.generateQuestions({
         projectId,
-        numberOfQuestions: 3,
+        count: 3,
       });
 
-      console.log('Response:', JSON.stringify(questionsResponse, null, 2));
+      console.log('Response:', questionsResponse);
 
       if (questionsResponse.data) {
         console.log('✅ Generated questions:');

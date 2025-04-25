@@ -102,11 +102,13 @@ export type GenerateOrFixQueryProgramParams =
  * Parameters for generating questions
  * Corresponds to POST /v1/actions/generate/questions
  */
-export interface GenerateQuestionsParams extends BaseGenerateParams {
+export interface GenerateQuestionsParams {
   /** The ID of the project */
   projectId: string;
+  /** Previous questions to generate new questions based on */
+  previousQuestions?: string[];
   /** Number of questions to generate */
-  numberOfQuestions?: number;
+  count?: number;
 }
 
 /**

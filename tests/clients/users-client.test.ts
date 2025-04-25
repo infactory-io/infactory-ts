@@ -391,7 +391,8 @@ describe('UsersClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/users/get_teams_with_organizations_and_projects?userId=user-1',
+        '/v1/users/get_teams_with_organizations_and_projects',
+        { userId: 'user-1' },
       );
 
       // Verify the result
@@ -431,7 +432,8 @@ describe('UsersClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/users/get_teams_with_organizations_and_projects?clerk_user_id=clerk-user-1',
+        '/v1/users/get_teams_with_organizations_and_projects',
+        { clerkUserId: 'clerk-user-1' },
       );
 
       // Verify the result
@@ -471,7 +473,8 @@ describe('UsersClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/users/get_teams_with_organizations_and_projects?email=user1%40example.com',
+        '/v1/users/get_teams_with_organizations_and_projects',
+        { email: 'user1@example.com' },
       );
 
       // Verify the result
@@ -512,7 +515,8 @@ describe('UsersClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/users/get_teams_with_organizations_and_projects?userId=user-1&email=user1%40example.com',
+        '/v1/users/get_teams_with_organizations_and_projects',
+        { userId: 'user-1', email: 'user1@example.com' },
       );
 
       // Verify the result

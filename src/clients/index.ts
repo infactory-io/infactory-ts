@@ -8,5 +8,6 @@ export * from './queryprograms-client.js';
 export * from './datasources-client.js';
 export * from './datalines-client.js';
 export * from './apis-client.js';
+export * from './generate-client.js';
 
 // Add additional client exports as they are created

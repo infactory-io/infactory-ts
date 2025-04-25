@@ -1,5 +1,9 @@
 import { HttpClient } from './core/http-client.js';
-import { PlatformsClient, TeamsClient } from './clients/index.js';
+import {
+  GenerateClient,
+  PlatformsClient,
+  TeamsClient,
+} from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 import { OrganizationsClient } from './clients/organizations-client.js';
 import { ProjectsClient } from './clients/projects-client.js';
@@ -59,6 +63,7 @@ export class InfactoryClient {
   public readonly datasources: DatasourcesClient;
   public readonly datalines: DatalinesClient;
   public readonly apis: APIsClient;
+  public readonly generate: GenerateClient;
   // Additional resource clients will be added here
 
   /**
@@ -106,6 +111,7 @@ export class InfactoryClient {
     this.datasources = new DatasourcesClient(this.httpClient);
     this.datalines = new DatalinesClient(this.httpClient);
     this.apis = new APIsClient(this.httpClient);
+    this.generate = new GenerateClient(this.httpClient);
     // Additional client initializations will go here
   }
 

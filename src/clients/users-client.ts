@@ -150,19 +150,9 @@ export class UsersClient {
     clerkUserId?: string;
     email?: string;
   }): Promise<ApiResponse<any>> {
-    const queryParams = new URLSearchParams();
-    if (params.userId) {
-      queryParams.append('userId', params.userId);
-    }
-    if (params.clerkUserId) {
-      queryParams.append('clerk_user_id', params.clerkUserId);
-    }
-    if (params.email) {
-      queryParams.append('email', params.email);
-    }
-
     return this.httpClient.get<any>(
-      `/v1/users/get_teams_with_organizations_and_projects?${queryParams.toString()}`,
+      `/v1/users/get_teams_with_organizations_and_projects`,
+      params,
     );
   }
 
