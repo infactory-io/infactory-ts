@@ -15,7 +15,6 @@ export * from './infrastructures.js';
 export * from './integrations.js';
 export * from './jobs.js';
 export * from './knowledge-graph.js';
-export * from './mcp.js'; // Export the new MCP resource
 export * from './ontologies.js';
 export * from './secrets.js';
 export * from './tasks.js';

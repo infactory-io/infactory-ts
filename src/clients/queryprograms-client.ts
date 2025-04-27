@@ -18,16 +18,17 @@ export class QueryProgramsClient {
   constructor(private readonly httpClient: HttpClient) {}
 
   /**
-   * List all query programs
-   * @param params - Optional pagination parameters and project ID filter
+   * List all query programs for a project
+   * @param params - Optional pagination parameters
    * @returns A promise that resolves to an API response containing an array of query programs
    */
   async listQueryPrograms(
-    params?: PaginationParams & { projectId?: string },
+    params?: PaginationParams & { projectId: string },
   ): Promise<ApiResponse<QueryProgram[]>> {
-    return await this.httpClient.get<QueryProgram[]>(`/v1/queryprograms`, {
+    return await this.httpClient.get<QueryProgram[]>(
+      `/v1/queryprograms`,
       params,
-    });
+    );
   }
 
   /**
@@ -37,19 +38,6 @@ export class QueryProgramsClient {
    */
   async getQueryProgram(id: string): Promise<ApiResponse<QueryProgram>> {
     return await this.httpClient.get<QueryProgram>(`/v1/queryprograms/${id}`);
-  }
-
-  /**
-   * Get query programs for a specific project
-   * @param projectId - The ID of the project
-   * @returns A promise that resolves to an API response containing an array of query programs
-   */
-  async getQueryProgramsByProject(
-    projectId?: string,
-  ): Promise<ApiResponse<QueryProgram[]>> {
-    return await this.httpClient.get<QueryProgram[]>(`/v1/queryprograms`, {
-      projectId: projectId,
-    });
   }
 
   /**
