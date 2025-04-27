@@ -629,10 +629,10 @@ export interface TestConnectionRequest {
  * Sample tables request
  */
 export interface SampleTablesRequest {
-  connection_string: string;
-  table_names: string[];
-  project_id: string;
-  datasource_id: string;
+  connectionString: string;
+  tableNames: string[];
+  projectId: string;
+  datasourceId: string;
   name: string;
 }
 
@@ -640,11 +640,11 @@ export interface SampleTablesRequest {
  * Execute custom SQL request
  */
 export interface ExecuteCustomSqlRequest {
-  connection_string: string;
-  sql_query: string;
-  sampling_sql_query: string;
-  project_id: string;
-  datasource_id: string;
+  connectionString: string;
+  sqlQuery: string;
+  samplingSqlQuery: string;
+  projectId: string;
+  datasourceId: string;
   name: string;
 }
 

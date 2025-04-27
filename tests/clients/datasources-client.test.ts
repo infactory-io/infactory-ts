@@ -886,10 +886,10 @@ describe('DatasourcesClient', () => {
         '/v1/database/sample-tables',
         {
           body: {
-            connection_string: request.connectionString,
-            table_names: request.tableNames,
-            project_id: request.projectId,
-            datasource_id: request.datasourceId,
+            connectionString: request.connectionString,
+            tableNames: request.tableNames,
+            projectId: request.projectId,
+            datasourceId: request.datasourceId,
             name: request.name,
           },
         },
@@ -937,11 +937,11 @@ describe('DatasourcesClient', () => {
         '/v1/database/execute-custom-sql',
         {
           body: {
-            connection_string: request.connectionString,
-            sql_query: request.sqlQuery,
-            sampling_sql_query: request.samplingSqlQuery,
-            project_id: request.projectId,
-            datasource_id: request.datasourceId,
+            connectionString: request.connectionString,
+            sqlQuery: request.sqlQuery,
+            samplingSqlQuery: request.samplingSqlQuery,
+            projectId: request.projectId,
+            datasourceId: request.datasourceId,
             name: request.name,
           },
         },
