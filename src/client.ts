@@ -13,6 +13,7 @@ import { DatasourcesClient } from './clients/datasources-client.js';
 import { DatalinesClient } from './clients/datalines-client.js';
 import { APIsClient } from './clients/apis-client.js';
 import { ChatClient } from './clients/chat-client.js';
+import { AuthClient } from './clients/auth-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -68,6 +69,7 @@ export class InfactoryClient {
   public readonly apis: APIsClient;
   public readonly generate: GenerateClient;
   public readonly chat: ChatClient;
+  public readonly auth: AuthClient;
   // Additional resource clients will be added here
 
   /**
@@ -148,6 +150,7 @@ export class InfactoryClient {
     this.apis = new APIsClient(this.httpClient);
     this.generate = new GenerateClient(this.httpClient);
     this.chat = new ChatClient(this.httpClient);
+    this.auth = new AuthClient(this.httpClient);
     // Additional client initializations will go here
   }
 

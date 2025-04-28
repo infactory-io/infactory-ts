@@ -5,7 +5,6 @@
  */
 
 export * from './auth.js';
-export * from './chat.js';
 export * from './chat-integrations.js';
 export * from './credentials.js';
 export * from './events.js';
