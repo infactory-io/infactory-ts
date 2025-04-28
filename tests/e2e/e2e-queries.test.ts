@@ -549,7 +549,6 @@ describe('E2E Tests: Query Editor Workflow', () => {
         // Verify the conversation exists by listing all conversations for the project
         const listConversationsResponse =
           await client.chat.getProjectConversations(project.id);
-        console.log('listConversationsResponse', listConversationsResponse);
         expect(listConversationsResponse?.error).not.toBeDefined();
         expect(listConversationsResponse?.data).toBeDefined();
 

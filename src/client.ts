@@ -1,20 +1,22 @@
 import { HttpClient } from './core/http-client.js';
 import {
   GenerateClient,
+  GraphClient,
   PlatformsClient,
   TeamsClient,
+  OrganizationsClient,
+  ProjectsClient,
+  UsersClient,
+  QueryProgramsClient,
+  DatasourcesClient,
+  DatalinesClient,
+  APIsClient,
+  ChatClient,
+  AuthClient,
+  SecretsClient,
+  SubscriptionsClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
-import { OrganizationsClient } from './clients/organizations-client.js';
-import { ProjectsClient } from './clients/projects-client.js';
-import { UsersClient } from './clients/users-client.js';
-import { QueryProgramsClient } from './clients/queryprograms-client.js';
-import { DatasourcesClient } from './clients/datasources-client.js';
-import { DatalinesClient } from './clients/datalines-client.js';
-import { APIsClient } from './clients/apis-client.js';
-import { ChatClient } from './clients/chat-client.js';
-import { AuthClient } from './clients/auth-client.js';
-import { SecretsClient } from './clients/secrets-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -72,6 +74,8 @@ export class InfactoryClient {
   public readonly chat: ChatClient;
   public readonly auth: AuthClient;
   public readonly secrets: SecretsClient;
+  public readonly subscriptions: SubscriptionsClient;
+  public readonly graph: GraphClient;
   // Additional resource clients will be added here
 
   /**
@@ -131,6 +135,9 @@ export class InfactoryClient {
       APIsClient,
       GenerateClient,
       ChatClient,
+      SecretsClient,
+      SubscriptionsClient,
+      GraphClient,
     ].forEach((ClientClass) => {
       if (typeof (ClientClass as any).mockClear === 'function') {
         (ClientClass as any).mockClear();
@@ -151,6 +158,8 @@ export class InfactoryClient {
     this.chat = new ChatClient(this.httpClient);
     this.auth = new AuthClient(this.httpClient);
     this.secrets = new SecretsClient(this.httpClient);
+    this.subscriptions = new SubscriptionsClient(this.httpClient);
+    this.graph = new GraphClient(this.httpClient);
     // Additional client initializations will go here
   }
 
