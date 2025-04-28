@@ -313,7 +313,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
     }
     // This check was already done in the try block above
     console.log('Publish test complete.');
-  });
+  }, 60000); // Increase timeout for deployment
 
   it('should generate questions for the project', async () => {
     console.log(`Generating questions for project ID: ${project.id}`);
