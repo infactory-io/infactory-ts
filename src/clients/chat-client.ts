@@ -1,11 +1,17 @@
+// src/clients/chat-client.ts
+
+import { HttpClient } from '../core/http-client.js';
+import { ApiResponse } from '../types/common.js';
 import {
   ChatMessage,
   ConversationGraph,
   GraphItem,
   MessageStatus,
-} from '@/types/chat.js';
-import { sharedClient, ApiResponse } from '@/core/shared-client.js';
+} from '../types/chat.js';
 
+/**
+ * Represents a conversation in the chat system
+ */
 export interface Conversation {
   id: string;
   title: string;
@@ -18,6 +24,9 @@ export interface Conversation {
   queryprogramId?: string | null;
 }
 
+/**
+ * Parameters for creating a new conversation
+ */
 export interface CreateConversationParams {
   projectId: string;
   title?: string;
@@ -25,6 +34,9 @@ export interface CreateConversationParams {
   queryprogramId?: string | null;
 }
 
+/**
+ * Parameters for updating an existing conversation
+ */
 export interface UpdateConversationParams {
   title?: string;
   isStarred?: boolean;
@@ -32,6 +44,9 @@ export interface UpdateConversationParams {
   defaultSlugModel?: string;
 }
 
+/**
+ * Parameters for creating a new chat message
+ */
 export interface ChatMessageCreate {
   conversationId: string;
   projectId: string;
@@ -50,6 +65,12 @@ export interface ChatMessageCreate {
   presencePenalty?: number;
 }
 
+/**
+ * Safely parses contentText to set the data field in a message
+ * @param message - The chat message to process
+ * @returns The processed message object
+ */
+// EXPORTED HELPER
 export const setChatMessageData = (message: ChatMessage): ChatMessage => {
   // Safely parse `content_text` to set `data` field in the message
   try {
@@ -69,7 +90,13 @@ export const setChatMessageData = (message: ChatMessage): ChatMessage => {
   return message;
 };
 
-const setConversationGraphItemData = (item: GraphItem): GraphItem => {
+/**
+ * Sets data for a graph item based on its kind
+ * @param item - The graph item to process
+ * @returns The processed graph item
+ */
+// EXPORTED HELPER
+export const setConversationGraphItemData = (item: GraphItem): GraphItem => {
   if (item.kind === 'node') {
     if (item.message) {
       item.message = setChatMessageData(item.message);
@@ -82,6 +109,13 @@ const setConversationGraphItemData = (item: GraphItem): GraphItem => {
   }
   return item;
 };
+
+/**
+ * Sets data for all items in a conversation graph
+ * @param graph - The conversation graph to process
+ * @returns The processed conversation graph
+ */
+// EXPORTED HELPER
 export const setConversationGraphData = (
   graph: ConversationGraph,
 ): ConversationGraph => {
@@ -91,18 +125,23 @@ export const setConversationGraphData = (
   return graph;
 };
 
-export async function processReadableChatResponseStream(
-  response: ReadableStream<any>,
-  setStatus: (status: MessageStatus | null) => void,
-) {
-  const reader = response?.getReader();
+/**
+ * Processes a readable chat response stream and updates the status
+ * @param stream - The readable stream to process
+ * @param setStatus - Callback function to update status
+ * @returns Promise that resolves when the stream is fully processed
+ */
+// EXPORTED HELPER
+export const processReadableChatResponseStream = async (
+  stream: ReadableStream,
+  setStatus: (status: MessageStatus) => void,
+): Promise<void> => {
+  const reader = stream?.getReader();
   if (!reader) {
     throw new Error('No readable stream');
   }
   const decoder = new TextDecoder();
 
-  // Replace the loading message with the actual stream message
-  // let i = 1;
   let buffer = '';
   let content = '';
   while (true) {
@@ -117,7 +156,6 @@ export async function processReadableChatResponseStream(
     for (const line of lines) {
       if (line.startsWith('event:')) {
         eventType = line.slice(6).trim();
-        // i += 1;
         continue; // Skip the event line
       }
       if (line.trim().length === 0) {
@@ -138,6 +176,8 @@ export async function processReadableChatResponseStream(
         } catch {
           console.warn('ToolChat - non-json data', eventType, dataStr);
         }
+
+        // Now process the status data
         if (
           eventType?.endsWith('LLMContent') &&
           'content' in status_data &&
@@ -190,89 +230,126 @@ export async function processReadableChatResponseStream(
     }
   }
   reader.releaseLock();
-}
+};
 
-export const chatApi = {
-  // Get all conversations for a project
-  getProjectConversations: async (
+/**
+ * Client for managing chats and conversations in the Infactory API
+ */
+export class ChatClient {
+  /**
+   * Creates a new ChatClient instance
+   * @param httpClient - The HTTP client to use for API requests
+   */
+  constructor(private readonly httpClient: HttpClient) {}
+
+  /**
+   * Get all conversations for a project
+   * @param projectId - The ID of the project
+   * @param queryProgramId - Optional query program ID to filter conversations
+   * @returns A promise that resolves to an API response containing an array of conversations
+   */
+  async getProjectConversations(
     projectId: string,
     queryProgramId?: string,
-  ): Promise<ApiResponse<Conversation[]>> => {
+  ): Promise<ApiResponse<Conversation[]>> {
     const params: Record<string, string> = { projectId: projectId };
     if (queryProgramId) {
       params['queryprogramId'] = queryProgramId;
     }
-    return await sharedClient.get<Conversation[]>(`/v1/chat`, {
-      params: params,
-    });
-  },
+    return await this.httpClient.get<Conversation[]>(`/v1/chat`, params);
+  }
 
-  // Get a specific conversation
-  getConversation: async (
+  /**
+   * Get a specific conversation by ID
+   * @param conversationId - The ID of the conversation to retrieve
+   * @returns A promise that resolves to an API response containing the conversation
+   */
+  async getConversation(
     conversationId: string,
-  ): Promise<ApiResponse<Conversation>> => {
-    return await sharedClient.get<Conversation>(`/v1/chat/${conversationId}`);
-  },
+  ): Promise<ApiResponse<Conversation>> {
+    return await this.httpClient.get<Conversation>(
+      `/v1/chat/${conversationId}`,
+    );
+  }
 
-  // Create a new conversation
-  createConversation: async (
+  /**
+   * Create a new conversation
+   * @param params - Parameters for creating the conversation
+   * @returns A promise that resolves to an API response containing the created conversation
+   */
+  async createConversation(
     params: CreateConversationParams,
-  ): Promise<ApiResponse<Conversation>> => {
-    return await sharedClient.post<Conversation>('/v1/chat', {
-      body: {
-        projectId: params.projectId,
-        title: params.title,
-        defaultSlugModel: params.defaultSlugModel,
-        queryprogramId: params.queryprogramId,
-      },
+  ): Promise<ApiResponse<Conversation>> {
+    return await this.httpClient.post<Conversation>('/v1/chat', {
+      projectId: params.projectId,
+      title: params.title,
+      defaultSlugModel: params.defaultSlugModel,
+      queryprogramId: params.queryprogramId,
     });
-  },
+  }
 
-  // Send a message to a conversation
-  sendMessage: async (
+  /**
+   * Send a message to a conversation
+   * @param conversationId - The ID of the conversation
+   * @param params - Parameters for creating the message
+   * @param noReply - Whether to prevent an AI response (defaults to false)
+   * @returns A promise that resolves to a readable stream of the response
+   */
+  async sendMessage(
     conversationId: string,
     params: ChatMessageCreate,
     noReply: boolean = false,
-  ): Promise<any> => {
+  ): Promise<ReadableStream<Uint8Array>> {
     const queryParams: Record<string, string> = {};
     if (noReply) {
       queryParams['no_reply'] = 'true';
     }
     const url = `/v1/chat/${conversationId}`;
 
-    return sharedClient.createStream(url, {
+    return this.httpClient.createStream(url, {
       url,
       method: 'POST',
       params: queryParams,
       body: JSON.stringify(params),
     });
-  },
+  }
 
-  // NEW: Send a tool call message through the chat interface.
-  sendToolCall: async (
+  /**
+   * Send a tool call message through the chat interface
+   * @param toolName - The name of the tool to call
+   * @param params - Parameters for creating the message
+   * @param noReply - Whether to prevent an AI response (defaults to false)
+   * @returns A promise that resolves to a readable stream of the response
+   */
+  async sendToolCall(
     toolName: string,
     params: ChatMessageCreate,
     noReply: boolean = false,
-  ): Promise<any> => {
+  ): Promise<ReadableStream<Uint8Array>> {
     const queryParams: Record<string, string> = {};
     if (noReply) {
       queryParams['noReply'] = 'true';
     }
     const url = `/live/${toolName}`;
 
-    return sharedClient.createStream(url, {
+    return this.httpClient.createStream(url, {
       url,
       method: 'POST',
       params: queryParams,
       body: JSON.stringify(params),
     });
-  },
+  }
 
-  // Get messages for a conversation
-  getConversationMessages: async (
+  /**
+   * Get messages for a conversation
+   * @param conversationId - The ID of the conversation
+   * @param includeHidden - Whether to include hidden messages (defaults to false)
+   * @returns A promise that resolves to an API response containing an array of messages
+   */
+  async getConversationMessages(
     conversationId: string,
     includeHidden: boolean = false,
-  ): Promise<ApiResponse<ChatMessage[]>> => {
+  ): Promise<ApiResponse<ChatMessage[]>> {
     const queryParams = new URLSearchParams();
     if (includeHidden) {
       queryParams.append('include_hidden', 'true');
@@ -280,59 +357,80 @@ export const chatApi = {
     const queryString = queryParams.toString();
     const url = `/v1/chat/${conversationId}/messages${queryString ? `?${queryString}` : ''}`;
 
-    return await sharedClient.get<ChatMessage[]>(url);
-  },
+    return await this.httpClient.get<ChatMessage[]>(url);
+  }
 
-  // Get a graph of the conversation
-  getConversationGraph: async (
+  /**
+   * Get a graph representation of the conversation
+   * @param conversationId - The ID of the conversation
+   * @returns A promise that resolves to an API response containing the conversation graph
+   */
+  async getConversationGraph(
     conversationId: string,
-  ): Promise<ApiResponse<ConversationGraph>> => {
-    return await sharedClient.get<ConversationGraph>(
+  ): Promise<ApiResponse<ConversationGraph>> {
+    return await this.httpClient.get<ConversationGraph>(
       `/v1/chat/${conversationId}/graph`,
     );
-  },
+  }
 
-  updateConversation: async (
+  /**
+   * Update an existing conversation
+   * @param conversationId - The ID of the conversation to update
+   * @param params - Parameters for updating the conversation
+   * @returns A promise that resolves to an API response containing the updated conversation
+   */
+  async updateConversation(
     conversationId: string,
     params: UpdateConversationParams,
-  ): Promise<ApiResponse<Conversation>> => {
-    return await sharedClient.patch<Conversation>(
+  ): Promise<ApiResponse<Conversation>> {
+    return await this.httpClient.patch<Conversation>(
       `/v1/chat/${conversationId}`,
       {
         body: params,
       },
     );
-  },
+  }
 
-  // Archive a conversation
-  archiveConversation: async (
+  /**
+   * Archive a conversation
+   * @param conversationId - The ID of the conversation to archive
+   * @returns A promise that resolves to an API response containing the archived conversation
+   */
+  async archiveConversation(
     conversationId: string,
-  ): Promise<ApiResponse<Conversation>> => {
-    return await sharedClient.patch<Conversation>(
+  ): Promise<ApiResponse<Conversation>> {
+    return await this.httpClient.patch<Conversation>(
       `/v1/chat/${conversationId}/archive`,
     );
-  },
+  }
 
-  // Star/unstar a conversation
-  toggleStar: async (
+  /**
+   * Star or unstar a conversation
+   * @param conversationId - The ID of the conversation to star/unstar
+   * @param starred - Whether the conversation should be starred (true) or unstarred (false)
+   * @returns A promise that resolves to an API response containing the updated conversation
+   */
+  async toggleStar(
     conversationId: string,
     starred: boolean,
-  ): Promise<ApiResponse<Conversation>> => {
+  ): Promise<ApiResponse<Conversation>> {
     const body: UpdateConversationParams = {
       isStarred: starred,
     };
-    return await sharedClient.patch<Conversation>(
+    return await this.httpClient.patch<Conversation>(
       `/v1/chat/${conversationId}`,
       {
         body,
       },
     );
-  },
+  }
 
-  // Delete a conversation
-  deleteConversation: async (
-    conversationId: string,
-  ): Promise<ApiResponse<void>> => {
-    return await sharedClient.delete<void>(`/v1/chat/${conversationId}`);
-  },
-};
+  /**
+   * Delete a conversation
+   * @param conversationId - The ID of the conversation to delete
+   * @returns A promise that resolves to an API response with the deletion result
+   */
+  async deleteConversation(conversationId: string): Promise<ApiResponse<void>> {
+    return await this.httpClient.delete<void>(`/v1/chat/${conversationId}`);
+  }
+}

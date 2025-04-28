@@ -1,10 +1,11 @@
 import { HttpClient } from '../core/http-client.js';
 import { ApiResponse, Organization } from '../types/common.js';
-
 export type CreateOrganizationParams = Pick<
   Organization,
-  'name' | 'description' | 'platformId' | 'clerkOrgId'
->;
+  'name' | 'description' | 'clerkOrgId'
+> & {
+  platformId?: string;
+};
 
 /**
  * Client for managing organizations in the Infactory API
@@ -63,7 +64,11 @@ export class OrganizationsClient {
     id: string,
     params: Partial<CreateOrganizationParams>,
   ): Promise<ApiResponse<Organization>> {
-    return this.httpClient.patch<Organization>(`/v1/orgs/${id}`, params);
+    return this.httpClient.patch<Organization>(
+      `/v1/orgs/${id}`,
+      undefined,
+      params,
+    );
   }
 
   /**

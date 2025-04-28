@@ -1,5 +1,5 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse, GetCoverageResponse } from '../types/common.js';
+import { ApiResponse, GetCoverageResponse, Graph } from '../types/common.js';
 import {
   QueryProgram,
   CreateQueryProgramParams,
@@ -18,16 +18,17 @@ export class QueryProgramsClient {
   constructor(private readonly httpClient: HttpClient) {}
 
   /**
-   * List all query programs
-   * @param params - Optional pagination parameters and project ID filter
+   * List all query programs for a project
+   * @param params - Optional pagination parameters
    * @returns A promise that resolves to an API response containing an array of query programs
    */
   async listQueryPrograms(
-    params?: PaginationParams & { projectId?: string },
+    params?: PaginationParams & { projectId: string },
   ): Promise<ApiResponse<QueryProgram[]>> {
-    return await this.httpClient.get<QueryProgram[]>(`/v1/queryprograms`, {
+    return await this.httpClient.get<QueryProgram[]>(
+      `/v1/queryprograms`,
       params,
-    });
+    );
   }
 
   /**
@@ -37,19 +38,6 @@ export class QueryProgramsClient {
    */
   async getQueryProgram(id: string): Promise<ApiResponse<QueryProgram>> {
     return await this.httpClient.get<QueryProgram>(`/v1/queryprograms/${id}`);
-  }
-
-  /**
-   * Get query programs for a specific project
-   * @param projectId - The ID of the project
-   * @returns A promise that resolves to an API response containing an array of query programs
-   */
-  async getQueryProgramsByProject(
-    projectId?: string,
-  ): Promise<ApiResponse<QueryProgram[]>> {
-    return await this.httpClient.get<QueryProgram[]>(`/v1/queryprograms`, {
-      projectId: projectId,
-    });
   }
 
   /**
@@ -103,44 +91,49 @@ export class QueryProgramsClient {
     });
   }
 
-  /**
-   * Execute a query program
-   * @param id - The ID of the query program to execute
-   * @param params - Optional parameters to pass to the query program execution
-   * @returns A promise that resolves to an API response containing the query response
-   */
-  async executeQueryProgram(
-    id: string,
-    params?: Record<string, any>,
-  ): Promise<ApiResponse<QueryResponse> | ReadableStream<Uint8Array>> {
-    return await this.httpClient.post<QueryResponse>(
-      `/v1/queryprograms/${id}/execute`,
-      params || {},
-    );
-  }
+  // /**
+  //  * Execute a query program synchronously (replacement for executeQueryProgram)
+  //  * @param queryProgramId - The ID of the query program to execute
+  //  * @param inputData - Optional input data for the query program (currently unused)
+  //  * @returns A promise that resolves to an API response containing the query result
+  //  */
+  // async executeQueryProgram(
+  //   queryProgramId: string,
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   inputData?: Record<string, any>,
+  // ): Promise<ApiResponse<QueryResponse> | ReadableStream<any>> {
+  //   // This method now uses evaluateQueryProgramSync internally
+  //   // since the original executeQueryProgram endpoint is returning 404 errors
 
-  /**
-   * Execute a query program with streaming response
-   * @param id - The ID of the query program to execute
-   * @param params - Optional parameters for streaming execution
-   * @returns A promise that resolves to a readable stream of execution events
-   */
-  async executeQueryProgramStream(
-    id: string,
-    params?: Record<string, any>,
-  ): Promise<ReadableStream<Uint8Array>> {
-    return await this.httpClient.createStream(
-      `/v1/queryprograms/${id}/execute`,
-      {
-        url: `/v1/queryprograms/${id}/execute`,
-        method: 'POST',
-        jsonBody: params || {},
-        headers: {
-          Accept: 'text/event-stream',
-        },
-      },
-    );
-  }
+  //   // Note: inputData is currently not used because evaluateQueryProgramSync doesn't support it
+  //   // We need to extract the project ID from the query program ID
+  //   // For now, we'll use the queryProgramId for both parameters
+  //   // This should be updated when the proper project ID is available
+  //   return await this.evaluateQueryProgramSync(queryProgramId, queryProgramId);
+  // }
+
+  // /**
+  //  * Execute a query program with streaming response
+  //  * @param id - The ID of the query program to execute
+  //  * @param params - Optional parameters for streaming execution
+  //  * @returns A promise that resolves to a readable stream of execution events
+  //  */
+  // async executeQueryProgramStream(
+  //   id: string,
+  //   params?: Record<string, any>,
+  // ): Promise<ReadableStream<Uint8Array>> {
+  //   return await this.httpClient.createStream(
+  //     `/v1/queryprograms/${id}/execute`,
+  //     {
+  //       url: `/v1/queryprograms/${id}/execute`,
+  //       method: 'POST',
+  //       jsonBody: params || {},
+  //       headers: {
+  //         Accept: 'text/event-stream',
+  //       },
+  //     },
+  //   );
+  // }
 
   /**
    * Validate a query program without executing it
@@ -227,6 +220,108 @@ export class QueryProgramsClient {
   ): Promise<ApiResponse<GetCoverageResponse>> {
     return await this.httpClient.get<GetCoverageResponse>(
       `/v1/queryprograms/coverage/${projectId}`,
+    );
+  }
+
+  /**
+   * Evaluate a query program with streaming response
+   * @param projectId - The ID of the project
+   * @param queryprogramId - The ID of the query program to evaluate
+   * @returns A promise that resolves to a readable stream of evaluation events
+   */
+  async evaluateQueryProgram(
+    projectId: string,
+    queryprogramId: string,
+    params?: Record<string, any>,
+  ): Promise<ReadableStream<Uint8Array>> {
+    params = params || {};
+    let url = '/v1/actions/evaluate/queryprogram';
+    const query_params = new URLSearchParams(params).toString();
+    if (query_params) {
+      url = `${url}?${query_params}`;
+    }
+
+    return await this.httpClient.createStream(url, {
+      url: url,
+      method: 'POST',
+      jsonBody: {
+        projectId,
+        queryprogramId,
+        stream: true, // Explicitly set streaming to true
+      },
+      headers: {
+        Accept: 'text/event-stream',
+      },
+    });
+  }
+
+  /**
+   * Evaluate a query program with non-streaming response
+   * @param projectId - The ID of the project
+   * @param queryprogramId - The ID of the query program to evaluate
+   * @returns A promise that resolves to an API response containing the evaluation result
+   */
+  async evaluateQueryProgramSync(
+    projectId: string,
+    queryprogramId: string,
+    params?: Record<string, any>,
+  ): Promise<ApiResponse<any>> {
+    params = params || {};
+    let url = '/v1/actions/evaluate/queryprogram';
+    const query_params = new URLSearchParams(params).toString();
+    if (query_params) {
+      url = `${url}?${query_params}`;
+    }
+    return await this.httpClient.post<any>(
+      url,
+      {
+        projectId,
+        queryprogramId,
+        stream: false, // Explicitly set streaming to false
+      },
+      params,
+    );
+  }
+
+  /**
+   * Analyze a query program to get its graph representation
+   * @param projectId - The ID of the project
+   * @param queryprogramId - The ID of the query program to analyze
+   * @returns A promise that resolves to an API response containing the graph representation
+   */
+  async analyzeQueryProgram(
+    projectId: string,
+    queryprogramId: string,
+  ): Promise<ApiResponse<Graph>> {
+    return await this.httpClient.post<Graph>(
+      '/v1/actions/evaluate/queryprogram/graph',
+      {
+        projectId,
+        queryprogramId,
+      },
+    );
+  }
+
+  /**
+   * Get readable answer for query response
+   * @param queryResponseId - The ID of the query response
+   * @param query - The query to generate a readable answer for
+   * @returns A promise that resolves to a readable stream of the answer
+   */
+  async getReadableAnswerForQueryResponse(
+    queryResponseId: string,
+    query: string,
+  ): Promise<ReadableStream<Uint8Array>> {
+    return await this.httpClient.createStream(
+      `/v1/actions/generate/readableanswer-to-queryresponse/${queryResponseId}`,
+      {
+        url: `/v1/actions/generate/readableanswer-to-queryresponse/${queryResponseId}`,
+        method: 'POST',
+        jsonBody: { query },
+        headers: {
+          Accept: 'text/event-stream',
+        },
+      },
     );
   }
 }

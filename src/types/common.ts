@@ -13,6 +13,12 @@ export interface ApiResponse<T> {
   error?: InfactoryAPIError;
 }
 
+export interface ApiKeyResponse<TData = any> {
+  success: boolean;
+  data?: TData;
+  error?: InfactoryAPIError;
+}
+
 // Base types
 export interface BaseEntity {
   id: string;

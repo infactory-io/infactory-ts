@@ -9,5 +9,11 @@ export * from './datasources-client.js';
 export * from './datalines-client.js';
 export * from './apis-client.js';
 export * from './generate-client.js';
-
-// Add additional client exports as they are created
+export * from './chat-client.js';
+export * from './secrets-client.js';
+export * from './subscriptions-client.js';
+export * from './graph-client.js';
+export * from './auth-client.js';
+export * from './integrations-client.js';
+export * from './jobs-client.js';
+export * from './live-client.js';

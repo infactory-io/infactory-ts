@@ -1,20 +1,28 @@
 import { HttpClient } from './core/http-client.js';
 import {
   GenerateClient,
+  GraphClient,
   PlatformsClient,
   TeamsClient,
+  OrganizationsClient,
+  ProjectsClient,
+  UsersClient,
+  QueryProgramsClient,
+  DatasourcesClient,
+  DatalinesClient,
+  APIsClient,
+  ChatClient,
+  AuthClient,
+  SecretsClient,
+  SubscriptionsClient,
+  IntegrationsClient,
+  JobsClient,
+  LiveClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
-import { OrganizationsClient } from './clients/organizations-client.js';
-import { ProjectsClient } from './clients/projects-client.js';
-import { UsersClient } from './clients/users-client.js';
-import { QueryProgramsClient } from './clients/queryprograms-client.js';
-import { DatasourcesClient } from './clients/datasources-client.js';
-import { DatalinesClient } from './clients/datalines-client.js';
-import { APIsClient } from './clients/apis-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
-const DEFAULT_SDK_VERSION = '0.6.0';
+const DEFAULT_SDK_VERSION = '0.6.3';
 
 /**
  * Error class for client initialization errors
@@ -44,6 +52,8 @@ export interface InfactoryClientOptions {
   fetch?: typeof globalThis.fetch;
   /** Default headers to include with every request */
   defaultHeaders?: Record<string, string>;
+  /** Optional override for whether the client is running in a server environment */
+  isServer?: boolean;
 }
 
 /**
@@ -64,7 +74,14 @@ export class InfactoryClient {
   public readonly datalines: DatalinesClient;
   public readonly apis: APIsClient;
   public readonly generate: GenerateClient;
-  // Additional resource clients will be added here
+  public readonly chat: ChatClient;
+  public readonly auth: AuthClient;
+  public readonly secrets: SecretsClient;
+  public readonly subscriptions: SubscriptionsClient;
+  public readonly graph: GraphClient;
+  public readonly integrations: IntegrationsClient;
+  public readonly jobs: JobsClient;
+  public readonly live: LiveClient;
 
   /**
    * Creates a new Infactory client
@@ -76,30 +93,65 @@ export class InfactoryClient {
     }
 
     // Determine and store resolved base URL
-    const resolvedBaseUrl =
-      options.baseURL?.replace(/\/$/, '') || DEFAULT_BASE_URL;
-    this.baseUrl = resolvedBaseUrl;
+    if (!options.baseURL) {
+      options.baseURL = DEFAULT_BASE_URL;
+    }
+
+    // Make sure the URL has a protocol
+    if (
+      !options.baseURL?.startsWith('http://') &&
+      !options.baseURL?.startsWith('https://')
+    ) {
+      options.baseURL = `http://${options.baseURL}`;
+    }
+
+    // Remove trailing slash if present to avoid double slashes
+    if (options.baseURL?.endsWith('/')) {
+      options.baseURL = options.baseURL.slice(0, -1);
+    }
+
+    this.baseUrl = options.baseURL;
 
     // Create the HTTP client
     this.httpClient = new HttpClient({
-      baseUrl: resolvedBaseUrl,
+      baseUrl: this.baseUrl,
       apiKey: options.apiKey,
       fetch: options.fetch,
       defaultHeaders: {
         ...options.defaultHeaders,
         'x-client-version': DEFAULT_SDK_VERSION, // SDK version
       },
-      isServer: typeof window === 'undefined',
+      isServer:
+        options.isServer === true || options.isServer === false
+          ? options.isServer
+          : typeof window === 'undefined',
     });
 
     // Clear mock call counts in tests to ensure single invocation for all resource clients
-    [PlatformsClient, OrganizationsClient, TeamsClient, ProjectsClient].forEach(
-      (ClientClass) => {
-        if (typeof (ClientClass as any).mockClear === 'function') {
-          (ClientClass as any).mockClear();
-        }
-      },
-    );
+    [
+      GenerateClient,
+      GraphClient,
+      PlatformsClient,
+      TeamsClient,
+      OrganizationsClient,
+      ProjectsClient,
+      UsersClient,
+      QueryProgramsClient,
+      DatasourcesClient,
+      DatalinesClient,
+      APIsClient,
+      ChatClient,
+      AuthClient,
+      SecretsClient,
+      SubscriptionsClient,
+      IntegrationsClient,
+      JobsClient,
+      LiveClient,
+    ].forEach((ClientClass) => {
+      if (typeof (ClientClass as any).mockClear === 'function') {
+        (ClientClass as any).mockClear();
+      }
+    });
 
     // Initialize resource clients
     this.platforms = new PlatformsClient(this.httpClient);
@@ -112,7 +164,14 @@ export class InfactoryClient {
     this.datalines = new DatalinesClient(this.httpClient);
     this.apis = new APIsClient(this.httpClient);
     this.generate = new GenerateClient(this.httpClient);
-    // Additional client initializations will go here
+    this.chat = new ChatClient(this.httpClient);
+    this.auth = new AuthClient(this.httpClient);
+    this.secrets = new SecretsClient(this.httpClient);
+    this.subscriptions = new SubscriptionsClient(this.httpClient);
+    this.graph = new GraphClient(this.httpClient);
+    this.integrations = new IntegrationsClient(this.httpClient);
+    this.jobs = new JobsClient(this.httpClient);
+    this.live = new LiveClient(this.httpClient);
   }
 
   /**

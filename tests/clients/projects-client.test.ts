@@ -290,6 +290,7 @@ describe('ProjectsClient', () => {
       // Call the method
       const result = await projectsClient.updateProject(
         'project-1',
+        'team-1',
         updateParams,
       );
 
@@ -301,18 +302,6 @@ describe('ProjectsClient', () => {
 
       // Verify the result
       expect(result.data).toEqual(mockResponse);
-    });
-
-    it('should validate teamId is provided', async () => {
-      // Call without teamId
-      await expect(
-        projectsClient.updateProject('project-1', {
-          name: 'Updated Project',
-        }),
-      ).rejects.toThrow('Team ID is required for updating a project');
-
-      // Verify HTTP client was not called
-      expect(mockHttpClient.patch).not.toHaveBeenCalled();
     });
   });
 

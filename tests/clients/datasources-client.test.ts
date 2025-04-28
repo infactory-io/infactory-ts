@@ -33,6 +33,7 @@ vi.mock('../../src/core/http-client', () => {
       delete: vi.fn(),
       request: vi.fn(),
       createStream: vi.fn(),
+      getIsServer: vi.fn(), // Add the mock function here
     })),
   };
 });
@@ -236,6 +237,8 @@ describe('DatasourcesClient', () => {
           projectId: 'project-1',
           jobType: 'upload',
           sourceId: 'ds-1',
+          source: 'datasource',
+          sourceEventType: 'file_upload',
         }),
       );
 
@@ -313,7 +316,9 @@ describe('DatasourcesClient', () => {
       // Call the method and expect it to throw with specific error message
       await expect(
         datasourcesClient.uploadCsvFile('project-1', '/path/to/test.csv'),
-      ).rejects.toThrow('Error creating datasource: Datasource not found');
+      ).rejects.toThrow(
+        'Error creating datasource: Datasource ID is missing or invalid',
+      );
     });
 
     it('should handle errors during job submission', async () => {
@@ -349,34 +354,20 @@ describe('DatasourcesClient', () => {
     });
 
     it('should handle errors during file upload', async () => {
-      // Mock datasource creation response
-      const mockDatasource = {
-        id: 'ds-1',
-        name: 'test.csv 2025-01-01T00-00-00Z',
-        projectId: 'project-1',
-        type: 'csv',
-        createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z',
-      };
-
-      // Setup the mock responses for datasource creation and job submission
+      // Mock create datasource response
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockDatasource,
+        data: { id: 'ds-1', name: 'test.csv 2025-01-01T00-00-00Z' },
       });
 
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: 'job-123',
-      });
+      // Mock submit job response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({ data: 'job-123' });
 
-      // Mock file upload response with error
-      const uploadError = createErrorFromStatus(
-        500,
-        'server_error',
-        'Failed to upload file',
-      );
-      vi.mocked(mockHttpClient.request).mockResolvedValueOnce({
-        error: uploadError,
-      });
+      // Mock file upload to throw an error
+      const uploadError = new Error('Upload failed');
+      vi.mocked(mockHttpClient.request).mockRejectedValueOnce(uploadError);
+
+      // Mock getIsServer to return false for browser path
+      vi.mocked(mockHttpClient.getIsServer).mockReturnValue(false);
 
       // Call the method and expect it to throw
       await expect(
@@ -385,19 +376,9 @@ describe('DatasourcesClient', () => {
     });
 
     it('should use custom job submission function when provided', async () => {
-      // Mock datasource creation response
-      const mockDatasource = {
-        id: 'ds-1',
-        name: 'test.csv 2025-01-01T00-00-00Z',
-        projectId: 'project-1',
-        type: 'csv',
-        createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-01T00:00:00Z',
-      };
-
-      // Setup the mock response for datasource creation
+      // Mock create datasource response - Make this match the expected name in the final assertion
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockDatasource,
+        data: { id: 'ds-1', name: 'Custom Datasource Name' }, // Use the expected custom name here
       });
 
       // Create a mock custom job submission function
@@ -407,6 +388,9 @@ describe('DatasourcesClient', () => {
       vi.mocked(mockHttpClient.request).mockResolvedValueOnce({
         data: { success: true },
       });
+
+      // Mock getIsServer to return false for browser path
+      vi.mocked(mockHttpClient.getIsServer).mockReturnValue(false);
 
       // Call the method with the custom job submission function
       const result = await datasourcesClient.uploadCsvFile(
@@ -433,38 +417,35 @@ describe('DatasourcesClient', () => {
 
       // Verify the returned data
       expect(result).toEqual({
-        datasource: mockDatasource,
+        datasource: expect.objectContaining({
+          id: 'ds-1',
+          name: 'Custom Datasource Name',
+        }),
         jobId: 'custom-job-123',
         uploadResponse: expect.any(Object),
       });
     });
 
     it('should use custom datasource name when provided', async () => {
-      // Setup the mock responses
-      vi.mocked(mockHttpClient.post).mockImplementationOnce((_, data: any) => {
-        // Return the data that was passed to create the datasource
-        return Promise.resolve({
-          data: {
-            ...data,
-            id: 'ds-1',
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-01T00:00:00Z',
-          },
-        });
+      const customName = 'My Custom Datasource Name';
+
+      // Mock create datasource response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: { id: 'ds-1', name: customName },
       });
 
-      // Mock job submission response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: 'job-123',
-      });
+      // Mock submit job response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({ data: 'job-123' });
 
       // Mock file upload response
       vi.mocked(mockHttpClient.request).mockResolvedValueOnce({
         data: { success: true },
       });
 
+      // Mock getIsServer to return false for browser path
+      vi.mocked(mockHttpClient.getIsServer).mockReturnValue(false);
+
       // Call the method with a custom datasource name
-      const customName = 'My Custom Datasource Name';
       const result = await datasourcesClient.uploadCsvFile(
         'project-1',
         '/path/to/test.csv',

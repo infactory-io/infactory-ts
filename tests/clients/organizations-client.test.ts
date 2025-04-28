@@ -245,6 +245,7 @@ describe('OrganizationsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
         '/v1/orgs/org-1',
+        undefined,
         updateParams,
       );
 
