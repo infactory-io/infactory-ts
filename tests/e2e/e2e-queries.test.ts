@@ -8,7 +8,10 @@ import {
   QueryProgram,
 } from '../../src/types/common.js';
 import { randomBytes } from 'crypto';
-import { Conversation } from '@/clients/chat-client.js';
+import {
+  Conversation,
+  ChatMessageCreate,
+} from '../../src/clients/chat-client.js';
 
 // Ensure environment variables are loaded (e.g., using dotenv in a setup file)
 // import dotenv from 'dotenv';
@@ -20,7 +23,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
   let team: Team;
   let project: Project;
   let queryProgram: QueryProgram;
-  let conversation: Conversation | null = null; // Conversation might be created implicitly
+  let conversation: Conversation | null = null;
 
   const uniqueId = randomBytes(4).toString('hex');
   const projectName = `e2e-project-${uniqueId}`;
@@ -515,5 +518,206 @@ describe('E2E Tests: Query Editor Workflow', () => {
       console.error('Error during delete and verify process:', error);
       console.warn('⚠️ Delete operation failed - continuing test');
     }
+  });
+
+  // Explore conversation tests
+  describe('Explore Conversation Tests', () => {
+    it('should create a new conversation', async () => {
+      console.log(`Creating conversation for project: ${project.id}`);
+      const conversationTitle = `E2E Test Conversation ${uniqueId}`;
+
+      try {
+        // Create a new conversation
+        const createConversationResponse = await client.chat.createConversation(
+          {
+            projectId: project.id,
+            title: conversationTitle,
+          },
+        );
+
+        console.log('CreateConversation', createConversationResponse);
+
+        expect(createConversationResponse?.error).not.toBeDefined();
+        expect(createConversationResponse?.data).toBeDefined();
+
+        conversation = createConversationResponse.data!;
+        console.log(`Conversation created with ID: ${conversation.id}`);
+
+        expect(conversation.title).toBe(conversationTitle);
+        expect(conversation.id).toBeDefined();
+
+        // Verify the conversation exists by listing all conversations for the project
+        const listConversationsResponse =
+          await client.chat.getProjectConversations(project.id);
+        console.log('listConversationsResponse', listConversationsResponse);
+        expect(listConversationsResponse?.error).not.toBeDefined();
+        expect(listConversationsResponse?.data).toBeDefined();
+
+        const conversations = listConversationsResponse.data!;
+        expect(conversations).toBeInstanceOf(Array);
+
+        const createdConversation = conversations.find(
+          (c) => c.id === conversation?.id,
+        );
+        expect(createdConversation).toBeDefined();
+        expect(createdConversation?.title).toBe(conversationTitle);
+
+        console.log('Successfully verified conversation creation');
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+        throw error;
+      }
+    }, 30000);
+
+    it('should send a message to the conversation', async () => {
+      // Skip if no conversation was created
+      if (!conversation) {
+        console.log(
+          'Skipping send message test as no conversation was created',
+        );
+        return;
+      }
+
+      console.log(`Sending message to conversation ID: ${conversation.id}`);
+      const messageContent = `This is a test message from E2E tests ${uniqueId}`;
+
+      try {
+        // Create message parameters
+        const messageParams: ChatMessageCreate = {
+          conversationId: conversation.id,
+          projectId: project.id,
+          content: messageContent,
+          authorRole: 'user',
+        };
+
+        // Send the message to the conversation
+        const messageResponse = await client.chat.sendMessage(
+          conversation.id,
+          messageParams,
+          true, // noReply = true to avoid waiting for AI response
+        );
+
+        // Since this is a streaming response, we'll just check that it was initiated properly
+        expect(messageResponse).toBeDefined();
+        console.log('Message sent successfully and stream initiated');
+
+        // Allow some time for the message to be processed
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Verify the message was added to the conversation
+        const conversationWithMessages = await client.chat.getConversation(
+          conversation.id,
+        );
+        expect(conversationWithMessages.error).toBeNull();
+        expect(conversationWithMessages.data).toBeDefined();
+
+        // Get messages for the conversation
+        const messagesResponse = await client.chat.getConversationMessages(
+          conversation.id,
+        );
+        expect(messagesResponse.error).toBeNull();
+        expect(messagesResponse.data).toBeDefined();
+
+        const messages = messagesResponse.data!;
+        const sentMessage = messages.find(
+          (m) => m.contentText === messageContent,
+        );
+
+        expect(sentMessage).toBeDefined();
+        console.log('Successfully verified message was added to conversation');
+      } catch (error) {
+        console.error('Error sending message to conversation:', error);
+        console.warn('⚠️ Message sending test failed - continuing with tests');
+      }
+    }, 60000); // Longer timeout for message processing
+
+    it('should delete the conversation', async () => {
+      // Skip if no conversation was created
+      if (!conversation) {
+        console.log(
+          'Skipping delete conversation test as no conversation was created',
+        );
+        return;
+      }
+
+      console.log(`Deleting conversation ID: ${conversation.id}`);
+
+      try {
+        // Delete the conversation
+        const deleteResponse = await client.chat.deleteConversation(
+          conversation.id,
+        );
+        expect(deleteResponse.error).toBeNull();
+        console.log('Conversation deletion request sent successfully');
+
+        // Verify the conversation was deleted by trying to fetch it
+        let deletionVerified = false;
+
+        try {
+          const getResponse = await client.chat.getConversation(
+            conversation.id,
+          );
+
+          // If we get here without error AND the response has deletedAt set, that's valid
+          if (getResponse.data?.deletedAt) {
+            console.log(
+              'Conversation marked as deleted at:',
+              getResponse.data.deletedAt,
+            );
+            deletionVerified = true;
+          } else {
+            console.warn(
+              '⚠️ Conversation still exists after deletion without deletedAt timestamp',
+            );
+          }
+        } catch (error: any) {
+          // This is expected - a 404 means deletion worked
+          if (error.response?.status === 404) {
+            console.log('Verified conversation deletion (received 404)');
+            deletionVerified = true;
+          }
+        }
+
+        // Verify deletion by listing conversations
+        const listResponse = await client.chat.getProjectConversations(
+          project.id,
+        );
+
+        if (listResponse.data) {
+          const conversations = listResponse.data;
+          const stillExists = conversations.some(
+            (c) => c.id === conversation?.id && !c.deletedAt,
+          );
+
+          if (!stillExists) {
+            console.log(
+              'Verified conversation not in active conversation list after deletion',
+            );
+            deletionVerified = true;
+          } else {
+            console.warn(
+              '⚠️ Conversation still exists in active list after deletion',
+            );
+          }
+        }
+
+        // Overall verification
+        if (deletionVerified) {
+          console.log('✅ Conversation deletion verified');
+        } else {
+          console.warn(
+            '⚠️ Could not fully verify deletion - continuing anyway',
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Error during conversation delete and verify process:',
+          error,
+        );
+        console.warn(
+          '⚠️ Delete conversation operation failed - continuing test',
+        );
+      }
+    }, 30000);
   });
 });

@@ -256,9 +256,7 @@ export class ChatClient {
     if (queryProgramId) {
       params['queryprogramId'] = queryProgramId;
     }
-    return await this.httpClient.get<Conversation[]>(`/v1/chat`, {
-      params: params,
-    });
+    return await this.httpClient.get<Conversation[]>(`/v1/chat`, params);
   }
 
   /**
@@ -283,12 +281,10 @@ export class ChatClient {
     params: CreateConversationParams,
   ): Promise<ApiResponse<Conversation>> {
     return await this.httpClient.post<Conversation>('/v1/chat', {
-      body: {
-        projectId: params.projectId,
-        title: params.title,
-        defaultSlugModel: params.defaultSlugModel,
-        queryprogramId: params.queryprogramId,
-      },
+      projectId: params.projectId,
+      title: params.title,
+      defaultSlugModel: params.defaultSlugModel,
+      queryprogramId: params.queryprogramId,
     });
   }
 

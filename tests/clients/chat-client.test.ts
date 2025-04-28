@@ -159,7 +159,7 @@ describe('ChatClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
-        params: { projectId: 'project-1' },
+        projectId: 'project-1',
       });
 
       // Verify the result
@@ -191,7 +191,8 @@ describe('ChatClient', () => {
 
       // Verify the HTTP client was called correctly with both params
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
-        params: { projectId: 'project-1', queryprogramId: 'qp-1' },
+        projectId: 'project-1',
+        queryprogramId: 'qp-1',
       });
 
       // Verify the result
@@ -215,7 +216,7 @@ describe('ChatClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
-        params: { projectId: 'project-1' },
+        projectId: 'project-1',
       });
 
       // Verify the error was returned
@@ -280,12 +281,10 @@ describe('ChatClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/chat', {
-        body: {
-          projectId: 'project-1',
-          title: 'New Conversation',
-          defaultSlugModel: 'gpt-4',
-          queryprogramId: undefined,
-        },
+        projectId: 'project-1',
+        title: 'New Conversation',
+        defaultSlugModel: 'gpt-4',
+        queryprogramId: undefined,
       });
 
       // Verify the result
@@ -320,12 +319,10 @@ describe('ChatClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/chat', {
-        body: {
-          projectId: 'project-1',
-          title: 'New Conversation with QueryProgram',
-          defaultSlugModel: undefined,
-          queryprogramId: 'qp-1',
-        },
+        projectId: 'project-1',
+        title: 'New Conversation with QueryProgram',
+        defaultSlugModel: undefined,
+        queryprogramId: 'qp-1',
       });
 
       // Verify the result
