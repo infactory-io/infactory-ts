@@ -8,7 +8,6 @@ export * from './auth.js';
 export * from './chat.js';
 export * from './chat-integrations.js';
 export * from './credentials.js';
-export * from './datalines.js';
 export * from './events.js';
 export * from './infrastructures.js';
 export * from './integrations.js';

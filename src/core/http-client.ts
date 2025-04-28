@@ -152,6 +152,10 @@ export class HttpClient {
     return this.baseUrl;
   }
 
+  public getIsServer(): boolean {
+    return this.isServer;
+  }
+
   /**
    * Creates a new HTTP client instance.
    * @param options - Configuration options for the client.

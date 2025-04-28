@@ -1,0 +1,5 @@
+Testing:
+* We use vitest for testing.
+* All tests in `tests/clients` should mock relevant clients which use HttpClient.
+* All e2e tests in `tests/e2e` should NEVER mock anything and should only use InfactoryClient from `src/client.js`.  They should never use fetch directly.
+* All examples in `examples` should not Mock anything and should only use InfactoryClient.  They should never use fetch directly.
