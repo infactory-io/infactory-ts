@@ -313,7 +313,9 @@ describe('DatasourcesClient', () => {
       // Call the method and expect it to throw with specific error message
       await expect(
         datasourcesClient.uploadCsvFile('project-1', '/path/to/test.csv'),
-      ).rejects.toThrow('Error creating datasource: Datasource not found');
+      ).rejects.toThrow(
+        'Error creating datasource: Datasource ID is missing or invalid',
+      );
     });
 
     it('should handle errors during job submission', async () => {
