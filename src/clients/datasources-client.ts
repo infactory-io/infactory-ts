@@ -1,15 +1,13 @@
 // src/clients/datasources-client.ts
 
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse, TestConnectionResponse } from '../types/common.js';
-import { Datasource } from '../types/common.js';
-import { SubmitJobParams } from '../api/jobs.js';
-import * as path from 'path';
-import * as fs from 'fs';
-// We will dynamically import FormData and node-fetch inside the server block
-
-// Import database-related interfaces
 import {
+  ApiResponse,
+  TestConnectionResponse,
+  Datasource,
+  CreateDatasourceParams,
+  DatasourceWithDatalines,
+  Graph,
   SampleTablesRequest as DatabaseSampleTablesRequest,
   SampleTablesResponse,
   ExecuteCustomSqlRequest,
@@ -17,8 +15,13 @@ import {
   ValidateSqlQueryRequest,
   ValidateSqlQueryResponse,
   ExtractSqlParametersResponse,
-} from '../types/common.js';
+} from '../types/common.js'; // Ensure all necessary types are imported
+import { SubmitJobParams } from '../api/jobs.js';
+import * as path from 'path';
+import * as fs from 'fs';
 import { InfactoryAPIError } from '@/errors/index.js'; // Import error type
+
+// Dynamic imports will be used inside the server block for node-fetch and form-data
 
 /**
  * Client for managing datasources in the Infactory API
@@ -30,7 +33,95 @@ export class DatasourcesClient {
    */
   constructor(private readonly httpClient: HttpClient) {}
 
-  // ... (other methods like getProjectDatasources, getDatasource, etc. remain unchanged) ...
+  /**
+   * Get datasources for a project
+   * @param projectId - The ID of the project
+   * @returns A promise that resolves to an API response containing an array of datasources
+   */
+  async getProjectDatasources(
+    projectId: string,
+  ): Promise<ApiResponse<Datasource[]>> {
+    return await this.httpClient.get(`/v1/datasources/project/${projectId}`);
+  }
+
+  /**
+   * Get a datasource with its associated datalines
+   * @param datasourceId - The ID of the datasource
+   * @returns A promise that resolves to an API response containing the datasource with datalines
+   */
+  async getDatasourceWithDatalines(
+    datasourceId: string,
+  ): Promise<ApiResponse<DatasourceWithDatalines>> {
+    return await this.httpClient.get(
+      `/v1/datasources/${datasourceId}/with_datalines`,
+    );
+  }
+
+  /**
+   * Get a datasource by ID
+   * @param datasourceId - The ID of the datasource to retrieve
+   * @returns A promise that resolves to an API response containing the datasource
+   */
+  async getDatasource(datasourceId: string): Promise<ApiResponse<Datasource>> {
+    return await this.httpClient.get(`/v1/datasources/${datasourceId}`);
+  }
+
+  /**
+   * Create a new datasource
+   * @param params - Parameters for creating the datasource
+   * @returns A promise that resolves to an API response containing the created datasource
+   */
+  async createDatasource(
+    params: CreateDatasourceParams,
+  ): Promise<ApiResponse<Datasource>> {
+    return await this.httpClient.post(`/v1/datasources`, params);
+  }
+
+  /**
+   * Update an existing datasource
+   * @param datasourceId - The ID of the datasource to update
+   * @param params - Parameters for updating the datasource
+   * @returns A promise that resolves to an API response containing the updated datasource
+   */
+  async updateDatasource(
+    datasourceId: string,
+    params: Partial<CreateDatasourceParams>, // Use CreateDatasourceParams for update shape too
+  ): Promise<ApiResponse<Datasource>> {
+    return await this.httpClient.patch(
+      `/v1/datasources/${datasourceId}`,
+      params,
+    );
+  }
+
+  /**
+   * Delete a datasource
+   * @param datasourceId - The ID of the datasource to delete
+   * @param permanent - Whether to permanently delete the datasource (defaults to false)
+   * @returns A promise that resolves to an API response with the deletion result
+   */
+  async deleteDatasource(
+    datasourceId: string,
+    permanent: boolean = false,
+  ): Promise<ApiResponse<void>> {
+    return await this.httpClient.delete(
+      `/v1/datasources/${datasourceId}?permanent=${permanent}`,
+    );
+  }
+
+  /**
+   * Clone a datasource to a new project
+   * @param datasourceId - The ID of the datasource to clone
+   * @param newProjectId - The ID of the project to clone the datasource to
+   * @returns A promise that resolves to an API response containing the cloned datasource
+   */
+  async cloneDatasource(
+    datasourceId: string,
+    newProjectId: string,
+  ): Promise<ApiResponse<Datasource>> {
+    return await this.httpClient.post(`/v1/datasources/${datasourceId}/clone`, {
+      new_projectId: newProjectId, // Ensure snake_case for API
+    });
+  }
 
   /**
    * Upload a CSV file to a project by creating a datasource and uploading a file in one operation
@@ -285,8 +376,51 @@ export class DatasourcesClient {
       };
     }
   }
+  /**
+   * Upload a file to a datasource (Original version using httpClient.createStream)
+   * @param projectId - Project ID
+   * @param datasourceId - Datasource ID (optional if creating a new datasource)
+   * @param formData - Form data containing the file to upload
+   * @param jobId - Job ID for tracking the upload
+   * @returns A promise that resolves to a readable stream of upload events
+   */
+  async uploadDatasource(
+    projectId: string,
+    datasourceId: string | undefined,
+    formData: FormData, // Browser FormData or form-data package instance
+    jobId: string,
+  ): Promise<ReadableStream> {
+    // Original returned a stream
+    // Note: This endpoint might differ slightly from /v1/actions/load/
+    // Check API spec if this specific path is still needed or if /load covers it.
+    // Assuming the intent was similar to the /load endpoint but perhaps for different source types or workflows.
+    const url = `/v1/datasources/${datasourceId}/upload?project_id=${projectId}&job_id=${jobId}`; // Example URL, adjust as needed
 
-  // ... (rest of the DatasourcesClient methods: testDatabaseConnection, sampleDatabaseTables, etc.) ...
+    return await this.httpClient.createStream(url, {
+      url: url, // Pass the constructed URL
+      method: 'POST',
+      // No 'params' here if they are in the URL
+      body: formData as unknown as BodyInit, // Cast FormData
+      headers: {
+        // HttpClient might handle multipart headers automatically,
+        // but explicitly setting Accept for SSE was common.
+        Accept: 'text/event-stream',
+        // Content-Type header for multipart/form-data is usually set automatically by fetch when body is FormData
+      },
+    });
+  }
+
+  /**
+   * Get the ontology graph for a datasource
+   * @param datasourceId - The ID of the datasource
+   * @returns A promise that resolves to an API response containing the ontology graph
+   */
+  async getOntologyGraph(datasourceId: string): Promise<ApiResponse<Graph>> {
+    return await this.httpClient.get(
+      `/v1/datasources/${datasourceId}/ontology_mapping`,
+    );
+  }
+
   /**
    * Test a database connection
    * @param connectionString - The database connection string to test
