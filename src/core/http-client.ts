@@ -12,7 +12,7 @@ import {
 } from '@/errors/index.js';
 
 // Define SDK version for request headers
-export const SDK_VERSION = '0.6.0';
+export const SDK_VERSION = '0.6.3';
 
 // Default API base path for client-side requests
 const API_BASE_URL = '/api/infactory';

@@ -569,6 +569,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
     }, 30000);
 
     it('should send a message to the conversation', async () => {
+      // TODO FIX THIS SILENT ERROR
       // Skip if no conversation was created
       if (!conversation) {
         console.log(
@@ -646,7 +647,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         const deleteResponse = await client.chat.deleteConversation(
           conversation.id,
         );
-        expect(deleteResponse.error).toBeNull();
+        expect(deleteResponse.error).toBeUndefined();
         console.log('Conversation deletion request sent successfully');
 
         // Verify the conversation was deleted by trying to fetch it
