@@ -15,9 +15,6 @@ export { AuthManager } from './auth/auth-manager.js';
 // Export core types needed by users
 export * from './types/index.js'; // Types already exports errors.ts types via ./types/errors.js
 
-// Export all API resources for direct access
-export * from './api/resources/index.js';
-
 // Export utility functions
 export * from './utils/index.js';
 

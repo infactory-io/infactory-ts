@@ -16,10 +16,10 @@ import {
   ValidateSqlQueryResponse,
   ExtractSqlParametersResponse,
 } from '../types/common.js'; // Ensure all necessary types are imported
-import { SubmitJobParams } from '../api/jobs.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import { InfactoryAPIError } from '@/errors/index.js'; // Import error type
+import { SubmitJobParams } from './jobs-client.js';
 
 // Dynamic imports will be used inside the server block for node-fetch and form-data
 

@@ -15,6 +15,7 @@ import {
   AuthClient,
   SecretsClient,
   SubscriptionsClient,
+  IntegrationsClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 
@@ -76,6 +77,7 @@ export class InfactoryClient {
   public readonly secrets: SecretsClient;
   public readonly subscriptions: SubscriptionsClient;
   public readonly graph: GraphClient;
+  public readonly integrations: IntegrationsClient;
   // Additional resource clients will be added here
 
   /**
@@ -138,6 +140,7 @@ export class InfactoryClient {
       SecretsClient,
       SubscriptionsClient,
       GraphClient,
+      IntegrationsClient,
     ].forEach((ClientClass) => {
       if (typeof (ClientClass as any).mockClear === 'function') {
         (ClientClass as any).mockClear();
@@ -160,6 +163,7 @@ export class InfactoryClient {
     this.secrets = new SecretsClient(this.httpClient);
     this.subscriptions = new SubscriptionsClient(this.httpClient);
     this.graph = new GraphClient(this.httpClient);
+    this.integrations = new IntegrationsClient(this.httpClient);
     // Additional client initializations will go here
   }
 

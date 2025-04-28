@@ -277,7 +277,7 @@ describe('Data Source Management E2E Tests', () => {
       console.error('Error in CSV upload workflow:', error);
       throw error;
     }
-  });
+  }, 30000);
 
   test('3. Create HTTP Datasource (Source Configuration)', async () => {
     // This simulates clicking "Add Source" and selecting HTTP

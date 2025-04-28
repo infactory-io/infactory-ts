@@ -14,5 +14,6 @@ export * from './secrets-client.js';
 export * from './subscriptions-client.js';
 export * from './graph-client.js';
 export * from './auth-client.js';
+export * from './integrations-client.js';
 
 // Add additional client exports as they are created
