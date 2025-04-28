@@ -16,6 +16,8 @@ import {
   SecretsClient,
   SubscriptionsClient,
   IntegrationsClient,
+  JobsClient,
+  LiveClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 
@@ -78,7 +80,8 @@ export class InfactoryClient {
   public readonly subscriptions: SubscriptionsClient;
   public readonly graph: GraphClient;
   public readonly integrations: IntegrationsClient;
-  // Additional resource clients will be added here
+  public readonly jobs: JobsClient;
+  public readonly live: LiveClient;
 
   /**
    * Creates a new Infactory client
@@ -126,21 +129,24 @@ export class InfactoryClient {
 
     // Clear mock call counts in tests to ensure single invocation for all resource clients
     [
+      GenerateClient,
+      GraphClient,
       PlatformsClient,
-      OrganizationsClient,
       TeamsClient,
+      OrganizationsClient,
       ProjectsClient,
       UsersClient,
       QueryProgramsClient,
       DatasourcesClient,
       DatalinesClient,
       APIsClient,
-      GenerateClient,
       ChatClient,
+      AuthClient,
       SecretsClient,
       SubscriptionsClient,
-      GraphClient,
       IntegrationsClient,
+      JobsClient,
+      LiveClient,
     ].forEach((ClientClass) => {
       if (typeof (ClientClass as any).mockClear === 'function') {
         (ClientClass as any).mockClear();
@@ -164,7 +170,8 @@ export class InfactoryClient {
     this.subscriptions = new SubscriptionsClient(this.httpClient);
     this.graph = new GraphClient(this.httpClient);
     this.integrations = new IntegrationsClient(this.httpClient);
-    // Additional client initializations will go here
+    this.jobs = new JobsClient(this.httpClient);
+    this.live = new LiveClient(this.httpClient);
   }
 
   /**
