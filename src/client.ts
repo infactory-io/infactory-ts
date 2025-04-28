@@ -14,6 +14,7 @@ import { DatalinesClient } from './clients/datalines-client.js';
 import { APIsClient } from './clients/apis-client.js';
 import { ChatClient } from './clients/chat-client.js';
 import { AuthClient } from './clients/auth-client.js';
+import { SecretsClient } from './clients/secrets-client.js';
 
 const DEFAULT_BASE_URL = 'https://api.infactory.ai';
 const DEFAULT_SDK_VERSION = '0.6.0';
@@ -70,6 +71,7 @@ export class InfactoryClient {
   public readonly generate: GenerateClient;
   public readonly chat: ChatClient;
   public readonly auth: AuthClient;
+  public readonly secrets: SecretsClient;
   // Additional resource clients will be added here
 
   /**
@@ -148,6 +150,7 @@ export class InfactoryClient {
     this.generate = new GenerateClient(this.httpClient);
     this.chat = new ChatClient(this.httpClient);
     this.auth = new AuthClient(this.httpClient);
+    this.secrets = new SecretsClient(this.httpClient);
     // Additional client initializations will go here
   }
 
