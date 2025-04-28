@@ -40,7 +40,8 @@ export interface ChatMessage {
   user?: any;
 }
 
-interface BaseGraphItem {
+// Base structure for graph items
+export interface BaseGraphItem {
   id: string;
   createdAt: string; // ISO datetime string
   kind: 'node' | 'group';

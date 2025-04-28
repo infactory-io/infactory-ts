@@ -1,7 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChatClient } from '../../src/clients/chat-client.js';
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import {
+  ChatClient,
+  setChatMessageData,
+  setConversationGraphItemData,
+  setConversationGraphData,
+  processReadableChatResponseStream,
+} from '../../src/clients/chat-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
+import type {
+  BaseGraphItem,
+  ChatMessage,
+  ConversationGraph,
+  GroupItem,
+  NodeItem,
+} from '../../src/types/chat.js';
 
 // Mock the HttpClient
 vi.mock('../../src/core/http-client', () => {
@@ -16,6 +29,84 @@ vi.mock('../../src/core/http-client', () => {
       getIsServer: vi.fn(),
     })),
   };
+});
+
+// --- Mock Data Helper Functions ---
+
+// Helper to create a default ChatMessage with required fields
+const createMockChatMessage = (
+  overrides: Partial<ChatMessage> = {},
+): ChatMessage => ({
+  id: 'msg-default',
+  authorUserId: 'user-default',
+  nodeId: 'node-default',
+  conversationId: 'conv-default',
+  authorRole: 'user',
+  authorName: 'Default User',
+  authorMetadata: null,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(), // ChatMessage has updatedAt
+  contentType: 'text/plain',
+  contentText: 'Default content',
+  data: null,
+  reactElement: null,
+  responseFormat: null,
+  status: 'completed',
+  endTurn: null,
+  weight: 1.0,
+  recipient: 'all',
+  channel: null,
+  requestId: null,
+  aggregateResult: null,
+  toolMessages: null,
+  finishDetails: null,
+  attachments: null,
+  formattedContent: null,
+  thinking: null,
+  resultType: null,
+  text: null,
+  ...overrides,
+});
+
+// Helper to create a default BaseGraphItem
+const createMockBaseGraphItem = (
+  overrides: Partial<BaseGraphItem> = {},
+): BaseGraphItem => ({
+  id: 'item-default',
+  createdAt: new Date().toISOString(),
+  kind: 'node', // Provide a default kind, will be overridden by Node/Group helpers
+  ...overrides,
+});
+
+// Helper to create a default NodeItem
+const createMockNodeItem = (overrides: Partial<NodeItem> = {}): NodeItem => ({
+  ...createMockBaseGraphItem(),
+  kind: 'node',
+  message: createMockChatMessage({
+    id: overrides.message?.id ?? 'msg-node-default',
+    nodeId: overrides.id ?? 'node-item-default',
+  }),
+  status: null, // NodeItem status is null | MessageStatus
+  ...overrides,
+});
+
+// Helper to create a default GroupItem
+const createMockGroupItem = (
+  overrides: Partial<GroupItem> = {},
+): GroupItem => ({
+  ...createMockBaseGraphItem(),
+  kind: 'group',
+  items: [],
+  ...overrides,
+});
+
+// Helper to create a default ConversationGraph
+const createMockConversationGraph = (
+  overrides: Partial<ConversationGraph> = {},
+): ConversationGraph => ({
+  conversationId: 'conv-graph-default',
+  items: [],
+  ...overrides,
 });
 
 describe('ChatClient', () => {
@@ -657,6 +748,366 @@ describe('ChatClient', () => {
 
       // Verify the result
       expect(result.data).toBeUndefined();
+    });
+  });
+
+  // Helper Function Tests
+  describe('setChatMessageData', () => {
+    it('should parse valid JSON contentText into data', () => {
+      const message = createMockChatMessage({
+        contentText: '{"key": "value"}',
+      });
+      const processedMessage = setChatMessageData(message);
+      expect(processedMessage.data).toEqual({ key: 'value' });
+    });
+
+    it('should not modify data if contentText is not valid JSON', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {}); // Suppress console output
+      const message = createMockChatMessage({ contentText: 'not json' });
+      const processedMessage = setChatMessageData(message);
+      expect(processedMessage.data).toBeNull(); // Corrected: Default is null
+      expect(consoleWarnSpy).not.toHaveBeenCalled(); // Doesn't warn if not starting with {
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('should warn and not set data if contentText starts with { but is invalid JSON', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {}); // Suppress console output
+      const message = createMockChatMessage({
+        contentText: '{invalid json',
+      });
+      const processedMessage = setChatMessageData(message);
+      expect(processedMessage.data).toBeNull(); // Corrected: Default is null
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Error loading message.contentText as data:',
+        '{invalid json',
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('should not modify message if contentText is null', () => {
+      const messageNull = createMockChatMessage({ contentText: null });
+      const processedMessage = setChatMessageData(messageNull);
+      expect(processedMessage.data).toBeNull();
+    });
+  });
+
+  describe('setConversationGraphItemData', () => {
+    it('should process message data for node items', () => {
+      const nodeItem = createMockNodeItem({
+        id: 'node-1',
+        message: createMockChatMessage({
+          id: 'msg-1',
+          nodeId: 'node-1',
+          contentText: '{"key": "value"}',
+        }),
+      });
+      const processedItem = setConversationGraphItemData(nodeItem) as NodeItem;
+      expect(processedItem.message?.data).toEqual({ key: 'value' });
+    });
+
+    it('should handle node items without messages', () => {
+      const nodeItem = createMockNodeItem({ id: 'node-1', message: null });
+      const processedItem = setConversationGraphItemData(nodeItem) as NodeItem;
+      expect(processedItem.message).toBeNull();
+    });
+
+    it('should recursively process items within group items', () => {
+      const groupItem = createMockGroupItem({
+        id: 'group-1',
+        items: [
+          createMockNodeItem({
+            id: 'node-1',
+            message: createMockChatMessage({
+              id: 'msg-1',
+              nodeId: 'node-1',
+              contentText: '{"key1": "value1"}',
+            }),
+          }),
+          createMockGroupItem({
+            id: 'group-2',
+            items: [
+              createMockNodeItem({
+                id: 'node-2',
+                message: createMockChatMessage({
+                  id: 'msg-2',
+                  nodeId: 'node-2',
+                  authorRole: 'assistant',
+                  contentText: '{"key2": "value2"}',
+                }),
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const processedItem = setConversationGraphItemData(
+        groupItem,
+      ) as GroupItem;
+      const processedNode1 = processedItem.items[0] as NodeItem;
+      const processedGroup2 = processedItem.items[1] as GroupItem;
+      const processedNode2 = processedGroup2.items[0] as NodeItem;
+
+      expect(processedNode1.message?.data).toEqual({ key1: 'value1' });
+      expect(processedNode2.message?.data).toEqual({ key2: 'value2' });
+    });
+
+    it('should handle empty group items', () => {
+      const groupItem = createMockGroupItem({ id: 'group-1', items: [] });
+      const processedItem = setConversationGraphItemData(
+        groupItem,
+      ) as GroupItem;
+      expect(processedItem.items).toEqual([]);
+    });
+  });
+
+  describe('setConversationGraphData', () => {
+    it('should process all top-level items in the graph', () => {
+      const graph = createMockConversationGraph({
+        conversationId: 'conv-1',
+        items: [
+          createMockNodeItem({
+            id: 'node-1',
+            message: createMockChatMessage({
+              id: 'msg-1',
+              nodeId: 'node-1',
+              conversationId: 'conv-1',
+              contentText: '{"key1": "value1"}',
+            }),
+          }),
+          createMockGroupItem({
+            id: 'group-1',
+            items: [
+              createMockNodeItem({
+                id: 'node-2',
+                message: createMockChatMessage({
+                  id: 'msg-2',
+                  nodeId: 'node-2',
+                  conversationId: 'conv-1',
+                  authorRole: 'assistant',
+                  contentText: '{"key2": "value2"}',
+                }),
+              }),
+            ],
+          }),
+        ],
+      });
+      const processedGraph = setConversationGraphData(graph);
+      const processedNode1 = processedGraph.items[0] as NodeItem;
+      const processedGroup1 = processedGraph.items[1] as GroupItem;
+      const processedNode2 = processedGroup1.items[0] as NodeItem;
+
+      expect(processedNode1.message?.data).toEqual({ key1: 'value1' });
+      expect(processedNode2.message?.data).toEqual({ key2: 'value2' });
+    });
+
+    it('should handle an empty graph', () => {
+      const graph = createMockConversationGraph({
+        conversationId: 'conv-empty',
+        items: [],
+      });
+      const processedGraph = setConversationGraphData(graph);
+      expect(processedGraph.items).toEqual([]);
+    });
+  });
+});
+
+describe('processReadableChatResponseStream', () => {
+  let mockSetStatus: Mock; // Simplified type
+  const encoder = new TextEncoder();
+
+  beforeEach(() => {
+    mockSetStatus = vi.fn();
+    vi.spyOn(console, 'info').mockImplementation(() => {}); // Suppress info logs
+    vi.spyOn(console, 'warn').mockImplementation(() => {}); // Suppress warn logs
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // Helper to create a ReadableStream from strings
+  function createStream(...chunks: string[]): ReadableStream<Uint8Array> {
+    return new ReadableStream({
+      start(controller) {
+        chunks.forEach((chunk) => {
+          controller.enqueue(encoder.encode(chunk));
+        });
+        controller.close();
+      },
+    });
+  }
+
+  it('should throw error if reader cannot be obtained', async () => {
+    const stream = {
+      getReader: () => null,
+    } as unknown as ReadableStream<any>; // Simulate null reader
+    await expect(
+      processReadableChatResponseStream(stream, mockSetStatus),
+    ).rejects.toThrow('No readable stream');
+  });
+
+  it('should process LLMContent events and accumulate content', async () => {
+    const stream = createStream(
+      'event: fooLLMContent\ndata: {"content": "Hello "}\n\n',
+      'event: barLLMContent\ndata: {"content": "World!"}\n\n',
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).toHaveBeenCalledTimes(2);
+    expect(mockSetStatus).toHaveBeenNthCalledWith(1, {
+      kind: 'thinking',
+      contentType: 'fooLLMContent',
+      content: 'Hello ',
+      data: null,
+    });
+    expect(mockSetStatus).toHaveBeenNthCalledWith(2, {
+      kind: 'thinking',
+      contentType: 'barLLMContent',
+      content: 'Hello World!', // Accumulated content
+      data: null,
+    });
+  });
+
+  it('should process messages events', async () => {
+    const mockMessageData = { id: 'msg-1', text: 'some message' };
+    const stream = createStream(
+      `event: messages\ndata: ${JSON.stringify(mockMessageData)}\n\n`,
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).toHaveBeenCalledTimes(1);
+    expect(mockSetStatus).toHaveBeenCalledWith({
+      kind: 'thinking',
+      contentType: 'messages',
+      content: '', // No LLMContent events
+      data: mockMessageData, // Parsed data
+    });
+  });
+
+  it('should process LLMToolCall events and format content', async () => {
+    const stream = createStream(
+      'event: LLMToolCall\ndata: {"name": "get_weather", "arguments": {}}\n\n',
+      'event: LLMToolCall\ndata: {"name": "/v1/internal/api", "arguments": {}}\n\n',
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).toHaveBeenCalledTimes(2);
+    expect(mockSetStatus).toHaveBeenNthCalledWith(1, {
+      kind: 'thinking',
+      contentType: 'LLMToolCall',
+      content: 'Calling `/get_weather`',
+      data: null,
+    });
+    expect(mockSetStatus).toHaveBeenNthCalledWith(2, {
+      kind: 'thinking',
+      contentType: 'LLMToolCall',
+      content: 'Calling `/v1/internal/api`',
+      data: null,
+    });
+  });
+
+  it('should handle LLMToolCall event via function-call type', async () => {
+    const stream = createStream(
+      'data: {"type": "function-call", "name": "my_func"}\n\n',
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+    expect(mockSetStatus).toHaveBeenCalledTimes(1);
+    expect(mockSetStatus).toHaveBeenCalledWith({
+      kind: 'thinking',
+      contentType: 'LLMToolCall',
+      content: 'Calling `/my_func`',
+      data: null,
+    });
+  });
+
+  it('should process text events', async () => {
+    const stream = createStream(
+      'event: text\ndata: {"content": "processing..."}\n\n',
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).toHaveBeenCalledTimes(1);
+    expect(mockSetStatus).toHaveBeenCalledWith({
+      kind: 'thinking',
+      contentType: 'text',
+      content: 'Processing data',
+      data: null,
+    });
+  });
+
+  it('should handle invalid JSON in data lines', async () => {
+    const stream = createStream('event: messages\ndata: {invalid json\n\n');
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).toHaveBeenCalledTimes(1);
+    expect(mockSetStatus).toHaveBeenCalledWith({
+      kind: 'thinking',
+      contentType: 'messages',
+      content: '',
+      data: null,
+    });
+    expect(console.warn).toHaveBeenCalledWith(
+      'ToolChat - non-json data',
+      'messages',
+      '{invalid json',
+    );
+  });
+
+  it('should handle unknown event types', async () => {
+    const stream = createStream('event: unknown\ndata: {"foo": "bar"}\n\n');
+    await processReadableChatResponseStream(stream, mockSetStatus);
+
+    expect(mockSetStatus).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith(
+      'ToolChat - Unknown status data:',
+      'unknown',
+      { foo: 'bar' },
+    );
+  });
+
+  it('should handle multi-line data correctly', async () => {
+    // Example from SSE spec
+    const stream = createStream(
+      'data: YHOO\ndata: +2\ndata: 10\n\n',
+      'event: end-of-stream\ndata: goodbye\n\n',
+    );
+    // This test primarily ensures it doesn't crash and processes events line by line.
+    // The current logic only parses the last `data:` line per event block if it's JSON.
+    await processReadableChatResponseStream(stream, mockSetStatus);
+    expect(mockSetStatus).toHaveBeenCalledTimes(0);
+    expect(console.warn).toHaveBeenCalledTimes(7);
+  });
+
+  it('should process stream with mixed events and complete', async () => {
+    const stream = createStream(
+      'event: fooLLMContent\ndata: {"content": "A"}\n\n',
+      'event: messages\ndata: {"id": "m1"}\n\n',
+      'event: barLLMContent\ndata: {"content": "B"}\n\n',
+    );
+    await processReadableChatResponseStream(stream, mockSetStatus);
+    expect(mockSetStatus).toHaveBeenCalledTimes(3);
+    // Check calls in order they happened
+    expect(mockSetStatus.mock.calls[0][0]).toEqual({
+      kind: 'thinking',
+      contentType: 'fooLLMContent',
+      content: 'A',
+      data: null,
+    });
+    expect(mockSetStatus.mock.calls[1][0]).toEqual({
+      kind: 'thinking',
+      contentType: 'messages',
+      content: 'A', // Content accumulated from previous event
+      data: { id: 'm1' },
+    });
+    expect(mockSetStatus.mock.calls[2][0]).toEqual({
+      kind: 'thinking',
+      contentType: 'barLLMContent',
+      content: 'AB', // Content accumulated
+      data: null,
     });
   });
 });

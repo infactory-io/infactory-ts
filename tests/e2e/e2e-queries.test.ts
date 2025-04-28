@@ -25,8 +25,27 @@ describe('E2E Tests: Query Editor Workflow', () => {
   const uniqueId = randomBytes(4).toString('hex');
   const projectName = `e2e-project-${uniqueId}`;
   const queryProgramName = `e2e-query-${uniqueId}`;
-  const initialQueryCode = `// Initial code for ${queryProgramName}\nreturn 'Hello, World!';`;
-  const updatedQueryCode = `// Updated code for ${queryProgramName}\nreturn 'Hello, Updated World!';`;
+  const initialQueryCode = `class AnswerQueryProgram(QueryProgram):
+    """
+    Make an empty DataFrame.
+    """
+
+    def __init__(self):
+        self.plan = []
+        self.load_params = []
+        self.slots = []
+        self.lets = []
+        self.stores = [
+            Store(At.MAIN, "An empty DataFrame.")
+        ]
+
+    def run(self):
+        (
+            self
+            .new(store=At.A)
+            .move(At.A, At.MAIN)
+        )`;
+  const updatedQueryCode = `// Updated code for ${queryProgramName}\n\n${initialQueryCode}`;
 
   beforeAll(async () => {
     const apiKey = process.env.NF_API_KEY;

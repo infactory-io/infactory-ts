@@ -68,8 +68,9 @@ export interface ChatMessageCreate {
 /**
  * Safely parses contentText to set the data field in a message
  * @param message - The chat message to process
- * @returns The processed chat message
+ * @returns The processed message object
  */
+// EXPORTED HELPER
 export const setChatMessageData = (message: ChatMessage): ChatMessage => {
   // Safely parse `content_text` to set `data` field in the message
   try {
@@ -94,7 +95,8 @@ export const setChatMessageData = (message: ChatMessage): ChatMessage => {
  * @param item - The graph item to process
  * @returns The processed graph item
  */
-const setConversationGraphItemData = (item: GraphItem): GraphItem => {
+// EXPORTED HELPER
+export const setConversationGraphItemData = (item: GraphItem): GraphItem => {
   if (item.kind === 'node') {
     if (item.message) {
       item.message = setChatMessageData(item.message);
@@ -113,6 +115,7 @@ const setConversationGraphItemData = (item: GraphItem): GraphItem => {
  * @param graph - The conversation graph to process
  * @returns The processed conversation graph
  */
+// EXPORTED HELPER
 export const setConversationGraphData = (
   graph: ConversationGraph,
 ): ConversationGraph => {
@@ -124,14 +127,16 @@ export const setConversationGraphData = (
 
 /**
  * Processes a readable chat response stream and updates the status
- * @param response - The readable stream to process
+ * @param stream - The readable stream to process
  * @param setStatus - Callback function to update status
+ * @returns Promise that resolves when the stream is fully processed
  */
-export async function processReadableChatResponseStream(
-  response: ReadableStream<any>,
-  setStatus: (status: MessageStatus | null) => void,
-) {
-  const reader = response?.getReader();
+// EXPORTED HELPER
+export const processReadableChatResponseStream = async (
+  stream: ReadableStream,
+  setStatus: (status: MessageStatus) => void,
+): Promise<void> => {
+  const reader = stream?.getReader();
   if (!reader) {
     throw new Error('No readable stream');
   }
@@ -171,6 +176,8 @@ export async function processReadableChatResponseStream(
         } catch {
           console.warn('ToolChat - non-json data', eventType, dataStr);
         }
+
+        // Now process the status data
         if (
           eventType?.endsWith('LLMContent') &&
           'content' in status_data &&
@@ -223,7 +230,7 @@ export async function processReadableChatResponseStream(
     }
   }
   reader.releaseLock();
-}
+};
 
 /**
  * Client for managing chats and conversations in the Infactory API

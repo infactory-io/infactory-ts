@@ -101,9 +101,6 @@ export class InfactoryClient {
 
     this.baseUrl = options.baseURL;
 
-    console.log('this.baseUrl', this.baseUrl);
-    console.log('isServer', typeof window === 'undefined');
-
     // Create the HTTP client
     this.httpClient = new HttpClient({
       baseUrl: this.baseUrl,
