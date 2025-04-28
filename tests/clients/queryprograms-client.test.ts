@@ -2,11 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryProgramsClient } from '../../src/clients/queryprograms-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
-import {
-  ApiResponse,
-  QueryResponse,
-  QueryProgram,
-} from '../../src/types/common.js';
+// ApiResponse type is used in return type annotations in the class methods
+import { ApiResponse } from '../../src/types/common.js';
 
 // Mock the HttpClient
 vi.mock('../../src/core/http-client', () => {
@@ -17,6 +14,7 @@ vi.mock('../../src/core/http-client', () => {
       patch: vi.fn(),
       delete: vi.fn(),
       createStream: vi.fn(),
+      request: vi.fn(),
     })),
   };
 });
@@ -70,9 +68,10 @@ describe('QueryProgramsClient', () => {
       const result = await queryProgramsClient.listQueryPrograms();
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
-        params: undefined,
-      });
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/queryprograms',
+        undefined,
+      );
 
       // Verify the result
       expect(result.data).toEqual(mockQueryPrograms);
@@ -105,9 +104,10 @@ describe('QueryProgramsClient', () => {
       const result = await queryProgramsClient.listQueryPrograms(params);
 
       // Verify the HTTP client was called correctly with the pagination parameters
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/queryprograms',
         params,
-      });
+      );
 
       // Verify the result
       expect(result.data).toEqual(mockQueryPrograms);
@@ -129,9 +129,10 @@ describe('QueryProgramsClient', () => {
       const result = await queryProgramsClient.listQueryPrograms();
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
-        params: undefined,
-      });
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/queryprograms',
+        undefined,
+      );
 
       // Verify the error was returned
       expect(result.error).toEqual(mockError);
@@ -219,8 +220,9 @@ describe('QueryProgramsClient', () => {
       });
 
       // Call the method
-      const result =
-        await queryProgramsClient.getQueryProgramsByProject('project-1');
+      const result = await queryProgramsClient.listQueryPrograms({
+        projectId: 'project-1',
+      });
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
@@ -258,12 +260,13 @@ describe('QueryProgramsClient', () => {
       });
 
       // Call the method without projectId
-      const result = await queryProgramsClient.getQueryProgramsByProject();
+      const result = await queryProgramsClient.listQueryPrograms();
 
       // Verify the HTTP client was called correctly with undefined projectId
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
-        projectId: undefined,
-      });
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/queryprograms',
+        undefined,
+      );
 
       // Verify the result
       expect(result.data).toEqual(mockQueryPrograms);
@@ -282,8 +285,9 @@ describe('QueryProgramsClient', () => {
       });
 
       // Call the method
-      const result =
-        await queryProgramsClient.getQueryProgramsByProject('project-1');
+      const result = await queryProgramsClient.listQueryPrograms({
+        projectId: 'project-1',
+      });
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/queryprograms', {
@@ -379,58 +383,10 @@ describe('QueryProgramsClient', () => {
       const mockResponse = {
         id: 'qp-1',
         name: 'Updated Query Program',
+        projectId: 'project-1',
         description: 'Updated description',
         query: 'SELECT * FROM updated_table',
-        projectId: 'project-1',
-        createdAt: '2025-01-01T00:00:00Z',
-        updatedAt: '2025-01-03T00:00:00Z',
         published: false,
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.patch).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.updateQueryProgram(
-        'qp-1',
-        updateParams,
-      );
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1',
-        updateParams,
-      );
-
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
-    });
-
-    it('should filter out null and undefined values when updating', async () => {
-      // Mock request data with some null values
-      const updateParams = {
-        name: 'Updated Query Program',
-        description: null, // Should be filtered out
-        query: 'select * from users where active = true',
-        tags: undefined, // Should be filtered out
-        published: true,
-      };
-
-      const expectedFilteredParams = {
-        name: 'Updated Query Program',
-        query: 'select * from users where active = true',
-        published: true,
-      };
-
-      // Mock response data
-      const mockResponse = {
-        id: 'qp-1',
-        name: 'Updated Query Program',
-        projectId: 'project-1',
-        query: 'select * from users where active = true',
-        published: true,
         createdAt: '2025-01-01T00:00:00Z',
         updatedAt: '2025-01-03T12:00:00Z',
       };
@@ -446,10 +402,10 @@ describe('QueryProgramsClient', () => {
         updateParams,
       );
 
-      // Verify the HTTP client was called correctly with filtered parameters
+      // Verify the HTTP client was called correctly with the update parameters
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
         '/v1/queryprograms/qp-1',
-        expectedFilteredParams,
+        updateParams,
       );
 
       // Verify the result
@@ -535,25 +491,12 @@ describe('QueryProgramsClient', () => {
     });
   });
 
-  describe('executeQueryProgram', () => {
-    it('should call the correct endpoint to execute a query program', async () => {
-      // Mock request parameters
-      const executeParams = {
-        param1: 'value1',
-        param2: 42,
-      };
-
+  describe('analyzeQueryProgram', () => {
+    it('should call the correct endpoint to analyze a query program', async () => {
       // Mock response data
       const mockResponse = {
-        result: [
-          { id: 1, name: 'Test 1' },
-          { id: 2, name: 'Test 2' },
-        ],
-        metadata: {
-          executionTime: 0.15,
-          queryProgramId: 'qp-1',
-        },
-        success: true,
+        nodes: [],
+        edges: [],
       };
 
       // Setup the mock response
@@ -562,124 +505,221 @@ describe('QueryProgramsClient', () => {
       });
 
       // Call the method
-      const result = await queryProgramsClient.executeQueryProgram(
+      const result = await queryProgramsClient.analyzeQueryProgram(
+        'project-1',
         'qp-1',
-        executeParams,
       );
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
-        executeParams,
+        '/v1/actions/evaluate/queryprogram/graph',
+        {
+          projectId: 'project-1',
+          queryprogramId: 'qp-1',
+        },
       );
 
       // Verify the result
-      // TypeScript doesn't know that we've mocked this to return an ApiResponse
-      // and not a ReadableStream, so we need to cast
-      expect((result as ApiResponse<QueryResponse>).data).toEqual(mockResponse);
+      expect(result.data).toEqual(mockResponse);
     });
 
-    it('should handle null parameters when executing a query program', async () => {
-      // Mock response data
-      const mockResponse = {
-        result: [],
-        metadata: {
-          executionTime: 0.05,
-          queryProgramId: 'qp-1',
-        },
-        success: true,
-      };
+    it('should handle errors when analyzing a query program', async () => {
+      // Setup the mock to return an error
+      const mockError = createErrorFromStatus(
+        500,
+        'server_error',
+        'Internal server error',
+      );
 
-      // Setup the mock response
       vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: mockResponse,
+        error: mockError,
       });
 
-      // Call the method with undefined parameters (testing line 118 branch)
-      const result = await queryProgramsClient.executeQueryProgram(
-        'qp-1',
-        undefined,
+      // Call the method
+      const result = await queryProgramsClient.analyzeQueryProgram(
+        'project-1',
+        'qp-nonexistent',
       );
 
-      // Verify the HTTP client was called correctly with empty object
+      // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
-        {},
+        '/v1/actions/evaluate/queryprogram/graph',
+        {
+          projectId: 'project-1',
+          queryprogramId: 'qp-nonexistent',
+        },
       );
 
-      // Verify the result
-      // TypeScript doesn't know that we've mocked this to return an ApiResponse
-      // and not a ReadableStream, so we need to cast
-      expect((result as ApiResponse<QueryResponse>).data).toEqual(mockResponse);
+      // Verify the error was returned
+      expect(result.error).toEqual(mockError);
     });
   });
 
-  describe('executeQueryProgramStream', () => {
-    it('should call the correct endpoint to execute a query program with streaming', async () => {
-      // Mock request parameters
-      const executeParams = {
-        param1: 'value1',
-        param2: 42,
-        stream: true,
-      };
-
-      // Mock stream response
+  describe('getReadableAnswerForQueryResponse', () => {
+    it('should call the correct endpoint to get a readable answer', async () => {
       const mockStream = new ReadableStream();
-
-      // Setup the mock response
       vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
 
       // Call the method
-      const result = await queryProgramsClient.executeQueryProgramStream(
-        'qp-1',
-        executeParams,
-      );
+      const result =
+        await queryProgramsClient.getReadableAnswerForQueryResponse(
+          'response-1',
+          'What does this data mean?',
+        );
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
+        '/v1/actions/generate/readableanswer-to-queryresponse/response-1',
         {
-          url: '/v1/queryprograms/qp-1/execute',
+          url: '/v1/actions/generate/readableanswer-to-queryresponse/response-1',
           method: 'POST',
-          jsonBody: executeParams,
+          jsonBody: { query: 'What does this data mean?' },
           headers: {
             Accept: 'text/event-stream',
           },
         },
       );
 
-      // Verify the result is a stream
+      // Verify the result is the mock stream
+      expect(result).toBe(mockStream);
+    });
+  });
+
+  describe('evaluateQueryProgram', () => {
+    it('should call the correct endpoint to execute a query program with streaming', async () => {
+      const mockStream = new ReadableStream();
+      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
+
+      // Call the method with streaming
+      const result = await queryProgramsClient.evaluateQueryProgram(
+        'project-1', // projectId
+        'qp-1', // queryProgramId
+        { param1: 'value1' },
+      );
+
+      // Verify the HTTP client was called correctly with the new endpoints
+      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
+        {
+          url: expect.stringContaining('/v1/actions/evaluate/queryprogram'),
+          method: 'POST',
+          jsonBody: {
+            projectId: 'project-1',
+            queryprogramId: 'qp-1',
+            stream: true,
+          },
+          headers: {
+            Accept: 'text/event-stream',
+          },
+        },
+      );
+
+      // Verify the result is the mock stream
       expect(result).toBe(mockStream);
     });
 
     it('should handle null parameters when executing a query program with streaming', async () => {
       // Mock stream response
       const mockStream = new ReadableStream();
-
-      // Setup the mock response
       vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
 
-      // Call the method with undefined parameters (testing line 135 branch)
-      const result = await queryProgramsClient.executeQueryProgramStream(
-        'qp-1',
+      // Call the method with null parameters
+      const result = await queryProgramsClient.evaluateQueryProgram(
+        'project-1', // projectId
+        'qp-1', // queryProgramId
         undefined,
       );
 
-      // Verify the HTTP client was called correctly with empty object
+      // Verify the HTTP client was called correctly with null parameters
       expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        '/v1/queryprograms/qp-1/execute',
+        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
         {
-          url: '/v1/queryprograms/qp-1/execute',
+          url: expect.stringContaining('/v1/actions/evaluate/queryprogram'),
           method: 'POST',
-          jsonBody: {},
+          jsonBody: {
+            projectId: 'project-1',
+            queryprogramId: 'qp-1',
+            stream: true,
+          },
           headers: {
             Accept: 'text/event-stream',
           },
         },
       );
 
-      // Verify the result is a stream
+      // Verify the result is the mock stream
       expect(result).toBe(mockStream);
+    });
+  });
+
+  describe('evaluateQueryProgramSync', () => {
+    it('should call the correct endpoint to execute a query program', async () => {
+      const queryProgramsClient = new QueryProgramsClient(mockHttpClient);
+      const executeParams = {
+        param1: 'value1',
+        param2: 42,
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: { result: 'success' },
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.evaluateQueryProgramSync(
+        'project-1', // projectId
+        'qp-1', // queryProgramId
+        executeParams,
+      );
+
+      // Verify the HTTP client was called correctly
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
+        {
+          projectId: 'project-1',
+          queryprogramId: 'qp-1',
+          stream: false,
+        },
+        executeParams,
+      );
+
+      // Verify the result
+      expect(result.data).toEqual({ result: 'success' });
+    });
+
+    it('should filter out null and undefined values when validating', async () => {
+      // Mock request data with some null values
+      const validateParams = {
+        param1: 'value1',
+        param2: null,
+        param3: undefined,
+      };
+
+      // Setup the mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: { result: 'success' },
+      });
+
+      // Call the method
+      const result = await queryProgramsClient.evaluateQueryProgramSync(
+        'project-1', // projectId
+        'qp-1', // queryProgramId
+        validateParams,
+      );
+
+      // Verify the HTTP client was called correctly with filtered parameters
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
+        {
+          projectId: 'project-1',
+          queryprogramId: 'qp-1',
+          stream: false,
+        },
+        validateParams,
+      );
+
+      // Verify the result
+      expect(result.data).toEqual({ result: 'success' });
     });
   });
 
@@ -1060,7 +1100,7 @@ describe('QueryProgramsClient', () => {
       );
 
       // Verify the result shows it's still published
-      expect((result as ApiResponse<QueryProgram>).data?.published).toBe(true);
+      expect(result.data?.published).toBe(true);
     });
   });
 

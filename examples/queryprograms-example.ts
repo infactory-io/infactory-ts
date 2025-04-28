@@ -82,10 +82,10 @@ async function queryProgramsExample() {
     const projectId = firstTeam.projects[0].id;
     console.log(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
 
-    // List query programs for the project
-    console.log('\n1. Listing query programs for the project:');
+    // Get query programs for the project
+    console.log('Getting query programs for the project:');
     const queryProgramsResponse =
-      await client.queryPrograms.getQueryProgramsByProject(projectId);
+      await client.queryPrograms.listQueryPrograms(projectId);
     if (queryProgramsResponse.error) {
       console.error(
         'Error listing query programs:',
@@ -96,9 +96,16 @@ async function queryProgramsExample() {
         `Found ${queryProgramsResponse.data?.length || 0} query programs`,
       );
       if (queryProgramsResponse.data && queryProgramsResponse.data.length > 0) {
-        queryProgramsResponse.data.forEach((qp, index) => {
+        const queryPrograms = queryProgramsResponse.data.map(
+          (qp: any, index: number) => ({
+            id: qp.id,
+            name: qp.name || `Query Program ${index + 1}`,
+            published: qp.published,
+          }),
+        );
+        queryPrograms.forEach((qp, index) => {
           console.log(
-            `${index + 1}. ${qp.name || 'Unnamed'} (ID: ${qp.id}) - Published: ${qp.published ? 'Yes' : 'No'}`,
+            `${index + 1}. ${qp.name} (ID: ${qp.id}) - Published: ${qp.published ? 'Yes' : 'No'}`,
           );
         });
       }
@@ -167,7 +174,10 @@ class AnswerQueryProgram(QueryProgram):
           // Execute the query program
           console.log('Executing the query program:');
           const executeResponse =
-            await client.queryPrograms.executeQueryProgram(queryProgramId);
+            await client.queryPrograms.evaluateQueryProgramSync(
+              projectId,
+              queryProgramId,
+            );
 
           if (isReadableStream(executeResponse)) {
             console.log('Received streaming response, processing events...');

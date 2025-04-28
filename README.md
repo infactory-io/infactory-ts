@@ -140,16 +140,18 @@ await fetch(
 ```typescript
 // Get query programs for a project
 const queryProgramsResponse =
-  await client.queryprograms.getQueryProgramsByProject(projectId);
+  await client.queryPrograms.getQueryProgramsByProject(projectId);
 const queryPrograms = queryProgramsResponse.data;
 
 // Execute a query program
-const evaluateResponse =
-  await client.queryprograms.executeQueryProgram(queryProgramId);
+const evaluateResponse = await client.queryPrograms.evaluateQueryProgramSync(
+  projectId,
+  queryProgramId,
+);
 const queryResult = evaluateResponse.data;
 
 // Publish a query program to make it available as an API
-await client.queryprograms.publishQueryProgram(queryProgramId);
+await client.queryPrograms.publishQueryProgram(queryProgramId);
 ```
 
 ### Accessing APIs
@@ -235,7 +237,7 @@ async function handleErrors() {
 
 ### Handling Streaming Responses
 
-Some API endpoints like `executeQueryProgram` can return streaming responses. The SDK provides enhanced utilities to handle these responses, including event-based streaming:
+Some API endpoints can return streaming responses. The SDK provides enhanced utilities to handle these responses, including event-based streaming:
 
 ```typescript
 import {
@@ -249,7 +251,7 @@ async function handleBasicStreamingResponse() {
   const client = new InfactoryClient({ apiKey: 'your-api-key' });
 
   // This may return a stream or a regular response
-  const result = await client.queryprograms.executeQueryProgram(
+  const result = await client.queryprograms.evaluateQueryProgramSync(
     queryProgramId,
     { stream: true },
   );
@@ -269,7 +271,7 @@ async function handleEventStreamingResponse() {
   const client = new InfactoryClient({ apiKey: 'your-api-key' });
 
   // Get a streaming response
-  const result = await client.queryprograms.executeQueryProgram(
+  const result = await client.queryprograms.evaluateQueryProgramSync(
     queryProgramId,
     { stream: true },
   );

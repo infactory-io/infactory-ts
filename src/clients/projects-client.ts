@@ -15,7 +15,6 @@ export type CreateProjectParams = Pick<Project, 'name' | 'description'> & {
 export type UpdateProjectParams = Partial<
   Pick<Project, 'name' | 'description'>
 > & {
-  teamId?: string;
   deletedAt?: string | null;
 };
 
@@ -131,15 +130,12 @@ export class ProjectsClient {
    */
   async updateProject(
     projectId: string,
+    teamId: string,
     params: UpdateProjectParams,
   ): Promise<ApiResponse<Project>> {
-    if (!params.teamId) {
-      throw new Error('Team ID is required for updating a project');
-    }
     // Prepare payload with snake_case teamId
-    const { teamId, ...rest } = params;
     const payload = {
-      ...rest,
+      ...params,
       teamId: teamId,
     };
     return this.httpClient.patch<Project>(`/v1/projects/${projectId}`, payload);
@@ -199,19 +195,25 @@ export class ProjectsClient {
    * @param teamId - The ID of the team to import the project into
    * @param file - The project configuration file to import
    * @param conflictStrategy - Strategy for handling naming conflicts
+   * @param renameSuffix - Custom suffix to use for renaming projects (when conflict_strategy is 'rename')
    * @returns A promise that resolves to an API response containing the imported project
    */
   async importProject(
     teamId: string,
     file: File,
     conflictStrategy: 'rename' | 'overwrite' | 'skip' = 'rename',
+    renameSuffix?: string,
   ): Promise<ApiResponse<ProjectImportResponse>> {
     try {
       // Create FormData
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('teamId', teamId);
+      formData.append('team_id', teamId);
       formData.append('conflict_strategy', conflictStrategy);
+
+      if (renameSuffix) {
+        formData.append('rename_suffix', renameSuffix);
+      }
 
       return await this.httpClient.request<ProjectImportResponse>({
         url: '/projects/import',

@@ -44,6 +44,8 @@ export interface InfactoryClientOptions {
   fetch?: typeof globalThis.fetch;
   /** Default headers to include with every request */
   defaultHeaders?: Record<string, string>;
+  /** Optional override for whether the client is running in a server environment */
+  isServer?: boolean;
 }
 
 /**
@@ -76,30 +78,60 @@ export class InfactoryClient {
     }
 
     // Determine and store resolved base URL
-    const resolvedBaseUrl =
-      options.baseURL?.replace(/\/$/, '') || DEFAULT_BASE_URL;
-    this.baseUrl = resolvedBaseUrl;
+    if (!options.baseURL) {
+      options.baseURL = DEFAULT_BASE_URL;
+    }
+
+    // Make sure the URL has a protocol
+    if (
+      !options.baseURL?.startsWith('http://') &&
+      !options.baseURL?.startsWith('https://')
+    ) {
+      options.baseURL = `http://${options.baseURL}`;
+    }
+
+    // Remove trailing slash if present to avoid double slashes
+    if (options.baseURL?.endsWith('/')) {
+      options.baseURL = options.baseURL.slice(0, -1);
+    }
+
+    this.baseUrl = options.baseURL;
+
+    console.log('this.baseUrl', this.baseUrl);
+    console.log('isServer', typeof window === 'undefined');
 
     // Create the HTTP client
     this.httpClient = new HttpClient({
-      baseUrl: resolvedBaseUrl,
+      baseUrl: this.baseUrl,
       apiKey: options.apiKey,
       fetch: options.fetch,
       defaultHeaders: {
         ...options.defaultHeaders,
         'x-client-version': DEFAULT_SDK_VERSION, // SDK version
       },
-      isServer: typeof window === 'undefined',
+      isServer:
+        options.isServer === true || options.isServer === false
+          ? options.isServer
+          : typeof window === 'undefined',
     });
 
     // Clear mock call counts in tests to ensure single invocation for all resource clients
-    [PlatformsClient, OrganizationsClient, TeamsClient, ProjectsClient].forEach(
-      (ClientClass) => {
-        if (typeof (ClientClass as any).mockClear === 'function') {
-          (ClientClass as any).mockClear();
-        }
-      },
-    );
+    [
+      PlatformsClient,
+      OrganizationsClient,
+      TeamsClient,
+      ProjectsClient,
+      UsersClient,
+      QueryProgramsClient,
+      DatasourcesClient,
+      DatalinesClient,
+      APIsClient,
+      GenerateClient,
+    ].forEach((ClientClass) => {
+      if (typeof (ClientClass as any).mockClear === 'function') {
+        (ClientClass as any).mockClear();
+      }
+    });
 
     // Initialize resource clients
     this.platforms = new PlatformsClient(this.httpClient);

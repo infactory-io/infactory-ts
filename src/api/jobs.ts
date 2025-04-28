@@ -40,6 +40,11 @@ export interface Worker {
 }
 
 // Define types for job events
+export interface JobStatus {
+  status: string;
+  metadata?: Record<string, any>;
+}
+
 export interface JobEventPayload {
   partNumber?: number;
   etag?: string;
@@ -128,6 +133,22 @@ export const jobsApi = {
     return await sharedClient.post<string>('/v1/jobs/submit', {
       body: params,
     });
+  },
+
+  /**
+   * Gets the status of a job directly by ID
+   * @param jobId - ID of the job to check status for
+   */
+  getJobStatusById: async (jobId: string): Promise<ApiResponse<JobStatus>> => {
+    return await sharedClient.get<JobStatus>(`/v1/jobs/${jobId}`);
+  },
+
+  /**
+   * Gets a job by ID
+   * @param jobId - ID of the job to retrieve
+   */
+  getJob: async (jobId: string): Promise<ApiResponse<JobStatus>> => {
+    return await sharedClient.get<JobStatus>(`/v1/jobs/${jobId}`);
   },
 
   /**
