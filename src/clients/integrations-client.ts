@@ -1,7 +1,31 @@
 import { HttpClient } from '../core/http-client.js';
 import { ApiResponse, ToolNameSpace } from '../types/common.js';
 
-// Fivetran Integration
+// Type definitions
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+// Authentication Header Definitions
+// 1. None
+//    Not explicitly defined in OpenAPI, but represents no authentication
+//    Used when an endpoint doesn't require authentication
+// 2. Basic
+//    OpenAPI Type: http with scheme basic
+//    Implementation: Sends username:password encoded in Base64 in the Authorization header
+//    Format: Authorization: Basic base64(username:password)
+// 3. Bearer
+//    OpenAPI Type: http with scheme bearer
+//    Implementation: Sends a token in the Authorization header
+//    Format: Authorization: Bearer token
+// 4. ApiKey
+//    OpenAPI Type: apiKey
+//    Implementation: Can be sent in header, query, or cookie
+//    Format depends on location:
+//        Header: X-API-Key: key (name configurable)
+//        Query: ?api_key=key (parameter name configurable)
+//
+
+// These are defined in the front ends
+export type AuthType = 'None' | 'Basic Auth' | 'Bearer Token' | 'API Key';
 
 /**
  * Parameters for Fivetran webhook handling
@@ -228,13 +252,14 @@ export interface HttpAuthConfig {
  */
 export interface TestHttpConnectionRequest {
   url: string;
-  method: string;
+  method: HttpMethod;
   headers?: Record<string, string>;
   parameters?: Record<string, ParameterConfig>;
   parameterGroups?: ParameterGroup[];
-  authType?: string;
+  authType?: AuthType;
   auth?: HttpAuthConfig;
   body?: HttpBodyConfig;
+  responsePathExtractor?: string;
 }
 
 /**
@@ -464,6 +489,7 @@ export class IntegrationsClient {
   async testHttpConnection(
     requestConfig: TestHttpConnectionRequest,
   ): Promise<ApiResponse<TestHttpConnectionResponse>> {
+    console.log('Testing HTTP connection with config:', requestConfig);
     return this.httpClient.post<TestHttpConnectionResponse>(
       '/v1/http/test-connection',
       requestConfig,

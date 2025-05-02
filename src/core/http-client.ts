@@ -23,6 +23,10 @@ const API_BASE_URL = '/api/infactory';
  * @returns The snake_case string.
  */
 function toSnakeCase(key: string): string {
+  if (key.includes('-')) {
+    // For keys like 'Content-Type` which shouldn't be converted
+    return key;
+  }
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 

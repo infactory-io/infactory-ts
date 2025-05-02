@@ -17,3 +17,4 @@ export * from './auth-client.js';
 export * from './integrations-client.js';
 export * from './jobs-client.js';
 export * from './live-client.js';
+export * from './actions-client.js';

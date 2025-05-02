@@ -5,11 +5,10 @@ import { ApiResponse, Project } from '../types/common.js';
  * Parameters for creating a project
  */
 export type CreateProjectParams = Pick<Project, 'name' | 'description'> & {
-  teamId: string;
+  teamId?: string;
 };
 
 /**
- /**
  * Parameters for updating a project
  */
 export type UpdateProjectParams = Partial<
@@ -108,9 +107,6 @@ export class ProjectsClient {
     // Client-side validation
     if (!params.name || params.name.trim() === '') {
       throw new Error('Project name is required');
-    }
-    if (!params.teamId) {
-      throw new Error('Team ID is required');
     }
 
     // The API expects teamId (snake_case) instead of teamId (camelCase)
