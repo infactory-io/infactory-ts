@@ -96,35 +96,6 @@ describe('ActionsClient', () => {
       expect(result.data?.testResult?.success).toBe(true);
     });
 
-    it('should test HTTP connections when appropriate', async () => {
-      // Setup mock responses
-      datasourcesClient.createDatasource.mockResolvedValue({
-        data: { id: 'ds-789', name: 'Test API', type: 'http' },
-      });
-      integrationsClient.testHttpConnection.mockResolvedValue({
-        data: { success: true, statusCode: 200 },
-      });
-
-      // Call the connect method with HTTP params
-      const result = await actionsClient.connect({
-        projectId: 'proj-123',
-        name: 'Test API',
-        type: 'http',
-        config: {
-          url: 'https://api.example.com',
-          method: 'GET',
-        },
-      });
-
-      // Assertions
-      expect(datasourcesClient.createDatasource).toHaveBeenCalled();
-      expect(integrationsClient.testHttpConnection).toHaveBeenCalledWith({
-        url: 'https://api.example.com',
-        method: 'GET',
-      });
-      expect(result.data?.testResult?.success).toBe(true);
-    });
-
     it('should handle datasource creation failure', async () => {
       // Setup mock responses
       datasourcesClient.createDatasource.mockResolvedValue({

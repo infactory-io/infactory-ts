@@ -3,6 +3,18 @@
  */
 
 /**
+ * Process error message to ensure it's a valid string
+ */
+function _process_error_message(message: any): string {
+  if (message === undefined || message === null) {
+    message = '';
+  } else if (typeof message !== 'string') {
+    message = JSON.stringify(message);
+  }
+  return message;
+}
+
+/**
  * Base error class for all Infactory API errors
  */
 export class InfactoryAPIError extends Error {
@@ -72,7 +84,7 @@ export class NotFoundError extends InfactoryAPIError {
  */
 export class ValidationError extends InfactoryAPIError {
   constructor(message: string, requestId?: string, details?: any) {
-    super(400, 'validation_error', message, requestId, details);
+    super(422, 'validation_error', message, requestId, details);
     this.name = 'ValidationError';
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
@@ -143,6 +155,7 @@ export function createErrorFromStatus(
   requestId?: string,
   details?: any,
 ): InfactoryAPIError {
+  message = _process_error_message(message);
   switch (status) {
     case 400:
       return new ValidationError(message, requestId, details);
@@ -154,6 +167,8 @@ export function createErrorFromStatus(
       return new NotFoundError(message, requestId, details);
     case 409:
       return new ConflictError(message, requestId, details);
+    case 422:
+      return new ValidationError(message, requestId, details);
     case 429:
       return new RateLimitError(message, requestId, details);
     case 503:

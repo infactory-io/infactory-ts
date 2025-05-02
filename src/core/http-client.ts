@@ -10,9 +10,10 @@ import {
   createErrorFromStatus,
   AuthenticationError,
 } from '@/errors/index.js';
+import { DEFAULT_SDK_VERSION } from '@/client.js';
 
 // Define SDK version for request headers
-export const SDK_VERSION = '0.6.3';
+export const SDK_VERSION = DEFAULT_SDK_VERSION;
 
 // Default API base path for client-side requests
 const API_BASE_URL = '/api/infactory';

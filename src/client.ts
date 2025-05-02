@@ -22,8 +22,8 @@ import {
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 
-const DEFAULT_BASE_URL = 'https://api.infactory.ai';
-const DEFAULT_SDK_VERSION = '0.6.3';
+export const DEFAULT_BASE_URL = 'https://api.infactory.ai';
+export const DEFAULT_SDK_VERSION = '0.6.4';
 
 /**
  * Error class for client initialization errors
