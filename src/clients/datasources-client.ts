@@ -74,6 +74,7 @@ export class DatasourcesClient {
   async createDatasource(
     params: CreateDatasourceParams,
   ): Promise<ApiResponse<Datasource>> {
+    console.log('Creating datasource:', params);
     return await this.httpClient.post(`/v1/datasources`, params);
   }
 

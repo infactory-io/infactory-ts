@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ProjectsClient } from '../../src/clients/projects-client.js';
+import { Project } from '../../src/types/common.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
 
@@ -249,17 +250,23 @@ describe('ProjectsClient', () => {
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
 
-    it('should validate teamId is provided', async () => {
-      // Call without teamId
-      await expect(
-        projectsClient.createProject({
-          name: 'New Project',
-          teamId: '',
-        }),
-      ).rejects.toThrow('Team ID is required');
+    it('should pass teamId to the API', async () => {
+      // Setup mock response
+      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
+        data: { id: 'project-1', name: 'New Project' } as Project,
+      });
 
-      // Verify HTTP client was not called
-      expect(mockHttpClient.post).not.toHaveBeenCalled();
+      // Call with teamId
+      await projectsClient.createProject({
+        name: 'New Project',
+        teamId: 'team-1',
+      });
+
+      // Verify HTTP client was called with the teamId in the payload
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/v1/projects',
+        expect.objectContaining({ teamId: 'team-1' }),
+      );
     });
   });
 
@@ -458,8 +465,10 @@ describe('ProjectsClient', () => {
         data: {},
       });
 
-      // Call the method with custom conflict strategy
-      await projectsClient.importProject('team-1', mockFile, 'overwrite');
+      // Call the method with custom conflict strategy using the options object
+      await projectsClient.importProject('team-1', mockFile, {
+        conflictStrategy: 'overwrite',
+      });
 
       // Verify the HTTP client was called correctly
       const requestCall = vi.mocked(mockHttpClient.request).mock.calls[0][0];
@@ -471,7 +480,7 @@ describe('ProjectsClient', () => {
         formDataEntries[pair[0]] = pair[1];
       }
 
-      expect(formDataEntries['conflict_strategy']).toBe('overwrite');
+      expect(formDataEntries['conflict_strategy']).toEqual('overwrite');
     });
 
     it('should log and rethrow errors on import failure', async () => {

@@ -12,7 +12,7 @@ import {
 } from '@/errors/index.js';
 
 // Define SDK version for request headers
-export const SDK_VERSION = '0.6.3';
+export const SDK_VERSION = '0.6.4';
 
 // Default API base path for client-side requests
 const API_BASE_URL = '/api/infactory';
@@ -23,6 +23,10 @@ const API_BASE_URL = '/api/infactory';
  * @returns The snake_case string.
  */
 function toSnakeCase(key: string): string {
+  if (key.includes('-')) {
+    // For keys like 'Content-Type` which shouldn't be converted
+    return key;
+  }
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 

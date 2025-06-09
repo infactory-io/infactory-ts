@@ -2,6 +2,11 @@
  * Ensure this aligns with the schema components of openapi schema and infactory database schemas
  */
 
+import {
+  TestHttpConnectionResponse,
+  HttpMethod,
+  AuthType,
+} from '@/clients/integrations-client.js';
 import { InfactoryAPIError } from '@/errors/index.js';
 
 /**
@@ -161,20 +166,76 @@ export interface Dataline extends BaseEntity {
   queryprograms?: any;
 }
 
+// Status enum
+export enum DatasourceStatus {
+  WORKING = 'working',
+  READY = 'ready',
+  FAILED = 'failed',
+}
+
+// Phase enum
+export enum DatasourcePhase {
+  // Upload phases
+  UPLOAD_STARTED = 'upload_started',
+  UPLOAD_IN_PROGRESS = 'upload_in_progress',
+  UPLOAD_COMPLETED = 'upload_completed',
+
+  // Sync phases
+  SYNC_STARTED = 'sync_started',
+  SYNC_IN_PROGRESS = 'sync_in_progress',
+  SYNC_COMPLETED = 'sync_completed',
+
+  // Convert phases
+  CONVERT_STARTED = 'convert_started',
+  CONVERT_IN_PROGRESS = 'convert_in_progress',
+  CONVERT_COMPLETED = 'convert_completed',
+
+  // Schema generation phases
+  SCHEMA_GENERATION_STARTED = 'generate_schema_started',
+  SCHEMA_GENERATION_IN_PROGRESS = 'generate_schema_in_progress',
+  SCHEMA_GENERATION_COMPLETED = 'generate_schema_completed',
+
+  // Transformation phases
+  TRANSFORMATION_STARTED = 'transformation_started',
+  TRANSFORMATION_IN_PROGRESS = 'transformation_in_progress',
+  TRANSFORMATION_COMPLETED = 'transformation_completed',
+
+  // Generic phases
+  STARTED = 'started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+}
+
+// Type aliases
+export type DatasourceStatusType = 'working' | 'ready' | 'failed';
+export type DatasourcePhaseType =
+  | 'upload_started'
+  | 'upload_in_progress'
+  | 'upload_completed'
+  | 'sync_started'
+  | 'sync_in_progress'
+  | 'sync_completed'
+  | 'convert_started'
+  | 'convert_in_progress'
+  | 'convert_completed'
+  | 'generate_schema_started'
+  | 'generate_schema_in_progress'
+  | 'generate_schema_completed'
+  | 'transformation_started'
+  | 'transformation_in_progress'
+  | 'transformation_completed'
+  | 'started'
+  | 'in_progress'
+  | 'completed';
+
 export interface DatasourceWithDatalines extends BaseEntity {
   name: string | null;
   type: string | null;
   uri: string | null;
   projectId: string;
   credentials: any;
-  status:
-    | 'created'
-    | 'sync_waiting'
-    | 'sync_started'
-    | 'sync_completed'
-    | 'sync_error'
-    | 'transformation_started'
-    | null;
+  status: DatasourceStatus | null;
+  phase: DatasourcePhase | null;
   dataobjects: DataObject[];
   projects: any;
 }
@@ -233,18 +294,13 @@ export interface Datasource extends BaseEntity {
 }
 
 export interface CreateDatasourceParams {
-  name: string;
   projectId: string;
-  type: string;
+  name?: string;
+  type?: string;
   uri?: string;
-  status?:
-    | 'created'
-    | 'sync_waiting'
-    | 'sync_started'
-    | 'sync_completed'
-    | 'sync_error'
-    | 'transformation_started';
-  deletedAt?: string | null;
+  status?: DatasourceStatus;
+  phase?: DatasourcePhase;
+  message?: string;
 }
 
 // Credential types
@@ -751,4 +807,64 @@ export interface ExtractSqlParametersRequest {
 export interface ExtractSqlParametersResponse {
   parameters: SqlParameter[];
   parsedQuery: string;
+}
+
+/**
+ * Options for connecting to an HTTP API
+ */
+export interface ConnectOptions {
+  url: string;
+  method: HttpMethod;
+  projectId: string;
+  connectionName: string;
+  organizationId?: string;
+  teamId?: string;
+  headers?: Record<string, string>;
+  parameters?: Record<string, any>;
+  responsePathExtractor?: string;
+  authType?: AuthType;
+  authConfig?: Record<string, any>;
+}
+
+/**
+ * Result of an HTTP connection operation
+ */
+export interface HttpConnectionResult {
+  success: boolean;
+  stepsCompleted: string[];
+  datasourceId?: string;
+  dataObjectId?: string;
+  jobIds: string[];
+  errors: Array<{ step: string; error: string }>;
+  testResult?: TestConnectionResponse | TestHttpConnectionResponse;
+  datasource?: Datasource;
+  credentials?: any;
+  jobs?: any[];
+}
+
+/**
+ * Parameters for the unified 'connect' method in DatasourcesClient
+ */
+export interface ConnectDatasourceParams {
+  projectId: string;
+  name: string;
+  type: string;
+  uri?: string;
+  status?: string;
+  config?: {
+    url?: string;
+    method?: string;
+    headers?: Record<string, string>;
+    parameters?: Record<string, any>;
+    parameterGroups?: any[];
+    authType?: string;
+    auth?: Record<string, any>;
+    body?: any;
+    responsePathExtractor?: string;
+    teamId?: string;
+    organizationId?: string;
+  };
+  credentialsId?: string;
+  filePath?: string;
+  sampleTables?: string[]; // Used in connectDB method
 }

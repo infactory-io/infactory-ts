@@ -18,11 +18,12 @@ import {
   IntegrationsClient,
   JobsClient,
   LiveClient,
+  ActionsClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 
-const DEFAULT_BASE_URL = 'https://api.infactory.ai';
-const DEFAULT_SDK_VERSION = '0.6.3';
+export const DEFAULT_BASE_URL = 'https://api.infactory.ai';
+export const DEFAULT_SDK_VERSION = '0.6.4';
 
 /**
  * Error class for client initialization errors
@@ -82,6 +83,7 @@ export class InfactoryClient {
   public readonly integrations: IntegrationsClient;
   public readonly jobs: JobsClient;
   public readonly live: LiveClient;
+  public readonly actions: ActionsClient;
 
   /**
    * Creates a new Infactory client
@@ -172,6 +174,15 @@ export class InfactoryClient {
     this.integrations = new IntegrationsClient(this.httpClient);
     this.jobs = new JobsClient(this.httpClient);
     this.live = new LiveClient(this.httpClient);
+
+    // Initialize the ActionsClient with necessary dependency clients
+    this.actions = new ActionsClient(
+      this.datasources,
+      this.integrations,
+      this.secrets,
+      this.teams,
+      this.organizations,
+    );
   }
 
   /**
