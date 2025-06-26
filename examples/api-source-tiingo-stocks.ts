@@ -1,6 +1,6 @@
 import { InfactoryClient } from '../src/client.js';
 import { ConnectOptions } from '../src/types/common.js';
-import { HttpMethod, AuthType } from '../src/clients/integrations-client.js';
+import { HttpMethod } from '../src/clients/integrations-client.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -20,7 +20,7 @@ if (!process.env.TIINGO_API_KEY) {
 
 // Get base URL from environment variable or use default
 const baseURL = process.env.NF_BASE_URL || 'https://api.infactory.ai';
-console.log(`Using API base URL: ${baseURL}`);
+console.info(`Using API base URL: ${baseURL}`);
 
 // Initialize the InfactoryClient with your API token
 const client = new InfactoryClient({
@@ -35,7 +35,7 @@ const client = new InfactoryClient({
  */
 async function main(projectId: string, apiKey: string, ticker: string) {
   try {
-    console.log('Connecting to Tiingo Stock API...');
+    console.info('Connecting to Tiingo Stock API...');
 
     // Define the ticker symbol
 
@@ -51,7 +51,7 @@ async function main(projectId: string, apiKey: string, ticker: string) {
       },
 
       // Use authentication via query parameter
-      authType: 'api_key',
+      authType: 'API Key',
       authConfig: {
         apiKey: {
           value: apiKey,
@@ -75,29 +75,29 @@ async function main(projectId: string, apiKey: string, ticker: string) {
     const result = await client.actions.connectAPI(connectOptions);
 
     // Check if the connection was successful
-    console.log('result', result);
+    console.info('result', result);
     if (result.success) {
-      console.log('Successfully connected to Tiingo API');
-      console.log(`Datasource ID: ${result.datasourceId}`);
+      console.info('Successfully connected to Tiingo API');
+      console.info(`Datasource ID: ${result.datasourceId}`);
 
       if (result.testResult) {
-        console.log('\nConnection Test Results:');
-        console.log(`Response Time: ${result.testResult.responseTime}ms`);
-        console.log(`Content Type: ${result.testResult.contentType}`);
+        console.info('\nConnection Test Results:');
+        console.info(`Response Time: ${result.testResult.responseTime}ms`);
+        console.info(`Content Type: ${result.testResult.contentType}`);
 
         // Print a sample of the data (first 2 records)
         if (result.testResult.data && Array.isArray(result.testResult.data)) {
-          console.log('\nSample Data (first 2 records):');
-          console.log(
+          console.info('\nSample Data (first 2 records):');
+          console.info(
             JSON.stringify(result.testResult.data.slice(0, 2), null, 2),
           );
         }
       }
 
       if (result.jobs && result.jobs.length > 0) {
-        console.log('\nJobs Created:');
+        console.info('\nJobs Created:');
         result.jobs.forEach((job) => {
-          console.log(
+          console.info(
             `- Job ID: ${job.id}, Type: ${job.job_type}, Status: ${job.status}`,
           );
         });

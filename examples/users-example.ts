@@ -22,26 +22,28 @@ const client = new InfactoryClient({
  */
 async function usersExample() {
   try {
-    console.log('=== Users API Example ===');
+    console.info('=== Users API Example ===');
 
     // Get current user information
-    console.log('\n1. Getting current user info:');
+    console.info('\n1. Getting current user info:');
     const currentUserResponse = await client.users.getCurrentUser();
     if (currentUserResponse.error) {
       console.error('Error getting current user:', currentUserResponse.error);
     } else {
-      console.log(
+      console.info(
         `Current user: ${currentUserResponse.data?.name} (${currentUserResponse.data?.email})`,
       );
-      console.log(
+      console.info(
         `Organization: ${currentUserResponse.data?.organization?.name}`,
       );
-      console.log(`Teams: ${currentUserResponse.data?.userTeams?.length || 0}`);
+      console.info(
+        `Teams: ${currentUserResponse.data?.userTeams?.length || 0}`,
+      );
     }
 
     // List all users in the organization
     if (currentUserResponse.data?.organizationId) {
-      console.log(
+      console.info(
         `\n2. Listing users in organization ${currentUserResponse.data?.organization?.name}:`,
       );
       const usersResponse = await client.users.getUsers(
@@ -50,29 +52,29 @@ async function usersExample() {
       if (usersResponse.error) {
         console.error('Error listing users:', usersResponse.error);
       } else {
-        console.log(`Found ${usersResponse.data?.length || 0} users`);
+        console.info(`Found ${usersResponse.data?.length || 0} users`);
         usersResponse.data?.forEach((user) => {
-          console.log(`- ${user.name} (${user.email}) - ID: ${user.id}`);
+          console.info(`- ${user.name} (${user.email}) - ID: ${user.id}`);
         });
       }
     }
 
     // Get specific user by ID
     if (currentUserResponse.data?.id) {
-      console.log(`\n3. Getting specific user by ID:`);
+      console.info(`\n3. Getting specific user by ID:`);
       const userResponse = await client.users.getUser(
         currentUserResponse.data.id,
       );
       if (userResponse.error) {
         console.error('Error getting user:', userResponse.error);
       } else {
-        console.log(`User details for ${userResponse.data?.name}:`);
-        console.log(JSON.stringify(userResponse.data, null, 2));
+        console.info(`User details for ${userResponse.data?.name}:`);
+        console.info(JSON.stringify(userResponse.data, null, 2));
       }
     }
 
     // Get user roles
-    console.log(`\n4. Getting roles for current user:`);
+    console.info(`\n4. Getting roles for current user:`);
     if (currentUserResponse.data?.id) {
       const rolesResponse = await client.users.getUserRoles(
         currentUserResponse.data.id,
@@ -80,16 +82,16 @@ async function usersExample() {
       if (rolesResponse.error) {
         console.error('Error getting user roles:', rolesResponse.error);
       } else {
-        console.log(`User has ${rolesResponse.data?.length || 0} roles`);
+        console.info(`User has ${rolesResponse.data?.length || 0} roles`);
         rolesResponse.data?.forEach((role) => {
-          console.log(`- ${role.name}: ${role.description}`);
-          console.log(`  Permissions: ${role.permissions.join(', ')}`);
+          console.info(`- ${role.name}: ${role.description}`);
+          console.info(`  Permissions: ${role.permissions.join(', ')}`);
         });
       }
     }
 
     // Get teams with organizations and projects
-    console.log(`\n5. Getting teams, organizations, and projects:`);
+    console.info(`\n5. Getting teams, organizations, and projects:`);
     const teamsResponse =
       await client.users.getTeamsWithOrganizationsAndProjects({
         userId: currentUserResponse.data?.id,
@@ -97,14 +99,14 @@ async function usersExample() {
     if (teamsResponse.error) {
       console.error('Error getting teams data:', teamsResponse.error);
     } else {
-      console.log('Teams with organizations and projects:');
-      console.log(JSON.stringify(teamsResponse.data, null, 2));
+      console.info('Teams with organizations and projects:');
+      console.info(JSON.stringify(teamsResponse.data, null, 2));
     }
 
     // Example of updating a user (commented out to prevent actual changes)
-    console.log('\n6. Example of updating a user (not executed):');
-    console.log('Code example:');
-    console.log(`
+    console.info('\n6. Example of updating a user (not executed):');
+    console.info('Code example:');
+    console.info(`
   // Update user information
   const updateResponse = await client.users.updateUser('user-id', {
     name: 'Updated Name',
@@ -114,9 +116,9 @@ async function usersExample() {
   `);
 
     // Example of creating a user (commented out to prevent actual changes)
-    console.log('\n7. Example of creating a user (not executed):');
-    console.log('Code example:');
-    console.log(`
+    console.info('\n7. Example of creating a user (not executed):');
+    console.info('Code example:');
+    console.info(`
   // Create a new user
   const createResponse = await client.users.createUser({
     email: 'newuser@example.com',
@@ -127,29 +129,29 @@ async function usersExample() {
   `);
 
     // Example of deleting a user (commented out to prevent actual changes)
-    console.log('\n8. Example of deleting a user (not executed):');
-    console.log('Code example:');
-    console.log(`
+    console.info('\n8. Example of deleting a user (not executed):');
+    console.info('Code example:');
+    console.info(`
   // Delete a user
   const deleteResponse = await client.users.deleteUser('user-id');
   `);
 
     // Example of moving a user to a new organization (commented out to prevent actual changes)
-    console.log(
+    console.info(
       '\n9. Example of moving a user to a new organization (not executed):',
     );
-    console.log('Code example:');
-    console.log(`
+    console.info('Code example:');
+    console.info(`
   // Move a user to a new organization
   const moveResponse = await client.users.moveUser('user-id', 'new-org-id');
   `);
 
     // Example of getting or creating a user, team, and organization (commented out to prevent actual changes)
-    console.log(
+    console.info(
       '\n10. Example of getting or creating a user, team, and organization (not executed):',
     );
-    console.log('Code example:');
-    console.log(`
+    console.info('Code example:');
+    console.info(`
   // Get or create user, team, and organization
   const getOrCreateResponse = await client.users.getOrCreateUserTeamOrganization({
     clerkUserId: 'clerk-user-id',
@@ -162,11 +164,11 @@ async function usersExample() {
   `);
 
     // Example of adding and removing user roles (commented out to prevent actual changes)
-    console.log(
+    console.info(
       '\n11. Example of adding and removing user roles (not executed):',
     );
-    console.log('Code example:');
-    console.log(`
+    console.info('Code example:');
+    console.info(`
   // Add a role to a user
   const addRoleResponse = await client.users.addUserRole('user-id', 'role-id');
   
@@ -175,12 +177,12 @@ async function usersExample() {
   `);
 
     // Client-side validation examples
-    console.log('\n12. Client-side validation examples:');
+    console.info('\n12. Client-side validation examples:');
     try {
       // This will throw an error because we're not providing required parameters
       await client.users.getTeamsWithOrganizationsAndProjects({});
     } catch (error: any) {
-      console.log(`Validation caught: ${error.message}`);
+      console.info(`Validation caught: ${error.message}`);
     }
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -189,5 +191,5 @@ async function usersExample() {
 
 // Run the example
 usersExample()
-  .then(() => console.log('\nUsers example completed'))
+  .then(() => console.info('\nUsers example completed'))
   .catch((error) => console.error('Fatal error:', error));

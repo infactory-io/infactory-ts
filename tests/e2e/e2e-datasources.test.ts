@@ -50,7 +50,7 @@ describe('Data Source Management E2E Tests', () => {
       );
     }
 
-    console.log(`Connecting to API at: ${baseURL}`);
+    console.info(`Connecting to API at: ${baseURL}`);
 
     // Create client instance with absolute URL
     client = new InfactoryClient({
@@ -63,7 +63,7 @@ describe('Data Source Management E2E Tests', () => {
     // We'll skip tests if we can't connect to the API
     const skipTests = process.env.SKIP_E2E_TESTS === 'true';
     if (skipTests) {
-      console.log('Skipping E2E tests as SKIP_E2E_TESTS=true');
+      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
       // Mark all tests as skipped
       test.skipIf(true)('Skipping all tests', () => {});
       return;
@@ -71,10 +71,10 @@ describe('Data Source Management E2E Tests', () => {
 
     try {
       // Organization and team IDs will be fetched from the API, no mocks
-      console.log('Setting up test data using API...');
+      console.info('Setting up test data using API...');
 
       // Step 1: Get organizations - use the first available organization
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       const orgsResponse = await client.organizations.list();
 
       if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -86,12 +86,12 @@ describe('Data Source Management E2E Tests', () => {
       const organization = orgsResponse.data[0];
       testData.organization.id = organization.id;
       testData.organization.name = organization.name;
-      console.log(
+      console.info(
         `Using organization: ${testData.organization.name} (${testData.organization.id})`,
       );
 
       // Step 2: Get teams - use the first available team in the organization
-      console.log('Fetching teams...');
+      console.info('Fetching teams...');
       const teamsResponse = await client.teams.getTeams(
         testData.organization.id,
       );
@@ -105,10 +105,10 @@ describe('Data Source Management E2E Tests', () => {
       const team = teamsResponse.data[0];
       testData.team.id = team.id;
       testData.team.name = team.name;
-      console.log(`Using team: ${testData.team.name} (${testData.team.id})`);
+      console.info(`Using team: ${testData.team.name} (${testData.team.id})`);
 
       // Step 3: Create a test project to use for datasource testing
-      console.log('Creating a test project for datasource tests...');
+      console.info('Creating a test project for datasource tests...');
       const projectName = `Datasource Test Project ${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).substring(2, 7)}`;
       const createProjectResponse = await client.projects.createProject({
         name: projectName,
@@ -124,7 +124,7 @@ describe('Data Source Management E2E Tests', () => {
 
       testData.project.id = createProjectResponse.data.id;
       testData.project.name = createProjectResponse.data.name;
-      console.log(
+      console.info(
         `Created test project: ${testData.project.name} (${testData.project.id})`,
       );
 
@@ -132,7 +132,7 @@ describe('Data Source Management E2E Tests', () => {
       if (!fs.existsSync(testCsvPath)) {
         throw new Error(`Test CSV file not found at: ${testCsvPath}`);
       }
-      console.log(`Using test CSV file at: ${testCsvPath}`);
+      console.info(`Using test CSV file at: ${testCsvPath}`);
     } catch (error) {
       console.error('Setup failed:', error);
       throw error;
@@ -141,12 +141,12 @@ describe('Data Source Management E2E Tests', () => {
 
   afterAll(async () => {
     // Clean up any datasources created during tests
-    console.log('Cleaning up test data...');
+    console.info('Cleaning up test data...');
 
     // Delete all datasources created during tests
     for (const datasource of testData.createdDatasources) {
       try {
-        console.log(
+        console.info(
           `Deleting datasource: ${datasource.name} (${datasource.id})`,
         );
         const deleteResponse = await client.datasources.deleteDatasource(
@@ -157,7 +157,7 @@ describe('Data Source Management E2E Tests', () => {
             `Warning: Failed to delete datasource ${datasource.id}: ${deleteResponse.error.message}`,
           );
         } else {
-          console.log(`Successfully deleted datasource: ${datasource.id}`);
+          console.info(`Successfully deleted datasource: ${datasource.id}`);
         }
       } catch (error) {
         console.warn(
@@ -169,7 +169,7 @@ describe('Data Source Management E2E Tests', () => {
     // Delete the test project
     if (testData.project.id) {
       try {
-        console.log(
+        console.info(
           `Deleting test project: ${testData.project.name} (${testData.project.id})`,
         );
         const deleteResponse = await client.projects.deleteProject(
@@ -180,7 +180,7 @@ describe('Data Source Management E2E Tests', () => {
             `Warning: Failed to delete project ${testData.project.id}: ${deleteResponse.error.message}`,
           );
         } else {
-          console.log(`Successfully deleted project: ${testData.project.id}`);
+          console.info(`Successfully deleted project: ${testData.project.id}`);
         }
       } catch (error) {
         console.warn(
@@ -192,7 +192,7 @@ describe('Data Source Management E2E Tests', () => {
 
   test('1. List Datasources (SourceListAdd view equivalent)', async () => {
     // This simulates loading the SourceListAdd view
-    console.log(`Fetching datasources for project: ${testData.project.id}`);
+    console.info(`Fetching datasources for project: ${testData.project.id}`);
     const response = await client.datasources.getProjectDatasources(
       testData.project.id,
     );
@@ -200,22 +200,22 @@ describe('Data Source Management E2E Tests', () => {
     expect(response.error).toBeUndefined();
     expect(response.data).toBeDefined();
 
-    console.log(
+    console.info(
       `Found ${response.data?.length || 0} datasources in the project`,
     );
 
     // At the beginning of the test, there should be no datasources
     if (response.data && response.data.length > 0) {
-      console.log('Existing datasources:');
+      console.info('Existing datasources:');
       response.data.forEach((datasource) => {
-        console.log(`- ${datasource.name} (${datasource.id})`);
+        console.info(`- ${datasource.name} (${datasource.id})`);
       });
     }
   });
 
   test('2. Create CSV Datasource (Upload CSV dialog)', async () => {
     // This simulates clicking "Upload CSV" and filling out the form
-    console.log('Starting CSV upload workflow...');
+    console.info('Starting CSV upload workflow...');
 
     // We'll use the uploadCsvFile method that handles the entire workflow:
     // 1. Create a datasource for CSV data
@@ -223,8 +223,8 @@ describe('Data Source Management E2E Tests', () => {
     // 3. Upload the file using the proper endpoints
     const csvDatasourceName = `CSV Datasource ${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).substring(2, 7)}`;
 
-    console.log(`Uploading CSV file to project ${testData.project.id}`);
-    console.log(`Using CSV file at: ${testCsvPath}`);
+    console.info(`Uploading CSV file to project ${testData.project.id}`);
+    console.info(`Using CSV file at: ${testCsvPath}`);
 
     try {
       // Use the uploadCsvFile method which handles the whole process in one call
@@ -237,8 +237,8 @@ describe('Data Source Management E2E Tests', () => {
       expect(uploadResult.datasource).toBeDefined();
       expect(uploadResult.jobId).toBeTruthy();
 
-      console.log(`Upload successful with job ID: ${uploadResult.jobId}`);
-      console.log(
+      console.info(`Upload successful with job ID: ${uploadResult.jobId}`);
+      console.info(
         `Created datasource: ${uploadResult.datasource.name} (${uploadResult.datasource.id})`,
       );
 
@@ -255,7 +255,7 @@ describe('Data Source Management E2E Tests', () => {
       });
 
       // Step 3: Verify the upload by getting datasource details with datalines
-      console.log('Verifying uploaded data by fetching datasource details...');
+      console.info('Verifying uploaded data by fetching datasource details...');
       // Allow some time for the upload to process
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -267,10 +267,10 @@ describe('Data Source Management E2E Tests', () => {
       expect(datasourceResponse.error).toBeUndefined();
       expect(datasourceResponse.data).toBeDefined();
 
-      console.log(
+      console.info(
         `Datasource details: Name=${datasourceResponse.data?.name}, Type=${datasourceResponse.data?.type}`,
       );
-      console.log(
+      console.info(
         `Datalines count: ${datasourceResponse.data?.datalines?.length || 0}`,
       );
     } catch (error) {
@@ -283,7 +283,7 @@ describe('Data Source Management E2E Tests', () => {
     // This simulates clicking "Add Source" and selecting HTTP
     const httpDatasourceName = `HTTP Datasource ${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).substring(2, 7)}`;
 
-    console.log(`Creating HTTP datasource: ${httpDatasourceName}`);
+    console.info(`Creating HTTP datasource: ${httpDatasourceName}`);
 
     const createResponse = await client.datasources.createDatasource({
       name: httpDatasourceName,
@@ -312,7 +312,7 @@ describe('Data Source Management E2E Tests', () => {
         name: datasource.name,
       });
 
-      console.log(
+      console.info(
         `Created HTTP datasource: ${testData.datasource.name} (${testData.datasource.id})`,
       );
     }
@@ -324,7 +324,7 @@ describe('Data Source Management E2E Tests', () => {
       throw new Error('No datasource ID available for this test');
     }
 
-    console.log(`Updating datasource: ${testData.datasource.id}`);
+    console.info(`Updating datasource: ${testData.datasource.id}`);
 
     const updateResponse = await client.datasources.updateDatasource(
       testData.datasource.id,
@@ -344,7 +344,7 @@ describe('Data Source Management E2E Tests', () => {
 
     if (updateResponse.data) {
       testData.datasource.name = updateResponse.data.name;
-      console.log(`Updated datasource: ${testData.datasource.name}`);
+      console.info(`Updated datasource: ${testData.datasource.name}`);
     }
   });
 
@@ -354,7 +354,7 @@ describe('Data Source Management E2E Tests', () => {
       throw new Error('No datasource ID available for this test');
     }
 
-    console.log(`Fetching details for datasource: ${testData.datasource.id}`);
+    console.info(`Fetching details for datasource: ${testData.datasource.id}`);
 
     const response = await client.datasources.getDatasourceWithDatalines(
       testData.datasource.id,
@@ -365,11 +365,11 @@ describe('Data Source Management E2E Tests', () => {
     expect(response.data?.id).toBe(testData.datasource.id);
 
     if (response.data) {
-      console.log(
+      console.info(
         `Datasource details: ${response.data.name} (${response.data.id})`,
       );
-      console.log(`Type: ${response.data.type}`);
-      console.log(`Datalines: ${response.data.datalines?.length || 0}`);
+      console.info(`Type: ${response.data.type}`);
+      console.info(`Datalines: ${response.data.datalines?.length || 0}`);
     }
   });
 
@@ -379,7 +379,7 @@ describe('Data Source Management E2E Tests', () => {
       throw new Error('No datasource ID available for this test');
     }
 
-    console.log(
+    console.info(
       `Fetching ontology graph for datasource: ${testData.datasource.id}`,
     );
 
@@ -391,12 +391,12 @@ describe('Data Source Management E2E Tests', () => {
     // but the API should still respond successfully
     expect(response.error).toBeUndefined();
 
-    console.log('Ontology graph data retrieved');
+    console.info('Ontology graph data retrieved');
     // Print basic graph information if available
     if (response.data) {
       const nodeCount = response.data.nodes?.length || 0;
       const edgeCount = response.data.edges?.length || 0;
-      console.log(`Graph contains ${nodeCount} nodes and ${edgeCount} edges`);
+      console.info(`Graph contains ${nodeCount} nodes and ${edgeCount} edges`);
     }
   });
 
@@ -407,7 +407,7 @@ describe('Data Source Management E2E Tests', () => {
     }
 
     // First, get the datalines for the CSV datasource
-    console.log(
+    console.info(
       `Fetching datalines for CSV datasource: ${testData.csvDatasource.id}`,
     );
     const datasourceResponse =
@@ -423,7 +423,7 @@ describe('Data Source Management E2E Tests', () => {
       !datasourceResponse.data?.datalines ||
       datasourceResponse.data.datalines.length === 0
     ) {
-      console.log(
+      console.info(
         'No datalines found for the CSV datasource. Skipping dataline update test.',
       );
       return;
@@ -435,7 +435,7 @@ describe('Data Source Management E2E Tests', () => {
       id: dataline.id,
       name: dataline.name || 'Unnamed dataline',
     };
-    console.log(
+    console.info(
       `Using dataline: ${testData.dataline.name} (${testData.dataline.id})`,
     );
 
@@ -452,7 +452,7 @@ describe('Data Source Management E2E Tests', () => {
       ],
     };
 
-    console.log('Updating dataline model...');
+    console.info('Updating dataline model...');
     const updateResponse = await client.datalines.updateDataline(
       testData.dataline.id,
       {
@@ -461,17 +461,17 @@ describe('Data Source Management E2E Tests', () => {
     );
 
     expect(updateResponse.error).toBeUndefined();
-    console.log('Dataline model updated successfully');
+    console.info('Dataline model updated successfully');
   });
 
   test('8. Update Dataline Schema (SchemaCodeTab)', async () => {
     // This simulates editing a dataline's schema code in the Schema Code tab
     if (!testData.dataline.id) {
-      console.log('No dataline ID available for this test. Skipping.');
+      console.info('No dataline ID available for this test. Skipping.');
       return;
     }
 
-    console.log(`Updating schema code for dataline: ${testData.dataline.id}`);
+    console.info(`Updating schema code for dataline: ${testData.dataline.id}`);
 
     const schemaCode = `{
   "type": "object",
@@ -489,7 +489,7 @@ describe('Data Source Management E2E Tests', () => {
     );
 
     expect(updateResponse.error).toBeUndefined();
-    console.log('Dataline schema code updated successfully');
+    console.info('Dataline schema code updated successfully');
   });
 
   test('9. View Processing Events (DataProcessingTab)', async () => {
@@ -498,7 +498,7 @@ describe('Data Source Management E2E Tests', () => {
       throw new Error('No CSV datasource ID available for this test');
     }
 
-    console.log(
+    console.info(
       `Fetching processing events for datasource: ${testData.csvDatasource.id}`,
     );
 
@@ -515,17 +515,17 @@ describe('Data Source Management E2E Tests', () => {
 
     expect(jobsResponse.error).toBeUndefined();
 
-    console.log('Processing events retrieved');
+    console.info('Processing events retrieved');
     if (jobsResponse.data) {
       const eventCount = Array.isArray(jobsResponse.data)
         ? jobsResponse.data.length
         : 0;
-      console.log(`Found ${eventCount} processing events`);
+      console.info(`Found ${eventCount} processing events`);
 
       // Display some information about the events
       if (eventCount > 0 && Array.isArray(jobsResponse.data)) {
         jobsResponse.data.slice(0, 3).forEach((event, index) => {
-          console.log(
+          console.info(
             `Event ${index + 1}: Type=${event.eventType || 'Unknown'}, Timestamp=${new Date(event.timestamp || 0).toISOString()}`,
           );
         });
@@ -539,7 +539,7 @@ describe('Data Source Management E2E Tests', () => {
       throw new Error('No datasource ID available for deletion test');
     }
 
-    console.log(
+    console.info(
       `Deleting datasource: ${testData.datasource.name} (${testData.datasource.id})`,
     );
 
@@ -548,7 +548,7 @@ describe('Data Source Management E2E Tests', () => {
     );
 
     expect(response.error).toBeUndefined();
-    console.log(
+    console.info(
       `Deleted datasource: ${testData.datasource.name} (${testData.datasource.id})`,
     );
 
@@ -558,7 +558,7 @@ describe('Data Source Management E2E Tests', () => {
     );
 
     // Verify the datasource was deleted by trying to fetch it
-    console.log(`Verifying deletion of datasource: ${testData.datasource.id}`);
+    console.info(`Verifying deletion of datasource: ${testData.datasource.id}`);
     const verifyResponse = await client.datasources.getDatasource(
       testData.datasource.id,
     );
@@ -573,7 +573,7 @@ describe('Data Source Management E2E Tests', () => {
 
   test('11. Test Database Connection (Test Connection button)', async () => {
     // This simulates clicking the Test Connection button in a database source configuration
-    console.log('Testing database connection...');
+    console.info('Testing database connection...');
 
     // Use a mock PostgreSQL connection string for testing
     const connectionString = 'postgresql://user:password@localhost:5432/testdb';
@@ -583,7 +583,7 @@ describe('Data Source Management E2E Tests', () => {
 
     // In a real environment, this might fail if no actual database is available,
     // but we're testing the API call flow itself
-    console.log(
+    console.info(
       `Connection test response received: ${response.error ? 'Error' : 'Success'}`,
     );
 

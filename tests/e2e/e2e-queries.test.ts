@@ -68,17 +68,17 @@ describe('E2E Tests: Query Editor Workflow', () => {
       isServer: true,
       // Add an explicit fetch implementation that logs the URL being fetched
       fetch: (url, options) => {
-        console.log('FETCH URL:', url);
+        console.info('FETCH URL:', url);
         return fetch(url, options);
       },
     });
 
-    console.log('CLIENT CREATED WITH isServer:', true);
+    console.info('CLIENT CREATED WITH isServer:', true);
 
     // 1. Setup: Use existing Org, Team, create Project
     try {
       // Step 1: Get organizations - use the first available organization
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       const orgsResponse = await client.organizations.list();
 
       if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -89,12 +89,12 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
       // Get first organization
       organization = orgsResponse.data[0];
-      console.log(
+      console.info(
         `Using organization: ${organization.name} (${organization.id})`,
       );
 
       // Step 2: Get teams - use the first available team in the organization
-      console.log('Fetching teams...');
+      console.info('Fetching teams...');
       const teamsResponse = await client.teams.getTeams(organization.id);
 
       if (!teamsResponse.data || teamsResponse.data.length === 0) {
@@ -104,15 +104,15 @@ describe('E2E Tests: Query Editor Workflow', () => {
       }
 
       team = teamsResponse.data[0];
-      console.log(`Using team: ${team.name} (${team.id})`);
+      console.info(`Using team: ${team.name} (${team.id})`);
 
       // Step 3: Create a test project to use for query program testing
-      console.log(`Creating project: ${projectName} in team ${team.id}`);
+      console.info(`Creating project: ${projectName} in team ${team.id}`);
       const projectReq = { name: projectName, teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
-      console.log(`Created project ID: ${project.id}`);
+      console.info(`Created project ID: ${project.id}`);
     } catch (error) {
       console.error('Failed during setup:', error);
       throw error; // Re-throw to fail the test suite
@@ -124,9 +124,9 @@ describe('E2E Tests: Query Editor Workflow', () => {
     // Cleanup: Just delete the Project we created
     try {
       if (project) {
-        console.log(`Deleting project ID: ${project.id}`);
+        console.info(`Deleting project ID: ${project.id}`);
         await client.projects.deleteProject(project.id);
-        console.log('Project deleted.');
+        console.info('Project deleted.');
       }
       // Don't delete the team or organization as we didn't create them
     } catch (error) {
@@ -136,7 +136,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
   }, 60000); // Increase timeout for cleanup
 
   it('should list initial query programs (empty)', async () => {
-    console.log(`Listing queries for project ID: ${project.id}`);
+    console.info(`Listing queries for project ID: ${project.id}`);
     const programsResponse = await client.queryPrograms.listQueryPrograms({
       projectId: project.id,
     });
@@ -144,11 +144,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
     const programs = programsResponse.data!;
     expect(programs).toBeInstanceOf(Array);
     expect(programs.length).toBe(0);
-    console.log('Initial query list is empty as expected.');
+    console.info('Initial query list is empty as expected.');
   });
 
   it('should create a new query program', async () => {
-    console.log(`Creating query program: ${queryProgramName}`);
+    console.info(`Creating query program: ${queryProgramName}`);
     const createReq: CreateQueryProgramParams = {
       name: queryProgramName,
       projectId: project.id,
@@ -163,11 +163,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
     expect(queryProgram.projectId).toBe(project.id);
     expect(queryProgram.query).toBe(initialQueryCode);
     expect(queryProgram.published).toBe(false);
-    console.log(`Created query program ID: ${queryProgram.id}`);
+    console.info(`Created query program ID: ${queryProgram.id}`);
   });
 
   it('should get the created query program', async () => {
-    console.log(`Getting query program ID: ${queryProgram.id}`);
+    console.info(`Getting query program ID: ${queryProgram.id}`);
     const fetchedResponse = await client.queryPrograms.getQueryProgram(
       queryProgram.id,
     );
@@ -177,11 +177,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
     expect(fetchedProgram.id).toBe(queryProgram.id);
     expect(fetchedProgram.name).toBe(queryProgramName);
     expect(fetchedProgram.query).toBe(initialQueryCode);
-    console.log('Fetched query program successfully.');
+    console.info('Fetched query program successfully.');
   });
 
   it('should update the query program code', async () => {
-    console.log(`Updating code for query program ID: ${queryProgram.id}`);
+    console.info(`Updating code for query program ID: ${queryProgram.id}`);
     const updateResponse = await client.queryPrograms.updateQueryProgram(
       queryProgram.id,
       {
@@ -195,11 +195,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
     expect(updatedProgram.query).toBe(updatedQueryCode);
     // Update local copy if needed (ensure queryProgram reflects latest state)
     queryProgram = updatedProgram; // Assign the whole updated object
-    console.log('Query program code updated successfully.');
+    console.info('Query program code updated successfully.');
   });
 
   it('should run the updated query program', async () => {
-    console.log(`Running query program ID: ${queryProgram.id}`);
+    console.info(`Running query program ID: ${queryProgram.id}`);
     try {
       // Execute the query program using the stored ID
       // Instead of passing queryCode as an extra param, pass it in the request body
@@ -212,7 +212,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
       // Check if we got a valid response
       expect(resultResponse.data).toBeDefined();
       const result = resultResponse.data!;
-      console.log(
+      console.info(
         'Query evaluation response (raw):',
         JSON.stringify(result, null, 2),
       );
@@ -220,7 +220,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
       // Since the API response structure is uncertain, let's be as flexible as possible
       // and just check that the stringified result contains our text somewhere
       const resultStr = JSON.stringify(result);
-      console.log('Testing if result contains expected string...');
+      console.info('Testing if result contains expected string...');
 
       // Instead of failing the test, just warn if we can't find the expected value
       // This makes our test more resilient to API changes
@@ -228,31 +228,31 @@ describe('E2E Tests: Query Editor Workflow', () => {
         console.warn(
           '⚠️ Could not find expected string "Hello, Updated World!" in the result',
         );
-        console.log(
+        console.info(
           'The API might return the result in a different format than expected.',
         );
-        console.log('Continuing with tests...');
+        console.info('Continuing with tests...');
       } else {
-        console.log('Found expected string in result!');
+        console.info('Found expected string in result!');
       }
 
       // Instead of asserting on the exact result format, just verify we got a valid response
       expect(resultResponse.data).toBeTruthy();
-      console.log('Query program execution completed successfully.');
+      console.info('Query program execution completed successfully.');
     } catch (error: any) {
       console.error('Error running query program:', error);
       console.warn(
         '⚠️ Error executing query program: ' +
           (error?.message || 'Unknown error'),
       );
-      console.log('The API might not support the operations as implemented.');
-      console.log('Continuing with tests...');
+      console.info('The API might not support the operations as implemented.');
+      console.info('Continuing with tests...');
       // Don't fail the test - just log the error and continue
     }
   }, 30000); // Increase timeout for evaluation
 
   it('should deploy (publish) the query program', async () => {
-    console.log(`Publishing query program ID: ${queryProgram.id}`);
+    console.info(`Publishing query program ID: ${queryProgram.id}`);
 
     try {
       // Use publishQueryProgram method for deployment
@@ -261,7 +261,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
       );
 
       // Log the response for debugging
-      console.log(
+      console.info(
         'Publish response:',
         JSON.stringify(publishResponse, null, 2),
       );
@@ -287,13 +287,13 @@ describe('E2E Tests: Query Editor Workflow', () => {
           publishedValue === 'true'
         ) {
           // These values are also considered 'published'
-          console.log(
+          console.info(
             'Query program is published (non-boolean value):',
             publishedValue,
           );
         } else {
           // If nothing matches, log the value but don't fail the test
-          console.log('Unexpected published value:', publishedValue);
+          console.info('Unexpected published value:', publishedValue);
           // Instead of failing, just log a warning
           console.warn(
             '⚠️ Unable to verify published status - continuing with tests',
@@ -305,7 +305,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         );
       }
 
-      console.log('Query program publish request completed.');
+      console.info('Query program publish request completed.');
     } catch (error) {
       // Log the error but don't fail the test
       console.error('Error publishing query program:', error);
@@ -315,11 +315,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
       // Skip the assertion to allow tests to continue
     }
     // This check was already done in the try block above
-    console.log('Publish test complete.');
+    console.info('Publish test complete.');
   }, 60000); // Increase timeout for deployment
 
   it('should generate questions for the project', async () => {
-    console.log(`Generating questions for project ID: ${project.id}`);
+    console.info(`Generating questions for project ID: ${project.id}`);
     try {
       // Use generate client's generateQuestions method
       // Note: This API call might take a while
@@ -331,28 +331,28 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
       // Just verify we got a valid response
       expect(generationResponse).toBeDefined();
-      console.log('Question generation request completed.');
+      console.info('Question generation request completed.');
 
       if (generationResponse.data) {
-        console.log('Generated questions data received');
+        console.info('Generated questions data received');
       }
     } catch (error: any) {
       console.error('Error generating questions:', error);
       console.warn(
         '⚠️ Error generating questions: ' + (error?.message || 'Unknown error'),
       );
-      console.log(
+      console.info(
         'The API might be temporarily unavailable or the operation timed out.',
       );
-      console.log('Continuing with tests...');
+      console.info('Continuing with tests...');
       // Don't fail the test - just log the error and continue
     }
     // No need to check specific result structures
-    console.log('Project question generation test completed');
+    console.info('Project question generation test completed');
   }, 60000); // Increase timeout for generation
 
   it('should attempt to send a message in the query program build chat', async () => {
-    console.log(
+    console.info(
       `Attempting to find conversation for query program ID: ${queryProgram.id}`,
     );
     try {
@@ -369,7 +369,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
       if (convoResponse.data && convoResponse.data.length > 0) {
         // Take the first matching conversation
         conversation = convoResponse.data[0];
-        console.log(`Found existing conversation ID: ${conversation.id}`);
+        console.info(`Found existing conversation ID: ${conversation.id}`);
       } else {
         // Handle case where API returns no conversations
         console.warn(
@@ -400,7 +400,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
     }
 
     if (conversation && client.chat) {
-      console.log(`Sending message to conversation ID: ${conversation.id}`);
+      console.info(`Sending message to conversation ID: ${conversation.id}`);
       const messageContent = 'Help me improve this query.';
       try {
         // Use the proper signature: sendMessage(conversationId, params, noReply)
@@ -416,7 +416,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         );
         // For stream responses, just check that something was returned
         expect(chatResponse).toBeDefined();
-        console.log(
+        console.info(
           'Chat message sent successfully. (Stream response available)',
         );
       } catch (error) {
@@ -424,22 +424,22 @@ describe('E2E Tests: Query Editor Workflow', () => {
         // Log error but don't fail the entire suite because of chat
       }
     } else {
-      console.log(
+      console.info(
         'Skipping send message test as conversation was not found or chat client unavailable.',
       );
     }
   }, 30000); // Increase timeout for chat interaction
 
   it('should delete the query program', async () => {
-    console.log(`Deleting query program ID: ${queryProgram.id}`);
+    console.info(`Deleting query program ID: ${queryProgram.id}`);
 
     try {
       const deleteResponse = await client.queryPrograms.deleteQueryProgram(
         queryProgram.id,
       );
       // For delete, often there's no data, check for absence of error or specific status code
-      console.log('Delete response:', JSON.stringify(deleteResponse, null, 2));
-      console.log('Query program deletion request sent.');
+      console.info('Delete response:', JSON.stringify(deleteResponse, null, 2));
+      console.info('Query program deletion request sent.');
 
       // Verify deletion - Option 1: Try to get it (should fail with 404)
       let deletionVerified = false;
@@ -447,14 +447,14 @@ describe('E2E Tests: Query Editor Workflow', () => {
         const getResponse = await client.queryPrograms.getQueryProgram(
           queryProgram.id,
         );
-        console.log(
+        console.info(
           'Get response after deletion:',
           JSON.stringify(getResponse, null, 2),
         );
 
         // If we get here without error AND the response has deletedAt set, that's also valid
         if (getResponse.data?.deletedAt) {
-          console.log(
+          console.info(
             'Query program marked as deleted at:',
             getResponse.data.deletedAt,
           );
@@ -466,12 +466,12 @@ describe('E2E Tests: Query Editor Workflow', () => {
         }
       } catch (error: any) {
         // This is actually expected - a 404 means deletion worked
-        console.log(
+        console.info(
           'Error trying to get deleted query program:',
           error.message,
         );
         if (error.response?.status === 404) {
-          console.log('Verified query program deletion (received 404).');
+          console.info('Verified query program deletion (received 404).');
           deletionVerified = true;
         }
       }
@@ -480,7 +480,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
       const programsResponse = await client.queryPrograms.listQueryPrograms({
         projectId: project.id,
       });
-      console.log(
+      console.info(
         'List response after deletion:',
         JSON.stringify(programsResponse.data, null, 2),
       );
@@ -492,7 +492,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         );
 
         if (!stillExists) {
-          console.log(
+          console.info(
             'Verified program not in active query list after deletion.',
           );
           deletionVerified = true;
@@ -503,14 +503,14 @@ describe('E2E Tests: Query Editor Workflow', () => {
         }
 
         // Note: Not strictly requiring empty list as there might be other query programs
-        console.log(
+        console.info(
           `Query list has ${programs.length} item(s) after deletion.`,
         );
       }
 
       // Overall verification
       if (deletionVerified) {
-        console.log('✅ Query program deletion verified.');
+        console.info('✅ Query program deletion verified.');
       } else {
         console.warn('⚠️ Could not fully verify deletion - continuing anyway.');
       }
@@ -523,7 +523,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
   // Explore conversation tests
   describe('Explore Conversation Tests', () => {
     it('should create a new conversation', async () => {
-      console.log(`Creating conversation for project: ${project.id}`);
+      console.info(`Creating conversation for project: ${project.id}`);
       const conversationTitle = `E2E Test Conversation ${uniqueId}`;
 
       try {
@@ -535,13 +535,13 @@ describe('E2E Tests: Query Editor Workflow', () => {
           },
         );
 
-        console.log('CreateConversation', createConversationResponse);
+        console.info('CreateConversation', createConversationResponse);
 
         expect(createConversationResponse?.error).not.toBeDefined();
         expect(createConversationResponse?.data).toBeDefined();
 
         conversation = createConversationResponse.data!;
-        console.log(`Conversation created with ID: ${conversation.id}`);
+        console.info(`Conversation created with ID: ${conversation.id}`);
 
         expect(conversation.title).toBe(conversationTitle);
         expect(conversation.id).toBeDefined();
@@ -561,7 +561,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         expect(createdConversation).toBeDefined();
         expect(createdConversation?.title).toBe(conversationTitle);
 
-        console.log('Successfully verified conversation creation');
+        console.info('Successfully verified conversation creation');
       } catch (error) {
         console.error('Error creating conversation:', error);
         throw error;
@@ -572,13 +572,13 @@ describe('E2E Tests: Query Editor Workflow', () => {
       // TODO FIX THIS SILENT ERROR
       // Skip if no conversation was created
       if (!conversation) {
-        console.log(
+        console.info(
           'Skipping send message test as no conversation was created',
         );
         return;
       }
 
-      console.log(`Sending message to conversation ID: ${conversation.id}`);
+      console.info(`Sending message to conversation ID: ${conversation.id}`);
       const messageContent = `This is a test message from E2E tests ${uniqueId}`;
 
       try {
@@ -599,7 +599,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
         // Since this is a streaming response, we'll just check that it was initiated properly
         expect(messageResponse).toBeDefined();
-        console.log('Message sent successfully and stream initiated');
+        console.info('Message sent successfully and stream initiated');
 
         // Allow some time for the message to be processed
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -624,7 +624,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         );
 
         expect(sentMessage).toBeDefined();
-        console.log('Successfully verified message was added to conversation');
+        console.info('Successfully verified message was added to conversation');
       } catch (error) {
         console.error('Error sending message to conversation:', error);
         console.warn('⚠️ Message sending test failed - continuing with tests');
@@ -634,13 +634,13 @@ describe('E2E Tests: Query Editor Workflow', () => {
     it('should delete the conversation', async () => {
       // Skip if no conversation was created
       if (!conversation) {
-        console.log(
+        console.info(
           'Skipping delete conversation test as no conversation was created',
         );
         return;
       }
 
-      console.log(`Deleting conversation ID: ${conversation.id}`);
+      console.info(`Deleting conversation ID: ${conversation.id}`);
 
       try {
         // Delete the conversation
@@ -648,7 +648,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
           conversation.id,
         );
         expect(deleteResponse.error).toBeUndefined();
-        console.log('Conversation deletion request sent successfully');
+        console.info('Conversation deletion request sent successfully');
 
         // Verify the conversation was deleted by trying to fetch it
         let deletionVerified = false;
@@ -660,7 +660,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
           // If we get here without error AND the response has deletedAt set, that's valid
           if (getResponse.data?.deletedAt) {
-            console.log(
+            console.info(
               'Conversation marked as deleted at:',
               getResponse.data.deletedAt,
             );
@@ -673,7 +673,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         } catch (error: any) {
           // This is expected - a 404 means deletion worked
           if (error.response?.status === 404) {
-            console.log('Verified conversation deletion (received 404)');
+            console.info('Verified conversation deletion (received 404)');
             deletionVerified = true;
           }
         }
@@ -690,7 +690,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
           );
 
           if (!stillExists) {
-            console.log(
+            console.info(
               'Verified conversation not in active conversation list after deletion',
             );
             deletionVerified = true;
@@ -703,7 +703,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
         // Overall verification
         if (deletionVerified) {
-          console.log('✅ Conversation deletion verified');
+          console.info('✅ Conversation deletion verified');
         } else {
           console.warn(
             '⚠️ Could not fully verify deletion - continuing anyway',

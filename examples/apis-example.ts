@@ -21,14 +21,14 @@ const client = new InfactoryClient({
   baseURL: baseURL,
 });
 
-console.log(`Using API at: ${baseURL}`);
+console.info(`Using API at: ${baseURL}`);
 
 /**
  * Example function demonstrating how to use the APIsClient
  */
 async function apisExample() {
   try {
-    console.log('=== APIs Example ===');
+    console.info('=== APIs Example ===');
 
     // First, get the current user to find a project
     const userResponse = await client.users.getCurrentUser();
@@ -43,8 +43,8 @@ async function apisExample() {
       return;
     }
 
-    console.log(`Authenticated as: ${userResponse.data?.email}`);
-    console.log('User data:', JSON.stringify(userResponse.data, null, 2));
+    console.info(`Authenticated as: ${userResponse.data?.email}`);
+    console.info('User data:', JSON.stringify(userResponse.data, null, 2));
 
     // Find the user's teams and projects - use email as the parameter
     const email = userResponse.data?.email;
@@ -79,18 +79,18 @@ async function apisExample() {
     }
 
     const projectId = firstTeam.projects[0].id;
-    console.log(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
+    console.info(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
 
     // List all APIs for the project
-    console.log('\n1. Listing APIs for the project:');
+    console.info('\n1. Listing APIs for the project:');
     const apisResponse = await client.apis.getProjectApis(projectId);
     if (apisResponse.error) {
       console.error('Error listing APIs:', apisResponse.error);
     } else {
-      console.log(`Found ${apisResponse.data?.length || 0} APIs`);
+      console.info(`Found ${apisResponse.data?.length || 0} APIs`);
       if (apisResponse.data && apisResponse.data.length > 0) {
         apisResponse.data.forEach((api, index) => {
-          console.log(
+          console.info(
             `${index + 1}. ${api.name} (ID: ${api.id}) - Path: ${api.basePath}/${api.version} - Status: ${api.status}`,
           );
         });
@@ -98,24 +98,24 @@ async function apisExample() {
         // Get details for the first API
         const firstApi = apisResponse.data[0];
 
-        console.log('\n2. Getting API details:');
+        console.info('\n2. Getting API details:');
         const apiResponse = await client.apis.getApi(firstApi.id);
         if (apiResponse.error) {
           console.error('Error getting API details:', apiResponse.error);
         } else {
-          console.log('API Details:');
-          console.log(`- ID: ${apiResponse.data?.id}`);
-          console.log(`- Name: ${apiResponse.data?.name}`);
-          console.log(`- Base Path: ${apiResponse.data?.basePath}`);
-          console.log(`- Version: ${apiResponse.data?.version}`);
-          console.log(`- Status: ${apiResponse.data?.status}`);
-          console.log(
+          console.info('API Details:');
+          console.info(`- ID: ${apiResponse.data?.id}`);
+          console.info(`- Name: ${apiResponse.data?.name}`);
+          console.info(`- Base Path: ${apiResponse.data?.basePath}`);
+          console.info(`- Version: ${apiResponse.data?.version}`);
+          console.info(`- Status: ${apiResponse.data?.status}`);
+          console.info(
             `- Description: ${apiResponse.data?.description || 'No description'}`,
           );
         }
 
         // Get endpoints for the API
-        console.log('\n3. Getting API endpoints:');
+        console.info('\n3. Getting API endpoints:');
         const endpointsResponse = await client.apis.getApiEndpoints(
           firstApi.id,
         );
@@ -125,10 +125,12 @@ async function apisExample() {
             endpointsResponse.error,
           );
         } else {
-          console.log(`Found ${endpointsResponse.data?.length || 0} endpoints`);
+          console.info(
+            `Found ${endpointsResponse.data?.length || 0} endpoints`,
+          );
           if (endpointsResponse.data && endpointsResponse.data.length > 0) {
             endpointsResponse.data.forEach((endpoint, index) => {
-              console.log(
+              console.info(
                 `${index + 1}. ${endpoint.httpMethod} ${endpoint.path} - ${endpoint.name}`,
               );
             });
@@ -138,7 +140,7 @@ async function apisExample() {
     }
 
     // Get query programs for the project
-    console.log('\n4. Getting query programs for the project:');
+    console.info('\n4. Getting query programs for the project:');
 
     // First, get the query programs for the project
     const programsResponse = await client.queryPrograms.listQueryPrograms({
@@ -149,17 +151,17 @@ async function apisExample() {
       console.error('Error getting query programs:', programsResponse.error);
     } else {
       const programs = programsResponse.data || [];
-      console.log(`Found ${programs.length} query programs`);
+      console.info(`Found ${programs.length} query programs`);
 
       if (programs.length > 0) {
         programs.forEach((program, index) => {
-          console.log(`${index + 1}. ${program.name} (ID: ${program.id})`);
+          console.info(`${index + 1}. ${program.name} (ID: ${program.id})`);
         });
       }
     }
 
     // Create a new API
-    console.log('\n5. Creating a new API:');
+    console.info('\n5. Creating a new API:');
     const createApiResponse = await client.apis.createApi({
       name: 'Example API',
       projectId: projectId,
@@ -171,7 +173,7 @@ async function apisExample() {
     if (createApiResponse.error) {
       console.error('Error creating API:', createApiResponse.error);
     } else {
-      console.log(
+      console.info(
         `Created API: ${createApiResponse.data?.name} (ID: ${createApiResponse.data?.id})`,
       );
 
@@ -180,7 +182,7 @@ async function apisExample() {
       if (apiId && programsResponse.data && programsResponse.data.length > 0) {
         // Use the first query program to create an endpoint
         const queryProgramId = programsResponse.data[0].id;
-        console.log('\n6. Creating an API endpoint:');
+        console.info('\n6. Creating an API endpoint:');
 
         const createEndpointResponse = await client.apis.createApiEndpoint({
           apiId: apiId,
@@ -198,7 +200,7 @@ async function apisExample() {
             createEndpointResponse.error,
           );
         } else {
-          console.log(
+          console.info(
             `Created endpoint: ${createEndpointResponse.data?.name} - ${createEndpointResponse.data?.httpMethod} ${createEndpointResponse.data?.path}`,
           );
 
@@ -206,7 +208,7 @@ async function apisExample() {
 
           if (endpointId) {
             // Update the endpoint
-            console.log('\n7. Updating the API endpoint:');
+            console.info('\n7. Updating the API endpoint:');
             const updateEndpointResponse = await client.apis.updateApiEndpoint(
               endpointId,
               {
@@ -220,13 +222,13 @@ async function apisExample() {
                 updateEndpointResponse.error,
               );
             } else {
-              console.log(
+              console.info(
                 `Updated endpoint: ${updateEndpointResponse.data?.name} - Description: ${updateEndpointResponse.data?.description}`,
               );
             }
 
             // Delete the endpoint
-            console.log('\n8. Deleting the API endpoint:');
+            console.info('\n8. Deleting the API endpoint:');
             const deleteEndpointResponse =
               await client.apis.deleteApiEndpoint(endpointId);
             if (deleteEndpointResponse.error) {
@@ -235,14 +237,14 @@ async function apisExample() {
                 deleteEndpointResponse.error,
               );
             } else {
-              console.log('API endpoint deleted successfully');
+              console.info('API endpoint deleted successfully');
             }
           }
         }
       }
 
       // Update the API
-      console.log('\n9. Updating the API:');
+      console.info('\n9. Updating the API:');
       const updateApiResponse = await client.apis.updateApi(apiId, {
         description: 'Updated description for the example API',
       });
@@ -250,18 +252,18 @@ async function apisExample() {
       if (updateApiResponse.error) {
         console.error('Error updating API:', updateApiResponse.error);
       } else {
-        console.log(
+        console.info(
           `Updated API: ${updateApiResponse.data?.name} - Description: ${updateApiResponse.data?.description}`,
         );
       }
 
       // Delete the API
-      console.log('\n10. Deleting the API:');
+      console.info('\n10. Deleting the API:');
       const deleteApiResponse = await client.apis.deleteApi(apiId);
       if (deleteApiResponse.error) {
         console.error('Error deleting API:', deleteApiResponse.error);
       } else {
-        console.log('API deleted successfully');
+        console.info('API deleted successfully');
       }
     }
   } catch (error) {
@@ -271,5 +273,5 @@ async function apisExample() {
 
 // Run the example
 apisExample()
-  .then(() => console.log('\nAPIs example completed'))
+  .then(() => console.info('\nAPIs example completed'))
   .catch((error) => console.error('Fatal error:', error));

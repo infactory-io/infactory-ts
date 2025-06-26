@@ -124,7 +124,7 @@ export class ActionsClient {
       ...(params.credentialsId && { credentialsId: params.credentialsId }),
     };
 
-    console.log(
+    console.info(
       `Attempting to create datasource with params: ${JSON.stringify(createParams)}`,
     );
     const createResponse = await this.datasourcesClient.createDatasource(
@@ -148,7 +148,7 @@ export class ActionsClient {
     }
 
     const datasource = createResponse.data;
-    console.log(`Datasource record created: ${datasource.id}`);
+    console.info(`Datasource record created: ${datasource.id}`);
 
     // Call the appropriate specialized connection method based on datasource type
     const lowerCaseType = params.type.toLowerCase();
@@ -247,7 +247,7 @@ export class ActionsClient {
     // If a filePath is provided, attempt to upload the file
     if (params.filePath) {
       try {
-        console.log(
+        console.info(
           `File path detected: ${params.filePath}. Attempting to upload file.`,
         );
 
@@ -318,7 +318,7 @@ export class ActionsClient {
 
     try {
       if (params.uri) {
-        console.log(
+        console.info(
           `Attempting to test database connection for ${datasource.id}`,
         );
         testResponse = await this.datasourcesClient.testDatabaseConnection(
@@ -335,7 +335,7 @@ export class ActionsClient {
               testResponse.error.message || 'Database connection test failed',
           };
         } else if (testResponse.data) {
-          console.log(
+          console.info(
             `Database connection test successful for ${datasource.id}`,
           );
           // Preserve the full TestConnectionResponse object with tables info, etc.
@@ -522,7 +522,7 @@ export class ActionsClient {
 
     try {
       // Step 1: Test the HTTP connection
-      console.log(`Step 1: Testing HTTP connection to ${url}`);
+      console.info(`Step 1: Testing HTTP connection to ${url}`);
 
       // Prepare parameters for the test request
       const paramObjects: Record<string, any> = {};
@@ -573,10 +573,10 @@ export class ActionsClient {
         return results;
       }
       results.stepsCompleted.push('test_connection');
-      console.log('Connection test successful');
+      console.info('Connection test successful');
 
       // Step 2: Create a datasource
-      console.log(`Step 2: Creating datasource "${connectionName}"`);
+      console.info(`Step 2: Creating datasource "${connectionName}"`);
 
       const datasourceParams: CreateDatasourceParams = {
         name: connectionName,
@@ -600,10 +600,10 @@ export class ActionsClient {
       results.stepsCompleted.push('create_datasource');
       results.datasourceId = datasource.id;
       results.datasource = datasource;
-      console.log(`Datasource created with ID: ${datasource.id}`);
+      console.info(`Datasource created with ID: ${datasource.id}`);
 
       // Step 3: Create credentials
-      console.log(
+      console.info(
         `Step 3: Creating credentials for datasource ${datasource.id}`,
       );
 
@@ -638,10 +638,10 @@ export class ActionsClient {
 
       results.stepsCompleted.push('create_credentials');
       results.credentials = credResponse.data;
-      console.log('Credentials created successfully');
+      console.info('Credentials created successfully');
 
       // Step 4: Execute the HTTP request
-      console.log(
+      console.info(
         `Step 4: Executing HTTP request for datasource ${datasource.id}`,
       );
 
@@ -681,7 +681,7 @@ export class ActionsClient {
         });
         return results;
       }
-      console.log('execResponse', execResponse.data);
+      console.info('execResponse', execResponse.data);
       results.stepsCompleted.push('execute_request');
 
       if (execResponse.data?.jobs) {
@@ -689,7 +689,7 @@ export class ActionsClient {
         results.jobIds = execResponse.data.jobs.map((job: any) => job.id);
       }
 
-      console.log(
+      console.info(
         `HTTP request executed successfully. Job IDs: ${results.jobIds.join(', ')}`,
       );
 

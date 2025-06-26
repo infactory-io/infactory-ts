@@ -219,7 +219,7 @@ export class ProjectsClient {
     try {
       // Node.js: If fileOrFilePath is a string (file path), create FormData with file stream
       if (typeof fileOrFilePath === 'string') {
-        console.log('Importing project using file path...');
+        console.info('Importing project using file path...');
         // Import required modules dynamically to avoid browser compatibility issues
         const FormData = (await import('form-data')).default;
         const fs = await import('fs');
@@ -259,9 +259,9 @@ export class ProjectsClient {
           headers,
         });
 
-        console.log('Response status:', response.status);
+        console.info('Response status:', response.status);
         const responseText = await response.text();
-        console.log('Response body:', responseText);
+        console.info('Response body:', responseText);
 
         let responseData;
         try {
@@ -272,7 +272,7 @@ export class ProjectsClient {
         }
 
         if (response.ok) {
-          console.log('Import successful!');
+          console.info('Import successful!');
           return { data: responseData as ProjectImportResponse };
         } else {
           console.error('Import failed with status:', response.status);
@@ -281,7 +281,7 @@ export class ProjectsClient {
       }
 
       // Browser: If fileOrFilePath is a File object, use browser FormData
-      console.log('Importing project using browser File...');
+      console.info('Importing project using browser File...');
       const formData = new FormData();
       formData.append('file', fileOrFilePath);
       formData.append('team_id', teamId);

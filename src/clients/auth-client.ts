@@ -34,7 +34,7 @@ export class AuthClient {
    * @example
    * const response = await client.auth.getApiKeys();
    * if (response.success) {
-   *   console.log('API Keys:', response.data);
+   *   console.info('API Keys:', response.data);
    * } else {
    *   console.error('Error getting API keys:', response.error);
    * }
@@ -53,8 +53,8 @@ export class AuthClient {
    * const response = await client.auth.createApiKey('My New Key');
    * if (response.success) {
    *   const [newKey, secret] = response.data; // Note: response.data is a tuple
-   *   console.log('New API Key:', newKey);
-   *   console.log('Key Secret:', secret); // Store this secret securely
+   *   console.info('New API Key:', newKey);
+   *   console.info('Key Secret:', secret); // Store this secret securely
    * } else {
    *   console.error('Error creating API key:', response.error);
    * }
@@ -74,7 +74,7 @@ export class AuthClient {
    * @example
    * const response = await client.auth.renameApiKey('key-id-123', 'Updated Key Name');
    * if (response.success) {
-   *   console.log('Renamed API Key:', response.data);
+   *   console.info('Renamed API Key:', response.data);
    * } else {
    *   console.error('Error renaming API key:', response.error);
    * }
@@ -96,7 +96,7 @@ export class AuthClient {
    * @example
    * const response = await client.auth.enableApiKey('key-id-123');
    * if (response.success) {
-   *   console.log('Enabled API Key:', response.data);
+   *   console.info('Enabled API Key:', response.data);
    * } else {
    *   console.error('Error enabling API key:', response.error);
    * }
@@ -116,7 +116,7 @@ export class AuthClient {
    * @example
    * const response = await client.auth.disableApiKey('key-id-123');
    * if (response.success) {
-   *   console.log('Disabled API Key:', response.data);
+   *   console.info('Disabled API Key:', response.data);
    * } else {
    *   console.error('Error disabling API key:', response.error);
    * }
@@ -135,7 +135,7 @@ export class AuthClient {
    * @example
    * const response = await client.auth.deleteApiKey('key-id-123');
    * if (response.success) {
-   *   console.log('API Key deleted successfully.');
+   *   console.info('API Key deleted successfully.');
    * } else {
    *   console.error('Error deleting API key:', response.error);
    * }

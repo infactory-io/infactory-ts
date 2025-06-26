@@ -48,7 +48,7 @@ describe('Project Management E2E Tests', () => {
       );
     }
 
-    console.log(`Connecting to API at: ${baseURL}`);
+    console.info(`Connecting to API at: ${baseURL}`);
 
     // Create client instance with absolute URL
     client = new InfactoryClient({
@@ -61,7 +61,7 @@ describe('Project Management E2E Tests', () => {
     // We'll skip tests if we can't connect to the API
     const skipTests = process.env.SKIP_E2E_TESTS === 'true';
     if (skipTests) {
-      console.log('Skipping E2E tests as SKIP_E2E_TESTS=true');
+      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
       // Mark all tests as skipped
       test.skipIf(true)('Skipping all tests', () => {});
       return;
@@ -69,10 +69,10 @@ describe('Project Management E2E Tests', () => {
 
     try {
       // Organization and team IDs will be fetched from the API, no mocks
-      console.log('Setting up test data using API...');
+      console.info('Setting up test data using API...');
 
       // // Step 1: Get the platform - use the first available platform
-      // console.log('Fetching platform information...');
+      // console.info('Fetching platform information...');
       // const platformsResponse = await client.platforms.list();
 
       // if (!platformsResponse.data || platformsResponse.data.length === 0) {
@@ -80,10 +80,10 @@ describe('Project Management E2E Tests', () => {
       // }
 
       // const platform = platformsResponse.data[platformsResponse.data.length - 1];
-      // console.log(`Using platform: ${platform.name} (${platform.id})`);
+      // console.info(`Using platform: ${platform.name} (${platform.id})`);
 
       // Step 2: Get organizations - use the first available organization in the platform
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       // Since we don't have a direct filter method, we'll get all orgs and filter client-side
       const orgsResponse = await client.organizations.list();
 
@@ -103,12 +103,12 @@ describe('Project Management E2E Tests', () => {
       const organization = platformOrgs[0];
       testData.organization.id = organization.id;
       testData.organization.name = organization.name;
-      console.log(
+      console.info(
         `Using organization: ${testData.organization.name} (${testData.organization.id})`,
       );
 
       // Step 3: Get teams - use the first available team in the organization
-      console.log('Fetching teams...');
+      console.info('Fetching teams...');
       const teamsResponse = await client.teams.getTeams(
         testData.organization.id,
       );
@@ -122,7 +122,7 @@ describe('Project Management E2E Tests', () => {
       const team = teamsResponse.data[0];
       testData.team.id = team.id;
       testData.team.name = team.name;
-      console.log(`Using team: ${testData.team.name} (${testData.team.id})`);
+      console.info(`Using team: ${testData.team.name} (${testData.team.id})`);
     } catch (error) {
       console.error('Setup failed:', error);
       throw error;
@@ -139,9 +139,9 @@ describe('Project Management E2E Tests', () => {
 
   test('1. List Projects (ProjectList view equivalent)', async () => {
     // This simulates the initial load of the ProjectList page in the frontend
-    console.log('Fetching projects...');
+    console.info('Fetching projects...');
     const response = await client.projects.getProjects(testData.team.id);
-    console.log('response', response);
+    console.info('response', response);
 
     if (response.error) {
       throw new Error(`Failed to fetch projects: ${response.error.message}`);
@@ -150,17 +150,17 @@ describe('Project Management E2E Tests', () => {
     const projectsData = response.data;
     expect(projectsData).toBeDefined();
 
-    console.log(
+    console.info(
       `Found ${projectsData?.length || 0} projects in team ${testData.team.name}`,
     );
     if (projectsData && projectsData.length > 0) {
       projectsData.forEach((project: any) => {
-        console.log(`- ${project.name} (${project.id})`);
+        console.info(`- ${project.name} (${project.id})`);
       });
       // Use the first project for later tests
       testData.project = projectsData[0];
     } else {
-      console.log(
+      console.info(
         'No projects found. Tests requiring existing projects will fail.',
       );
     }
@@ -188,7 +188,7 @@ describe('Project Management E2E Tests', () => {
         id: response.data.id,
         name: response.data.name,
       };
-      console.log(
+      console.info(
         `Created project: ${testData.project.name} (${testData.project.id})`,
       );
     }
@@ -209,14 +209,14 @@ describe('Project Management E2E Tests', () => {
     expect(response.data).toBeDefined();
     expect(response.data?.id).toBe(testData.project.id);
 
-    console.log(`Retrieved project details for: ${response.data?.name}`);
+    console.info(`Retrieved project details for: ${response.data?.name}`);
 
     // Also test fetching datasources for this project (part of context setting)
     const datasourcesResponse = await client.datasources.getProjectDatasources(
       testData.project.id,
     );
     expect(datasourcesResponse.error).toBeUndefined();
-    console.log(
+    console.info(
       `Project has ${datasourcesResponse.data?.length || 0} datasources`,
     );
   });
@@ -231,7 +231,7 @@ describe('Project Management E2E Tests', () => {
     let updatedName = `${testData.project.name} (Updated)`;
     const updatedDescription = 'Updated description for E2E testing';
 
-    console.log(`Updating project to: ${updatedName}`);
+    console.info(`Updating project to: ${updatedName}`);
 
     // In frontend, this would happen when user clicks Save button in EditProject view
     const updateResponse = await client.projects.updateProject(
@@ -244,11 +244,11 @@ describe('Project Management E2E Tests', () => {
     );
 
     expect(updateResponse.error).toBeUndefined();
-    console.log(`Update response: ${JSON.stringify(updateResponse.data)}`);
+    console.info(`Update response: ${JSON.stringify(updateResponse.data)}`);
 
     // The API might not return the updated project in the response
     // Fetch the project again to confirm it was updated
-    console.log('Fetching project again to verify update...');
+    console.info('Fetching project again to verify update...');
     const getResponse = await client.projects.getProject(
       testData.project.id,
       testData.team.id,
@@ -257,17 +257,17 @@ describe('Project Management E2E Tests', () => {
     expect(getResponse.error).toBeUndefined();
     expect(getResponse.data).toBeDefined();
 
-    console.log(`Project after update: ${JSON.stringify(getResponse.data)}`);
+    console.info(`Project after update: ${JSON.stringify(getResponse.data)}`);
 
     // If the API doesn't actually update the name, we'll update our test data and skip the assertion
     if (getResponse.data?.name === updatedName) {
       // If the API properly updated the name, verify it
       expect(getResponse.data.name).toBe(updatedName);
-      console.log(
+      console.info(
         `Project name successfully updated to: ${getResponse.data.name}`,
       );
     } else {
-      console.log(
+      console.info(
         `WARNING: API did not update project name. Expected: ${updatedName}, Got: ${getResponse.data?.name}`,
       );
       // Update our test data to match what the API actually returned
@@ -283,7 +283,7 @@ describe('Project Management E2E Tests', () => {
         id: getResponse.data.id,
         name: getResponse.data.name,
       };
-      console.log(`Updated project name to: ${testData.updatedProject.name}`);
+      console.info(`Updated project name to: ${testData.updatedProject.name}`);
     }
   });
 
@@ -307,7 +307,7 @@ describe('Project Management E2E Tests', () => {
         testData.exportedProjectPath,
         JSON.stringify(response.data, null, 2),
       );
-      console.log(`Exported project to: ${testData.exportedProjectPath}`);
+      console.info(`Exported project to: ${testData.exportedProjectPath}`);
       expect(fs.existsSync(testData.exportedProjectPath)).toBe(true);
     }
   });
@@ -337,12 +337,12 @@ describe('Project Management E2E Tests', () => {
 
       // For Node.js environment, we need to create a Buffer of the file content
       // We'll just log that we're reading the file since we're not actually using it for import
-      console.log(`Reading import file from: ${importFilePath}`);
+      console.info(`Reading import file from: ${importFilePath}`);
       const fileBuffer = fs.readFileSync(importFilePath);
-      console.log(`File size: ${fileBuffer.length} bytes`);
+      console.info(`File size: ${fileBuffer.length} bytes`);
 
       try {
-        console.log('Importing project from file...');
+        console.info('Importing project from file...');
 
         // In this E2E test, we'll create a new project instead of trying to import
         // since File handling in Node.js can be tricky for the importProject method
@@ -373,7 +373,7 @@ describe('Project Management E2E Tests', () => {
             id: importResponse.data.id,
             name: importResponse.data.name,
           };
-          console.log(
+          console.info(
             `Imported project: ${testData.importedProject.name} (${testData.importedProject.id})`,
           );
         }
@@ -395,7 +395,7 @@ describe('Project Management E2E Tests', () => {
     // In frontend, this is triggered when user selects an example template
     // For this E2E test, we'll create a project directly since the example templates API
     // may not be available or implemented yet
-    console.log('Creating an example project...');
+    console.info('Creating an example project...');
 
     // Simulate importing an example template by creating a new project with a template name
     const exampleProjectName = `Example Project ${new Date().toISOString().split('T')[0]}`;
@@ -421,7 +421,7 @@ describe('Project Management E2E Tests', () => {
         id: importResponse.data.id,
         name: importResponse.data.name,
       };
-      console.log(
+      console.info(
         `Created example project: ${testData.exampleProject.name} (${testData.exampleProject.id})`,
       );
     }
@@ -436,20 +436,20 @@ describe('Project Management E2E Tests', () => {
     const response = await client.projects.deleteProject(testData.project.id);
 
     expect(response.error).toBeUndefined();
-    console.log(
+    console.info(
       `Deleted project: ${testData.project.name} (${testData.project.id})`,
     );
 
     // Verify the project was deleted by trying to fetch it
     // After deletion, the project might still be returned but with deletedAt field set
-    console.log(`Verifying deletion of project: ${testData.project.id}`);
+    console.info(`Verifying deletion of project: ${testData.project.id}`);
     const verifyResponse = await client.projects.getProject(
       testData.project.id,
       testData.team.id,
     );
 
     // Either we should get an error OR the project should have a deletedAt timestamp
-    console.log(
+    console.info(
       `Verification response: ${verifyResponse.error ? 'Has error' : 'No error'}, Project: ${JSON.stringify(verifyResponse.data)}`,
     );
 
@@ -467,7 +467,7 @@ describe('Project Management E2E Tests', () => {
         testData.importedProject.id,
       );
       expect(cleanupResponse.error).toBeUndefined();
-      console.log(
+      console.info(
         `Cleaned up imported project: ${testData.importedProject.name}`,
       );
     }
@@ -478,7 +478,7 @@ describe('Project Management E2E Tests', () => {
         testData.exampleProject.id,
       );
       expect(cleanupResponse.error).toBeUndefined();
-      console.log(
+      console.info(
         `Cleaned up example project: ${testData.exampleProject.name}`,
       );
     }

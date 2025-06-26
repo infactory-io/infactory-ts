@@ -33,7 +33,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
   // Setup: Initialize client and authenticate
   beforeAll(async () => {
     // Step 1: Authenticate (represented by creating client with API key)
-    console.log('⏳ Step 1: Authenticating user...');
+    console.info('⏳ Step 1: Authenticating user...');
     const apiKey = process.env.NF_API_KEY;
     const baseUrl = process.env.NF_BASE_URL;
 
@@ -50,7 +50,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
       baseURL: baseUrl,
       isServer: true,
     });
-    console.log('✅ Authentication successful');
+    console.info('✅ Authentication successful');
   }, 60000);
 
   // Clean up resources created during tests
@@ -60,23 +60,23 @@ describe('E2E Tests: User Onboarding Flow', () => {
     try {
       // Clean up in reverse order: project -> team -> organization
       if (project?.id) {
-        console.log(`🧹 Cleaning up project: ${project.name} (${project.id})`);
+        console.info(`🧹 Cleaning up project: ${project.name} (${project.id})`);
         await client.projects.deleteProject(project.id, true);
       }
 
       if (team?.id) {
-        console.log(`🧹 Cleaning up team: ${team.name} (${team.id})`);
+        console.info(`🧹 Cleaning up team: ${team.name} (${team.id})`);
         await client.teams.deleteTeam(team.id);
       }
 
       if (organization?.id) {
-        console.log(
+        console.info(
           `🧹 Cleaning up organization: ${organization.name} (${organization.id})`,
         );
         await client.organizations.delete(organization.id);
       }
 
-      console.log('🧹 Cleanup completed');
+      console.info('🧹 Cleanup completed');
     } catch (error) {
       console.error('Error during cleanup:', error);
       // Don't fail the test suite on cleanup errors
@@ -85,19 +85,19 @@ describe('E2E Tests: User Onboarding Flow', () => {
 
   it('should fetch the current user (authenticated redirect)', async () => {
     // Step 2: After authentication, fetch the current user
-    console.log('⏳ Step 2: Fetching authenticated user details...');
+    console.info('⏳ Step 2: Fetching authenticated user details...');
     const userResponse = await client.users.getCurrentUser();
 
     expect(userResponse.error).toBeUndefined();
     expect(userResponse.data).toBeDefined();
 
     user = userResponse.data!;
-    console.log(`✅ Retrieved user: ${user.email} (${user.id})`);
+    console.info(`✅ Retrieved user: ${user.email} (${user.id})`);
   }, 30000);
 
   it('should check for existing organizations and teams', async () => {
     // Step 3: Check if the user belongs to any organization and team
-    console.log('⏳ Step 3: Checking for existing organizations and teams...');
+    console.info('⏳ Step 3: Checking for existing organizations and teams...');
 
     // Get teams with organizations and projects for the current user
     const teamsResponse =
@@ -114,7 +114,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
       if (!team) {
         throw new Error('Team must be defined before checking projects');
       }
-      console.log(`✅ Found existing team: ${team.name} (${team.id})`);
+      console.info(`✅ Found existing team: ${team.name} (${team.id})`);
 
       // Get the organization for this team
       const orgResponse = await client.organizations.get(team.organizationId);
@@ -123,18 +123,18 @@ describe('E2E Tests: User Onboarding Flow', () => {
       expect(orgResponse.data).toBeDefined();
 
       organization = orgResponse.data!;
-      console.log(
+      console.info(
         `✅ Using organization: ${organization.name} (${organization.id})`,
       );
     } else {
-      console.log('ℹ️ No existing teams found');
+      console.info('ℹ️ No existing teams found');
     }
   }, 30000);
 
   it('should create organization and team if none exists', async () => {
     // Step 4 & 5: If no org/team exists, create them
     if (!organization || !team) {
-      console.log('⏳ Step 4 & 5: Creating new organization and team...');
+      console.info('⏳ Step 4 & 5: Creating new organization and team...');
 
       // Create organization (simulating Clerk createOrganization)
       const createOrgResponse = await client.organizations.create({
@@ -148,7 +148,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
       expect(createOrgResponse.data).toBeDefined();
 
       organization = createOrgResponse.data!;
-      console.log(
+      console.info(
         `✅ Created organization: ${organization.name} (${organization.id})`,
       );
 
@@ -162,7 +162,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
       expect(createTeamResponse.data).toBeDefined();
 
       team = createTeamResponse.data!;
-      console.log(`✅ Created team: ${team.name} (${team.id})`);
+      console.info(`✅ Created team: ${team.name} (${team.id})`);
 
       // Add the current user to the team (if not automatically added)
       try {
@@ -173,13 +173,13 @@ describe('E2E Tests: User Onboarding Flow', () => {
         );
 
         if (!membershipResponse.error) {
-          console.log(`✅ Added user to team with role: ADMIN`);
+          console.info(`✅ Added user to team with role: ADMIN`);
         }
-      } catch (err) {
-        console.log('ℹ️ User might already be a member of the team');
+      } catch {
+        console.info('ℹ️ User might already be a member of the team');
       }
     } else {
-      console.log('ℹ️ Using existing organization and team');
+      console.info('ℹ️ Using existing organization and team');
     }
 
     // Verify organization and team exist
@@ -189,7 +189,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
 
   it('should check for existing projects in the team', async () => {
     // Step 6 & 7: Check if projects exist in the team
-    console.log('⏳ Step 6 & 7: Checking for existing projects...');
+    console.info('⏳ Step 6 & 7: Checking for existing projects...');
 
     if (!team) {
       throw new Error('Team must be defined before checking projects');
@@ -203,16 +203,18 @@ describe('E2E Tests: User Onboarding Flow', () => {
     if (projectsResponse.data && projectsResponse.data.length > 0) {
       // If projects exist, use the first one
       project = projectsResponse.data[0];
-      console.log(`✅ Found existing project: ${project.name} (${project.id})`);
+      console.info(
+        `✅ Found existing project: ${project.name} (${project.id})`,
+      );
     } else {
-      console.log('ℹ️ No existing projects found in team');
+      console.info('ℹ️ No existing projects found in team');
     }
   }, 30000);
 
   it('should create a default project if none exists', async () => {
     // Step 8: Create default project if none exists
     if (!project) {
-      console.log('⏳ Step 8: Creating default project...');
+      console.info('⏳ Step 8: Creating default project...');
 
       if (!team) {
         throw new Error('Team must be defined before creating a project');
@@ -228,11 +230,11 @@ describe('E2E Tests: User Onboarding Flow', () => {
       expect(createProjectResponse.data).toBeDefined();
 
       project = createProjectResponse.data!;
-      console.log(
+      console.info(
         `✅ Created default project: ${project.name} (${project.id})`,
       );
     } else {
-      console.log('ℹ️ Using existing project');
+      console.info('ℹ️ Using existing project');
     }
 
     // Verify project exists
@@ -247,12 +249,12 @@ describe('E2E Tests: User Onboarding Flow', () => {
     expect(project).toBeDefined();
 
     // Log the full onboarding path that was taken
-    console.log('\n🎉 Onboarding flow completed successfully!');
-    console.log('=======================================');
-    console.log(`User: ${user.email} (${user.id})`);
-    console.log(`Organization: ${organization!.name} (${organization!.id})`);
-    console.log(`Team: ${team!.name} (${team!.id})`);
-    console.log(`Project: ${project!.name} (${project!.id})`);
-    console.log('=======================================');
+    console.info('\n🎉 Onboarding flow completed successfully!');
+    console.info('=======================================');
+    console.info(`User: ${user.email} (${user.id})`);
+    console.info(`Organization: ${organization!.name} (${organization!.id})`);
+    console.info(`Team: ${team!.name} (${team!.id})`);
+    console.info(`Project: ${project!.name} (${project!.id})`);
+    console.info('=======================================');
   });
 });

@@ -74,7 +74,7 @@ export class DatasourcesClient {
   async createDatasource(
     params: CreateDatasourceParams,
   ): Promise<ApiResponse<Datasource>> {
-    console.log('Creating datasource:', params);
+    console.info('Creating datasource:', params);
     return await this.httpClient.post(`/v1/datasources`, params);
   }
 
@@ -151,7 +151,7 @@ export class DatasourcesClient {
     const datasourceType = 'csv';
 
     // Step 1: Create the datasource
-    console.log(`Creating datasource for CSV file: ${fileName}`);
+    console.info(`Creating datasource for CSV file: ${fileName}`);
     const datasourceResponse = await this.httpClient.post<Datasource>(
       `/v1/datasources`,
       {
@@ -161,7 +161,7 @@ export class DatasourcesClient {
       },
     );
 
-    console.log(
+    console.info(
       `Created datasource: ${datasourceResponse.data?.name} (${datasourceResponse.data?.id})`,
     );
     if (datasourceResponse.error) {
@@ -191,7 +191,7 @@ export class DatasourcesClient {
     };
 
     let jobId: string;
-    console.log('Submitting job for file upload...');
+    console.info('Submitting job for file upload...');
     if (customSubmitJob) {
       jobId = await customSubmitJob(null, {
         projectId: projectId,
@@ -227,13 +227,13 @@ export class DatasourcesClient {
     if (!jobId) {
       throw new Error('Error: No job ID received from job submission');
     }
-    console.log(`Job submitted successfully: ${jobId}`);
+    console.info(`Job submitted successfully: ${jobId}`);
 
     // Step 3: Upload the file
     const isServerEnv = this.httpClient.getIsServer();
     if (isServerEnv) {
       // --- Server-side implementation using direct node-fetch ---
-      console.log('Executing server-side file upload using node-fetch...');
+      console.info('Executing server-side file upload using node-fetch...');
 
       // Dynamic imports for Node.js environment
       const fetch = (await import('node-fetch')).default;
@@ -243,7 +243,7 @@ export class DatasourcesClient {
       let fileBuffer: Buffer;
       try {
         fileBuffer = fs.readFileSync(csvFilePath);
-        console.log(`Read file buffer of size: ${fileBuffer.length} bytes`);
+        console.info(`Read file buffer of size: ${fileBuffer.length} bytes`);
       } catch (readError) {
         console.error(`Error reading file ${csvFilePath}:`, readError);
         throw new Error(`Failed to read file: ${csvFilePath}`);
@@ -267,8 +267,8 @@ export class DatasourcesClient {
       const url = `${baseUrl}/v1/actions/load/${projectId}`;
       const formHeaders = formData.getHeaders(); // Get headers from form-data library
 
-      console.log(`Uploading to URL: ${url}`);
-      console.log(
+      console.info(`Uploading to URL: ${url}`);
+      console.info(
         'Headers (excluding Auth):',
         JSON.stringify(formHeaders, null, 2),
       );
@@ -283,7 +283,7 @@ export class DatasourcesClient {
           body: formData, // Pass FormData instance directly
         });
 
-        console.log(
+        console.info(
           `Upload fetch completed with status: ${response.status} ${response.statusText}`,
         );
 
@@ -321,7 +321,7 @@ export class DatasourcesClient {
       }
     } else {
       // --- Browser-side implementation using browser Fetch API ---
-      console.log(
+      console.info(
         'Executing browser-side file upload using browser Fetch API...',
       );
 

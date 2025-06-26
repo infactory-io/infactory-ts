@@ -3,7 +3,7 @@ import { QueryProgramsClient } from '../../src/clients/queryprograms-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
 // ApiResponse type is used in return type annotations in the class methods
-import { ApiResponse } from '../../src/types/common.js';
+// import { ApiResponse } from '../../src/types/common.js';
 
 // Mock the HttpClient
 vi.mock('../../src/core/http-client', () => {

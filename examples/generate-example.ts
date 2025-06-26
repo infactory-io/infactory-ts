@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Initialize the Infactory client with API key from environment variables
 const apiKey = process.env.NF_API_KEY || '';
-console.log(
+console.info(
   `Using API key: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`,
 );
 
@@ -29,10 +29,10 @@ const client = new InfactoryClient({
  */
 async function main() {
   try {
-    console.log('🚀 Demonstrating GenerateClient capabilities');
+    console.info('🚀 Demonstrating GenerateClient capabilities');
 
     // List projects to get a valid project ID
-    console.log('\n📋 Listing projects to get a valid project ID...');
+    console.info('\n📋 Listing projects to get a valid project ID...');
     const projectsResponse = await client.projects.getProjects();
 
     if (!projectsResponse.data || projectsResponse.data.length === 0) {
@@ -41,24 +41,24 @@ async function main() {
     }
 
     const projectId = projectsResponse.data[0].id;
-    console.log(
+    console.info(
       `✅ Using project: ${projectsResponse.data[0].name} (${projectId})`,
     );
 
     // Example 1: Generate questions based on project context
-    console.log('\n🤔 Generating questions based on project context...');
+    console.info('\n🤔 Generating questions based on project context...');
     try {
       const questionsResponse = await client.generate.generateQuestions({
         projectId,
         count: 3,
       });
 
-      console.log('Response:', questionsResponse);
+      console.info('Response:', questionsResponse);
 
       if (questionsResponse.data) {
-        console.log('✅ Generated questions:');
+        console.info('✅ Generated questions:');
         questionsResponse.data.questions.forEach((question, index) => {
-          console.log(`   ${index + 1}. ${question}`);
+          console.info(`   ${index + 1}. ${question}`);
         });
       } else if (questionsResponse.error) {
         console.error(
@@ -74,7 +74,7 @@ async function main() {
     }
 
     // Example 2: Generate a query program from natural language
-    console.log('\n📊 Generating a query program from natural language...');
+    console.info('\n📊 Generating a query program from natural language...');
     let queryProgramResponse: any | undefined;
     try {
       queryProgramResponse = await client.generate.generateQueryProgram({
@@ -82,17 +82,17 @@ async function main() {
         naturalLanguageQuery: 'Show me the top 5 products by sales revenue',
       });
 
-      console.log('Response:', JSON.stringify(queryProgramResponse, null, 2));
+      console.info('Response:', JSON.stringify(queryProgramResponse, null, 2));
     } catch (error) {
       console.error('❌ Unexpected error generating query program:', error);
     }
 
     if (queryProgramResponse?.data) {
-      console.log(
+      console.info(
         `✅ Generated query program: ${queryProgramResponse.data.name}`,
       );
-      console.log(`   ID: ${queryProgramResponse.data.id}`);
-      console.log(
+      console.info(`   ID: ${queryProgramResponse.data.id}`);
+      console.info(
         `   Code snippet: ${queryProgramResponse.data.queryProgram?.substring(0, 100)}...`,
       );
     } else if (queryProgramResponse.error) {
@@ -102,7 +102,7 @@ async function main() {
     }
 
     // Example 3: Generate a data model
-    console.log('\n🏗️ Generating a data model...');
+    console.info('\n🏗️ Generating a data model...');
     const dataModelResponse = await client.generate.generateDataModel({
       projectId,
       description:
@@ -110,10 +110,10 @@ async function main() {
     });
 
     if (dataModelResponse.data) {
-      console.log(`✅ Generated data model: ${dataModelResponse.data.title}`);
-      console.log('   Properties:');
+      console.info(`✅ Generated data model: ${dataModelResponse.data.title}`);
+      console.info('   Properties:');
       Object.keys(dataModelResponse.data.properties).forEach((prop) => {
-        console.log(`     - ${prop}`);
+        console.info(`     - ${prop}`);
       });
     } else if (dataModelResponse.error) {
       console.error(
@@ -122,7 +122,7 @@ async function main() {
     }
 
     // Example 4: Generate knowledge entity links
-    console.log('\n🔗 Generating knowledge entity links...');
+    console.info('\n🔗 Generating knowledge entity links...');
     const entityLinkResponse =
       await client.generate.generateKnowledgeEntityLink({
         projectId,
@@ -130,11 +130,11 @@ async function main() {
       });
 
     if (entityLinkResponse.data) {
-      console.log('✅ Generated entity links:');
-      console.log(`   Text: ${entityLinkResponse.data.text}`);
-      console.log('   Entities:');
+      console.info('✅ Generated entity links:');
+      console.info(`   Text: ${entityLinkResponse.data.text}`);
+      console.info('   Entities:');
       entityLinkResponse.data.entities.forEach((entity) => {
-        console.log(`     - ${entity.name} (${entity.type})`);
+        console.info(`     - ${entity.name} (${entity.type})`);
       });
     } else if (entityLinkResponse.error) {
       console.error(
@@ -142,7 +142,7 @@ async function main() {
       );
     }
 
-    console.log('\n✨ GenerateClient demonstration completed!');
+    console.info('\n✨ GenerateClient demonstration completed!');
   } catch (error) {
     console.error('❌ An unexpected error occurred:', error);
   }

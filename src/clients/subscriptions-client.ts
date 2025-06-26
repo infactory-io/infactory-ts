@@ -110,7 +110,7 @@ export class SubscriptionsClient {
    * @example
    * const response = await client.subscriptions.getSubscription('org_123');
    * if (response.data) {
-   *   console.log('Subscription:', response.data);
+   *   console.info('Subscription:', response.data);
    * } else {
    *   console.error('Error getting subscription:', response.error);
    * }
@@ -130,7 +130,7 @@ export class SubscriptionsClient {
    * @example
    * const response = await client.subscriptions.createCustomer();
    * if (response.data) {
-   *   console.log('Customer created:', response.data);
+   *   console.info('Customer created:', response.data);
    * } else {
    *   console.error('Error creating customer:', response.error);
    * }
@@ -176,7 +176,7 @@ export class SubscriptionsClient {
    *   overageEnabled: true
    * });
    * if (response.data) {
-   *   console.log('Overage settings updated:', response.data);
+   *   console.info('Overage settings updated:', response.data);
    * } else {
    *   console.error('Error updating overage settings:', response.error);
    * }
@@ -224,8 +224,8 @@ export class SubscriptionsClient {
    * @example
    * const response = await client.subscriptions.getUsage('org_123');
    * if (response.data) {
-   *   console.log('Usage information:', response.data);
-   *   console.log(`Used ${response.data.currentUsage} of ${response.data.includedQuantity} included`);
+   *   console.info('Usage information:', response.data);
+   *   console.info(`Used ${response.data.currentUsage} of ${response.data.includedQuantity} included`);
    * } else {
    *   console.error('Error getting usage information:', response.error);
    * }
@@ -249,9 +249,9 @@ export class SubscriptionsClient {
    *   newPriceId: 'price_new'
    * });
    * if (response.data) {
-   *   console.log('Upgrade preview:', response.data);
-   *   console.log(`Immediate cost: ${response.data.costNow} ${response.data.currency}`);
-   *   console.log(`Next cycle cost: ${response.data.costNextCycle} ${response.data.currency}`);
+   *   console.info('Upgrade preview:', response.data);
+   *   console.info(`Immediate cost: ${response.data.costNow} ${response.data.currency}`);
+   *   console.info(`Next cycle cost: ${response.data.costNextCycle} ${response.data.currency}`);
    * } else {
    *   console.error('Error previewing upgrade:', response.error);
    * }
@@ -275,7 +275,7 @@ export class SubscriptionsClient {
    *   newPriceId: 'price_new'
    * });
    * if (response.data) {
-   *   console.log('Subscription upgraded:', response.data);
+   *   console.info('Subscription upgraded:', response.data);
    * } else {
    *   console.error('Error applying upgrade:', response.error);
    * }
@@ -298,8 +298,8 @@ export class SubscriptionsClient {
    *   organizationId: 'org_123'
    * });
    * if (response.data) {
-   *   console.log('Subscription cancelled:', response.data);
-   *   console.log(`Subscription will end on: ${response.data.currentPeriodEnd}`);
+   *   console.info('Subscription cancelled:', response.data);
+   *   console.info(`Subscription will end on: ${response.data.currentPeriodEnd}`);
    * } else {
    *   console.error('Error cancelling subscription:', response.error);
    * }
@@ -319,9 +319,9 @@ export class SubscriptionsClient {
    * @example
    * const response = await client.subscriptions.listAvailableTiers();
    * if (response.data) {
-   *   console.log('Available tiers:', response.data);
+   *   console.info('Available tiers:', response.data);
    *   for (const tier of response.data) {
-   *     console.log(`${tier.name}: $${tier.prices.monthly.unitAmount/100}/month or $${tier.prices.yearly.unitAmount/100}/year`);
+   *     console.info(`${tier.name}: $${tier.prices.monthly.unitAmount/100}/month or $${tier.prices.yearly.unitAmount/100}/year`);
    *   }
    * } else {
    *   console.error('Error listing available tiers:', response.error);

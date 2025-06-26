@@ -25,14 +25,14 @@ const client = new InfactoryClient({
   baseURL: baseURL,
 });
 
-console.log(`Using API at: ${baseURL}`);
+console.info(`Using API at: ${baseURL}`);
 
 /**
  * Example function demonstrating how to use database API functionality
  */
 async function databaseExample() {
   try {
-    console.log('=== Database API Example ===');
+    console.info('=== Database API Example ===');
 
     // Get database connection string from environment variable
     const connectionString = process.env.NF_TEST_DB_CONNECTION_STRING;
@@ -55,27 +55,27 @@ async function databaseExample() {
     const sqlQuery = `SELECT * FROM ${tableName} LIMIT 10`;
     const samplingSqlQuery = `SELECT * FROM ${tableName} LIMIT 5`;
 
-    console.log(
+    console.info(
       `Using database connection: ${connectionString.replace(/:[^:]*@/, ':****@')}`,
     );
-    console.log(`Using tables: ${tableNames.join(', ')}`);
+    console.info(`Using tables: ${tableNames.join(', ')}`);
 
     // We'll use the datasources client for database operations
     let datasourcesClient;
     try {
       datasourcesClient = client.datasources;
-      console.log('Successfully initialized datasourcesClient');
+      console.info('Successfully initialized datasourcesClient');
     } catch (error) {
       console.error('Error initializing datasourcesClient:', error);
       throw error;
     }
 
     // Get projects to find one to use
-    console.log('Getting available projects...');
+    console.info('Getting available projects...');
     let projectsResponse;
     try {
       projectsResponse = await client.projects.getProjects();
-      console.log('Successfully retrieved projects');
+      console.info('Successfully retrieved projects');
     } catch (error) {
       console.error('Error retrieving projects:', error);
       throw error;
@@ -96,10 +96,10 @@ async function databaseExample() {
     // Find a project to work with
     const firstProject = projectsResponse.data[0];
     const projectId = firstProject.id;
-    console.log(`Using project: ${firstProject.name} (${projectId})`);
+    console.info(`Using project: ${firstProject.name} (${projectId})`);
 
     // Create a datasource for the database connection
-    console.log('\n1. Creating a datasource for the database connection:');
+    console.info('\n1. Creating a datasource for the database connection:');
     const createDatasourceResponse = await client.datasources.createDatasource({
       name: 'Database Connection Example',
       projectId: projectId,
@@ -116,7 +116,7 @@ async function databaseExample() {
     }
 
     const datasourceId = createDatasourceResponse.data?.id;
-    console.log(
+    console.info(
       `Created datasource: ${createDatasourceResponse.data?.name} (ID: ${datasourceId})`,
     );
 
@@ -124,11 +124,11 @@ async function databaseExample() {
     // No need for the HTTP client anymore
 
     // EXAMPLE 1: Test database connection
-    console.log('\n2. Testing database connection:');
+    console.info('\n2. Testing database connection:');
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      console.log(
+      console.info(
         'About to call testDatabaseConnection with:',
         connectionString.replace(/:[^:]*@/, ':****@'),
       );
@@ -154,18 +154,18 @@ async function databaseExample() {
           'Please check that your database connection string is correct and the database is accessible.',
         );
       } else {
-        console.log('Connection test result:');
+        console.info('Connection test result:');
         // Type assertion for the response data
         const testData = testConnectionResponse.data as {
           success: boolean;
           tables: Array<any>;
         };
-        console.log(`- Success: ${testData.success}`);
-        console.log(`- Tables found: ${testData.tables?.length || 0}`);
+        console.info(`- Success: ${testData.success}`);
+        console.info(`- Tables found: ${testData.tables?.length || 0}`);
         if (testData.tables && testData.tables.length > 0) {
-          console.log('Sample tables:');
+          console.info('Sample tables:');
           testData.tables.slice(0, 3).forEach((table: any, index: number) => {
-            console.log(
+            console.info(
               `  ${index + 1}. ${table.name} - Rows: ~${
                 table.estimatedRows
               }, Size: ${table.estimatedSize}, Columns: ${table.columnCount}`,
@@ -181,7 +181,7 @@ async function databaseExample() {
     }
 
     // EXAMPLE 2: Sample database tables
-    console.log('\n3. Sampling database tables:');
+    console.info('\n3. Sampling database tables:');
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
@@ -210,22 +210,22 @@ async function databaseExample() {
           'Please check that your database connection string is correct and the specified tables exist.',
         );
       } else {
-        console.log('Sample tables result:');
+        console.info('Sample tables result:');
         // Type assertion for the response data
         const sampleData = sampleTablesResponse.data as {
           dataObjects: Record<string, string>;
           jobs: Array<any>;
         };
-        console.log(
+        console.info(
           `- Data Objects: ${Object.keys(sampleData.dataObjects || {}).length}`,
         );
-        console.log(`- Jobs created: ${sampleData.jobs?.length || 0}`);
+        console.info(`- Jobs created: ${sampleData.jobs?.length || 0}`);
 
         if (sampleData.jobs && sampleData.jobs.length > 0) {
-          console.log('Jobs:');
+          console.info('Jobs:');
           sampleData.jobs.forEach((job: any, index: number) => {
-            console.log(`  ${index + 1}. Job Type: ${job.jobType}`);
-            console.log(`     Project ID: ${job.projectId}`);
+            console.info(`  ${index + 1}. Job Type: ${job.jobType}`);
+            console.info(`     Project ID: ${job.projectId}`);
           });
         }
       }
@@ -237,7 +237,7 @@ async function databaseExample() {
     }
 
     // EXAMPLE 3: Execute custom SQL
-    console.log('\n4. Executing custom SQL:');
+    console.info('\n4. Executing custom SQL:');
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
@@ -271,17 +271,17 @@ async function databaseExample() {
           'Please check that your SQL query is valid and the database is accessible.',
         );
       } else {
-        console.log('Execute custom SQL result:');
+        console.info('Execute custom SQL result:');
         // Type assertion for the response data
         const sqlData = executeCustomSqlResponse.data as { jobs: Array<any> };
-        console.log(`- Jobs created: ${sqlData.jobs?.length || 0}`);
+        console.info(`- Jobs created: ${sqlData.jobs?.length || 0}`);
 
         if (sqlData.jobs && sqlData.jobs.length > 0) {
-          console.log('Jobs:');
+          console.info('Jobs:');
           sqlData.jobs.forEach((job: any, index: number) => {
-            console.log(`  ${index + 1}. Job Type: ${job.jobType}`);
-            console.log(`     Project ID: ${job.projectId}`);
-            console.log(
+            console.info(`  ${index + 1}. Job Type: ${job.jobType}`);
+            console.info(`     Project ID: ${job.projectId}`);
+            console.info(
               `     Metadata: ${JSON.stringify(job.metadata, null, 2)}`,
             );
           });
@@ -295,7 +295,7 @@ async function databaseExample() {
     }
 
     // EXAMPLE 4: Validate SQL syntax
-    console.log('\n5. Validating SQL syntax:');
+    console.info('\n5. Validating SQL syntax:');
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
@@ -314,15 +314,15 @@ async function databaseExample() {
           'Please check that your SQL query syntax is correct for your database type.',
         );
       } else {
-        console.log('SQL syntax validation result:');
+        console.info('SQL syntax validation result:');
         // Type assertion for the response data
         const syntaxData = validateSqlSyntaxResponse.data as {
           valid: boolean;
           message?: string;
         };
-        console.log(`- Valid: ${syntaxData.valid}`);
+        console.info(`- Valid: ${syntaxData.valid}`);
         if (syntaxData.message) {
-          console.log(`- Message: ${syntaxData.message}`);
+          console.info(`- Message: ${syntaxData.message}`);
         }
       }
     } catch (error) {
@@ -333,7 +333,7 @@ async function databaseExample() {
     }
 
     // EXAMPLE 5: Validate SQL query (row count)
-    console.log('\n6. Validating SQL query (row count):');
+    console.info('\n6. Validating SQL query (row count):');
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
@@ -353,14 +353,14 @@ async function databaseExample() {
           'Please check that your SQL query is valid and the max_rows parameter is appropriate.',
         );
       } else {
-        console.log('SQL query validation result:');
+        console.info('SQL query validation result:');
         // Use the proper type from the imported interfaces
         const queryData =
           validateSqlQueryResponse.data as ValidateSqlQueryResponse;
-        console.log(`- Valid: ${queryData.valid}`);
-        console.log(`- Row Count: ${queryData.rowCount}`);
+        console.info(`- Valid: ${queryData.valid}`);
+        console.info(`- Row Count: ${queryData.rowCount}`);
         if (queryData.message) {
-          console.log(`- Message: ${queryData.message}`);
+          console.info(`- Message: ${queryData.message}`);
         }
       }
     } catch (error) {
@@ -371,7 +371,7 @@ async function databaseExample() {
     }
 
     // EXAMPLE 6: Extract SQL parameters
-    console.log('\n7. Extracting SQL parameters:');
+    console.info('\n7. Extracting SQL parameters:');
     try {
       // Use a SQL query with parameters for this example
       const parameterizedSqlQuery =
@@ -390,23 +390,23 @@ async function databaseExample() {
           'Please check that your SQL query contains properly formatted parameters like {{parameter_name}}.',
         );
       } else {
-        console.log('SQL parameters extraction result:');
+        console.info('SQL parameters extraction result:');
         // Use the proper type from the imported interfaces
         const paramsData =
           extractSqlParametersResponse.data as ExtractSqlParametersResponse;
-        console.log(
+        console.info(
           `- Parameters found: ${paramsData.parameters?.length || 0}`,
         );
-        console.log(`- Parsed Query: ${paramsData.parsedQuery}`);
+        console.info(`- Parsed Query: ${paramsData.parsedQuery}`);
 
         if (paramsData.parameters && paramsData.parameters.length > 0) {
-          console.log('Parameters:');
+          console.info('Parameters:');
           paramsData.parameters.forEach((param: any, index: number) => {
-            console.log(`  ${index + 1}. ${param.displayName}`);
-            console.log(`     Type: ${param.type}`);
-            console.log(`     Field: ${param.field}`);
-            console.log(`     Operator: ${param.operator}`);
-            console.log(`     Value: ${param.value}`);
+            console.info(`  ${index + 1}. ${param.displayName}`);
+            console.info(`     Type: ${param.type}`);
+            console.info(`     Field: ${param.field}`);
+            console.info(`     Operator: ${param.operator}`);
+            console.info(`     Value: ${param.value}`);
           });
         }
       }
@@ -419,13 +419,13 @@ async function databaseExample() {
 
     // Clean up the created datasource
     if (datasourceId) {
-      console.log('\nCleaning up - Deleting the datasource:');
+      console.info('\nCleaning up - Deleting the datasource:');
       const deleteResponse =
         await client.datasources.deleteDatasource(datasourceId);
       if (deleteResponse.error) {
         console.error('Error deleting datasource:', deleteResponse.error);
       } else {
-        console.log('Datasource deleted successfully');
+        console.info('Datasource deleted successfully');
       }
     }
   } catch (error) {
@@ -436,7 +436,7 @@ async function databaseExample() {
 // Run the example with better error handling
 try {
   databaseExample()
-    .then(() => console.log('\nDatabase example completed'))
+    .then(() => console.info('\nDatabase example completed'))
     .catch((error: unknown) => {
       console.error('Fatal error in databaseExample():', error);
       if (error instanceof Error && error.stack) {
