@@ -22,10 +22,10 @@ const client = new InfactoryClient({
  */
 async function teamsExample() {
   try {
-    console.log('=== Teams API Example ===');
+    console.info('=== Teams API Example ===');
 
     // First, get a list of organizations to work with
-    console.log('\n1. Fetching organizations:');
+    console.info('\n1. Fetching organizations:');
     const organizationsResponse = await client.organizations.list();
     if (organizationsResponse.error) {
       console.error(
@@ -47,35 +47,35 @@ async function teamsExample() {
 
     // Use the first organization for this example
     const organization = organizationsResponse.data[0];
-    console.log(
+    console.info(
       `Using organization: ${organization.name} (ID: ${organization.id})`,
     );
 
     // List all teams for this organization
-    console.log(`\n2. Listing teams for organization ${organization.id}:`);
+    console.info(`\n2. Listing teams for organization ${organization.id}:`);
     const teamsResponse = await client.teams.getTeams(organization.id);
     if (teamsResponse.error) {
       console.error('Error listing teams:', teamsResponse.error);
     } else {
-      console.log(`Found ${teamsResponse.data?.length || 0} teams`);
+      console.info(`Found ${teamsResponse.data?.length || 0} teams`);
       if (teamsResponse.data && teamsResponse.data.length > 0) {
         teamsResponse.data.forEach((team) => {
-          console.log(`- ${team.name} (ID: ${team.id})`);
+          console.info(`- ${team.name} (ID: ${team.id})`);
         });
 
         // Get details for the first team
         const firstTeam = teamsResponse.data[0];
-        console.log(`\n3. Getting details for team ${firstTeam.id}:`);
+        console.info(`\n3. Getting details for team ${firstTeam.id}:`);
 
         const teamResponse = await client.teams.getTeam(firstTeam.id);
         if (teamResponse.error) {
           console.error('Error getting team:', teamResponse.error);
         } else {
-          console.log('Team details:');
-          console.log(JSON.stringify(teamResponse.data, null, 2));
+          console.info('Team details:');
+          console.info(JSON.stringify(teamResponse.data, null, 2));
 
           // Get team memberships
-          console.log(`\n4. Listing members of team ${firstTeam.id}:`);
+          console.info(`\n4. Listing members of team ${firstTeam.id}:`);
           try {
             const membershipsResponse = await client.teams.getTeamMemberships(
               firstTeam.id,
@@ -86,7 +86,7 @@ async function teamsExample() {
                 membershipsResponse.error.message,
               );
             } else {
-              console.log(
+              console.info(
                 `Found ${membershipsResponse.data?.length || 0} team members`,
               );
               if (
@@ -94,12 +94,12 @@ async function teamsExample() {
                 membershipsResponse.data.length > 0
               ) {
                 membershipsResponse.data.forEach((membership) => {
-                  console.log(
+                  console.info(
                     `- User ID: ${membership.userId}, Role: ${membership.role}`,
                   );
                 });
               } else {
-                console.log('No team members found');
+                console.info('No team members found');
               }
             }
           } catch (error) {
@@ -111,13 +111,13 @@ async function teamsExample() {
           }
         }
       } else {
-        console.log('No teams found for this organization');
+        console.info('No teams found for this organization');
       }
     }
 
     // Create a new team example (commented out to prevent accidental creation)
     /*
-    console.log(`\n5. Creating a new team in organization ${organization.id}:`);
+    console.info(`\n5. Creating a new team in organization ${organization.id}:`);
     const createResponse = await client.teams.createTeam({
       name: 'Example Team',
       organizationId: organization.id
@@ -126,13 +126,13 @@ async function teamsExample() {
     if (createResponse.error) {
       console.error('Error creating team:', createResponse.error);
     } else {
-      console.log('Team created:');
-      console.log(JSON.stringify(createResponse.data, null, 2));
+      console.info('Team created:');
+      console.info(JSON.stringify(createResponse.data, null, 2));
       
       const teamId = createResponse.data.id;
       
       // Update the created team
-      console.log(`\n6. Updating team ${teamId}:`);
+      console.info(`\n6. Updating team ${teamId}:`);
       
       const updateResponse = await client.teams.updateTeam(teamId, {
         name: 'Updated Example Team'
@@ -141,12 +141,12 @@ async function teamsExample() {
       if (updateResponse.error) {
         console.error('Error updating team:', updateResponse.error);
       } else {
-        console.log('Team updated:');
-        console.log(JSON.stringify(updateResponse.data, null, 2));
+        console.info('Team updated:');
+        console.info(JSON.stringify(updateResponse.data, null, 2));
       }
       
       // Add a user to the team (you'd need a valid user ID)
-      // console.log(`\n7. Adding a user to team ${teamId}:`);
+      // console.info(`\n7. Adding a user to team ${teamId}:`);
       // const userId = 'some-valid-user-id';
       // const addMemberResponse = await client.teams.createTeamMembership(
       //   teamId,
@@ -155,19 +155,19 @@ async function teamsExample() {
       // );
       
       // Delete the created team
-      console.log(`\n8. Deleting team ${teamId}:`);
+      console.info(`\n8. Deleting team ${teamId}:`);
       
       const deleteResponse = await client.teams.deleteTeam(teamId);
       if (deleteResponse.error) {
         console.error('Error deleting team:', deleteResponse.error);
       } else {
-        console.log('Team deleted successfully');
+        console.info('Team deleted successfully');
       }
     }
     */
 
     // Example of team client-side validation
-    console.log('\n9. Client-side validation:');
+    console.info('\n9. Client-side validation:');
     try {
       // Creating a team with an empty name should fail
       await client.teams.createTeam({
@@ -175,7 +175,7 @@ async function teamsExample() {
         organizationId: organization.id,
       });
     } catch (validationError) {
-      console.log(
+      console.info(
         'Validation caught invalid parameters:',
         (validationError as Error).message,
       );
@@ -188,7 +188,7 @@ async function teamsExample() {
         organizationId: '',
       });
     } catch (validationError) {
-      console.log(
+      console.info(
         'Validation caught missing organization ID:',
         (validationError as Error).message,
       );
@@ -200,5 +200,5 @@ async function teamsExample() {
 
 // Run the example
 teamsExample()
-  .then(() => console.log('\nTeams example completed'))
+  .then(() => console.info('\nTeams example completed'))
   .catch((error) => console.error('Fatal error:', error));

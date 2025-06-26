@@ -489,7 +489,7 @@ export class IntegrationsClient {
   async testHttpConnection(
     requestConfig: TestHttpConnectionRequest,
   ): Promise<ApiResponse<TestHttpConnectionResponse>> {
-    console.log('Testing HTTP connection with config:', requestConfig);
+    console.info('Testing HTTP connection with config:', requestConfig);
     return this.httpClient.post<TestHttpConnectionResponse>(
       '/v1/http/test-connection',
       requestConfig,

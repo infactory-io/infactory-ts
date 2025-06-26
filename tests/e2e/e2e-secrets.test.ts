@@ -42,7 +42,9 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
   // Setup: Initialize client and create test resources
   beforeAll(async () => {
     // Step 1: Authenticate and set up environment
-    console.log('⏳ Step 1: Authenticating user and setting up environment...');
+    console.info(
+      '⏳ Step 1: Authenticating user and setting up environment...',
+    );
     // Use known API credentials from environment variables or fall back to hardcoded values
     const apiKey =
       process.env.NF_API_KEY ||
@@ -55,7 +57,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       throw new Error('Missing base URL');
     }
 
-    console.log(`Using API endpoint: ${baseUrl}`);
+    console.info(`Using API endpoint: ${baseUrl}`);
 
     // Create client with server mode enabled for e2e tests
     client = new InfactoryClient({
@@ -63,7 +65,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       baseURL: baseUrl,
       isServer: true,
     });
-    console.log('✅ Authentication successful');
+    console.info('✅ Authentication successful');
 
     // Get current user
     const userResponse = await client.users.getCurrentUser();
@@ -73,10 +75,10 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       );
     }
     user = userResponse.data;
-    console.log(`👤 Current user: ${user.email} (${user.id})`);
+    console.info(`👤 Current user: ${user.email} (${user.id})`);
 
     // Find an existing organization instead of creating one
-    console.log('Fetching organizations...');
+    console.info('Fetching organizations...');
     const orgsResponse = await client.organizations.list();
 
     if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -87,16 +89,16 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
 
     // Use the first available organization
     organization = orgsResponse.data[0];
-    console.log(
+    console.info(
       `🏢 Using organization: ${organization.name} (${organization.id})`,
     );
 
     // Find an existing team or create one
-    console.log('Fetching teams...');
+    console.info('Fetching teams...');
     const teamsResponse = await client.teams.getTeams(organization.id);
 
     if (!teamsResponse.data || teamsResponse.data.length === 0) {
-      console.log(`Creating team: ${teamName}`);
+      console.info(`Creating team: ${teamName}`);
       const createTeamResponse = await client.teams.createTeam({
         name: teamName,
         organizationId: organization.id,
@@ -108,11 +110,11 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         );
       }
       team = createTeamResponse.data;
-      console.log(`👥 Created team: ${team.name} (${team.id})`);
+      console.info(`👥 Created team: ${team.name} (${team.id})`);
     } else {
       // Use the first available team
       team = teamsResponse.data[0];
-      console.log(`👥 Using existing team: ${team.name} (${team.id})`);
+      console.info(`👥 Using existing team: ${team.name} (${team.id})`);
     }
 
     // Add the current user to the team
@@ -122,9 +124,9 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         user.id,
         TeamMembershipRole.ADMIN,
       );
-      console.log('👤 Added user to team with role: ADMIN');
-    } catch (err) {
-      console.log('ℹ️ User might already be a member of the team');
+      console.info('👤 Added user to team with role: ADMIN');
+    } catch {
+      console.info('ℹ️ User might already be a member of the team');
     }
 
     // Create project
@@ -140,22 +142,22 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       );
     }
     project = createProjectResponse.data;
-    console.log(`📁 Created project: ${project.name} (${project.id})`);
+    console.info(`📁 Created project: ${project.name} (${project.id})`);
 
-    console.log('✅ Successfully set up testing environment');
+    console.info('✅ Successfully set up testing environment');
   }, 60000);
 
   // Clean up test resources
   afterAll(async () => {
     if (!client) return;
 
-    console.log('\n🧹 Starting cleanup...');
+    console.info('\n🧹 Starting cleanup...');
 
     try {
       // Clean up in reverse order of creation
       // First, delete the secret if it was created
       if (secret?.id) {
-        console.log(
+        console.info(
           `🧹 Cleaning up secret: ${secret.name} (${secret.id}) in team: ${team.id}`,
         );
         const deleteSecretResponse = await client.secrets.deleteSecret(
@@ -163,38 +165,38 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
           secret.id,
         );
         if (!deleteSecretResponse.error) {
-          console.log('✅ Secret deleted successfully');
+          console.info('✅ Secret deleted successfully');
         }
       }
 
       // Then, delete the credential if it was created
       if (credential?.id) {
-        console.log(
+        console.info(
           `🧹 Cleaning up credential: ${credential.name} (${credential.id})`,
         );
         const deleteCredentialResponse = await client.secrets.deleteCredential(
           credential.id,
         );
         if (!deleteCredentialResponse.error) {
-          console.log('✅ Credential deleted successfully');
+          console.info('✅ Credential deleted successfully');
         }
       }
 
       // Delete project
       if (project?.id) {
-        console.log(`🧹 Cleaning up project: ${project.name} (${project.id})`);
+        console.info(`🧹 Cleaning up project: ${project.name} (${project.id})`);
         await client.projects.deleteProject(project.id, true);
       }
 
       // Delete team
       if (team?.id) {
-        console.log(`🧹 Cleaning up team: ${team.name} (${team.id})`);
+        console.info(`🧹 Cleaning up team: ${team.name} (${team.id})`);
         await client.teams.deleteTeam(team.id);
       }
 
       // We don't delete the organization as it might be used by other tests
 
-      console.log('✅ Cleanup completed successfully');
+      console.info('✅ Cleanup completed successfully');
     } catch (error) {
       console.error('Error during cleanup:', error);
       // Don't fail the test suite on cleanup errors
@@ -204,7 +206,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
   // Credentials Tests
   describe('Credential Management', () => {
     it('should create a new credential', async () => {
-      console.log('\n⏳ Creating a new AWS credential...');
+      console.info('\n⏳ Creating a new AWS credential...');
 
       const createParams = {
         name: credentialName,
@@ -224,7 +226,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       expect(response.data).toBeDefined();
       credential = response.data!;
 
-      console.log(
+      console.info(
         `✅ Created credential: ${credential.name} (${credential.id})`,
       );
       expect(credential.name).toBe(credentialName);
@@ -232,19 +234,19 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       if (credential.type) {
         expect(credential.type).toBe('aws');
       } else {
-        console.log('Note: Created credential does not contain type property');
+        console.info('Note: Created credential does not contain type property');
       }
       expect(credential.organizationId).toBe(organization.id);
     }, 30000);
 
     it('should get credentials list if the endpoint allows GET method', async () => {
-      console.log('\n⏳ Getting all credentials...');
+      console.info('\n⏳ Getting all credentials...');
 
       const response = await client.secrets.getCredentials();
 
       // Handle Method Not Allowed (405) error
       if (response.error && response.error.status === 405) {
-        console.log(
+        console.info(
           'GET /credentials endpoint returned 405 - this may be expected if the endpoint does not support this method',
         );
         return;
@@ -260,13 +262,13 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       );
       expect(foundCredential).toBeDefined();
 
-      console.log(
+      console.info(
         `✅ Found ${response.data!.length} credentials in the organization`,
       );
     }, 30000);
 
     it('should get a credential by ID', async () => {
-      console.log(`\n⏳ Getting credential by ID: ${credential.id}...`);
+      console.info(`\n⏳ Getting credential by ID: ${credential.id}...`);
 
       const response = await client.secrets.getCredential(credential.id);
 
@@ -275,11 +277,11 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       expect(response.data!.id).toBe(credential.id);
       expect(response.data!.name).toBe(credentialName);
 
-      console.log(`✅ Retrieved credential: ${response.data!.name}`);
+      console.info(`✅ Retrieved credential: ${response.data!.name}`);
     }, 30000);
 
     it('should update a credential', async () => {
-      console.log(`\n⏳ Updating credential: ${credential.id}...`);
+      console.info(`\n⏳ Updating credential: ${credential.id}...`);
 
       const updateParams = {
         name: updatedCredentialName,
@@ -304,7 +306,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       if (response.data?.config) {
         expect(response.data.config).toHaveProperty('region');
       } else {
-        console.log(
+        console.info(
           'Note: Updated credential does not contain config property',
         );
       }
@@ -312,17 +314,17 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       // Update our reference
       credential = response.data!;
 
-      console.log(`✅ Updated credential: ${credential.name}`);
+      console.info(`✅ Updated credential: ${credential.name}`);
     }, 30000);
 
     it('should get project credentials if the endpoint exists', async () => {
-      console.log(`\n⏳ Getting credentials for project: ${project.id}...`);
+      console.info(`\n⏳ Getting credentials for project: ${project.id}...`);
 
       const response = await client.secrets.getProjectCredentials(project.id);
 
       // If we get a 404, the endpoint might not be implemented yet
       if (response.error && response.error.status === 404) {
-        console.log(
+        console.info(
           'Project credentials endpoint returned 404 - this may be expected if the endpoint is not implemented',
         );
         return;
@@ -332,7 +334,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
 
-      console.log(
+      console.info(
         `✅ Found ${response.data!.length} credentials for the project`,
       );
     }, 30000);
@@ -341,7 +343,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
   // Secrets Tests
   describe('Secret Management', () => {
     it('should create a new secret', async () => {
-      console.log('\n⏳ Creating a new API key secret...');
+      console.info('\n⏳ Creating a new API key secret...');
 
       try {
         // Initialize a placeholder secret in case API call fails
@@ -364,30 +366,30 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
           key: `api-key-${uniqueId}`, // Adding a key field which might be required
         };
 
-        console.log(`Creating secret in team: ${team.id}`);
+        console.info(`Creating secret in team: ${team.id}`);
         const response = await client.secrets.createSecret(createParams);
 
         if (response.error) {
           console.error('Error creating secret:', response.error);
-          console.log('Will continue tests with placeholder secret');
+          console.info('Will continue tests with placeholder secret');
           // Continue with placeholder secret
         } else if (response.data) {
           // Update our reference with the real secret data
           secret = response.data;
-          console.log(`✅ Created secret: ${secret.name} (${secret.id})`);
+          console.info(`✅ Created secret: ${secret.name} (${secret.id})`);
           expect(secret.name).toBe(secretName);
           expect(secret.teamId).toBe(team.id);
           expect(secret.value).toBe(createParams.value);
         }
       } catch (error) {
         console.error('Exception creating secret:', error);
-        console.log('Will continue tests with placeholder secret');
+        console.info('Will continue tests with placeholder secret');
         // We'll continue with the placeholder secret
       }
     }, 30000);
 
     it('should get secrets list', async () => {
-      console.log('\n⏳ Getting all secrets for team...');
+      console.info('\n⏳ Getting all secrets for team...');
 
       const response = await client.secrets.getSecrets(team.id);
 
@@ -403,17 +405,19 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         expect(foundSecret).toBeDefined();
       }
 
-      console.log(`✅ Found ${response.data!.length} secrets`);
+      console.info(`✅ Found ${response.data!.length} secrets`);
     }, 30000);
 
     it('should get a secret by ID', async () => {
       // Skip this test if we're using a placeholder secret
       if (secret.id.startsWith('placeholder')) {
-        console.log('Skipping get secret by ID test due to placeholder secret');
+        console.info(
+          'Skipping get secret by ID test due to placeholder secret',
+        );
         return;
       }
 
-      console.log(
+      console.info(
         `\n⏳ Getting secret by ID: ${secret.id} (team: ${team.id})...`,
       );
 
@@ -424,17 +428,17 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       expect(response.data!.id).toBe(secret.id);
       expect(response.data!.name).toBe(secretName);
 
-      console.log(`✅ Retrieved secret: ${response.data!.name}`);
+      console.info(`✅ Retrieved secret: ${response.data!.name}`);
     }, 30000);
 
     it('should update a secret', async () => {
       // Skip this test if we're using a placeholder secret
       if (secret.id.startsWith('placeholder')) {
-        console.log('Skipping update secret test due to placeholder secret');
+        console.info('Skipping update secret test due to placeholder secret');
         return;
       }
 
-      console.log(`\n⏳ Updating secret: ${secret.id}...`);
+      console.info(`\n⏳ Updating secret: ${secret.id}...`);
 
       const updateParams = {
         name: updatedSecretName,
@@ -455,17 +459,17 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       // Update our reference
       secret = response.data!;
 
-      console.log(`✅ Updated secret: ${secret.name}`);
+      console.info(`✅ Updated secret: ${secret.name}`);
     }, 30000);
 
     it('should get project secrets if the endpoint exists', async () => {
-      console.log(`\n⏳ Getting secrets for project: ${project.id}...`);
+      console.info(`\n⏳ Getting secrets for project: ${project.id}...`);
 
       const response = await client.secrets.getProjectSecrets(project.id);
 
       // If we get a 404, the endpoint might not be implemented yet
       if (response.error && response.error.status === 404) {
-        console.log(
+        console.info(
           'Project secrets endpoint returned 404 - this may be expected if the endpoint is not implemented',
         );
         return;
@@ -475,26 +479,26 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
 
-      console.log(`✅ Found ${response.data!.length} secrets for the project`);
+      console.info(`✅ Found ${response.data!.length} secrets for the project`);
     }, 30000);
   });
 
   // Final summary and verification
   it('should demonstrate complete secret and credential lifecycle management', () => {
-    console.log(
+    console.info(
       '\n✅ Successfully demonstrated complete lifecycle of secrets and credentials:',
     );
-    console.log('=======================================');
-    console.log('1. Created test organization, team, and project');
-    console.log(
+    console.info('=======================================');
+    console.info('1. Created test organization, team, and project');
+    console.info(
       `2. Created AWS credential: ${credential.name} (${credential.id})`,
     );
-    console.log(`3. Retrieved, listed, and updated credential`);
-    console.log(`4. Created API key secret: ${secret.name} (${secret.id})`);
-    console.log('5. Retrieved, listed, and updated secret');
-    console.log('6. Verified project-specific credentials and secrets');
-    console.log('7. Properly cleaned up all created resources');
-    console.log('=======================================');
+    console.info(`3. Retrieved, listed, and updated credential`);
+    console.info(`4. Created API key secret: ${secret.name} (${secret.id})`);
+    console.info('5. Retrieved, listed, and updated secret');
+    console.info('6. Verified project-specific credentials and secrets');
+    console.info('7. Properly cleaned up all created resources');
+    console.info('=======================================');
 
     // Final verification that all resources were properly created and managed
     expect(organization).toBeDefined();

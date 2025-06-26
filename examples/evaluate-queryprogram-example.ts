@@ -14,7 +14,7 @@ if (!apiKey) {
 
 // Get base URL from environment variable or use default
 const baseURL = process.env.NF_BASE_URL || 'https://api.infactory.ai';
-console.log(`Using API base URL: ${baseURL}`);
+console.info(`Using API base URL: ${baseURL}`);
 
 // Create a new instance of the InfactoryClient
 const client = new InfactoryClient({
@@ -30,10 +30,10 @@ const projectId = '51748cd5-da55-437e-a707-947d972cf9e4';
  */
 async function evaluateQueryProgramExample() {
   try {
-    console.log('=== Query Program Evaluation Example ===');
+    console.info('=== Query Program Evaluation Example ===');
 
     // Step 1: List query programs to find one to evaluate
-    console.log('\n1. Listing query programs for the project:');
+    console.info('\n1. Listing query programs for the project:');
     const queryProgramsResponse = await client.queryPrograms.listQueryPrograms({
       projectId,
     });
@@ -55,9 +55,9 @@ async function evaluateQueryProgramExample() {
     }
 
     // Display the query programs
-    console.log(`Found ${queryProgramsResponse.data.length} query programs:`);
+    console.info(`Found ${queryProgramsResponse.data.length} query programs:`);
     queryProgramsResponse.data.forEach((qp, index) => {
-      console.log(
+      console.info(
         `${index + 1}. ${qp.name || 'Unnamed'} (ID: ${qp.id}) - Published: ${qp.published ? 'Yes' : 'No'}`,
       );
     });
@@ -74,12 +74,12 @@ async function evaluateQueryProgramExample() {
     }
 
     const queryProgramId = publishedQueryProgram.id;
-    console.log(
+    console.info(
       `\nUsing query program: ${publishedQueryProgram.name || 'Unnamed'} (ID: ${queryProgramId})`,
     );
 
     // Step 2: Analyze the query program to get its graph representation
-    console.log('\n2. Analyzing query program graph representation');
+    console.info('\n2. Analyzing query program graph representation');
 
     try {
       const graphResponse = await client.queryPrograms.analyzeQueryProgram(
@@ -90,9 +90,9 @@ async function evaluateQueryProgramExample() {
       if (graphResponse.error) {
         console.error('Error analyzing query program:', graphResponse.error);
       } else {
-        console.log('Graph analysis successful:');
-        console.log(`- Nodes: ${graphResponse.data?.nodes?.length || 0}`);
-        console.log(`- Edges: ${graphResponse.data?.edges?.length || 0}`);
+        console.info('Graph analysis successful:');
+        console.info(`- Nodes: ${graphResponse.data?.nodes?.length || 0}`);
+        console.info(`- Edges: ${graphResponse.data?.edges?.length || 0}`);
       }
     } catch (error) {
       console.error('Unexpected error during graph analysis:', error);
@@ -100,7 +100,7 @@ async function evaluateQueryProgramExample() {
     }
 
     // Step 3: Evaluate the query program synchronously
-    console.log('\n3. Evaluating query program synchronously:');
+    console.info('\n3. Evaluating query program synchronously:');
     try {
       const evalResponse = await client.queryPrograms.evaluateQueryProgramSync(
         projectId,
@@ -110,8 +110,8 @@ async function evaluateQueryProgramExample() {
       if (evalResponse.error) {
         console.error('Error evaluating query program:', evalResponse.error);
       } else {
-        console.log('Evaluation successful:');
-        console.log(JSON.stringify(evalResponse.data, null, 2));
+        console.info('Evaluation successful:');
+        console.info(JSON.stringify(evalResponse.data, null, 2));
       }
     } catch (error) {
       console.error('Unexpected error during evaluation:', error);
@@ -123,5 +123,5 @@ async function evaluateQueryProgramExample() {
 
 // Run the example
 evaluateQueryProgramExample()
-  .then(() => console.log('\nExample completed'))
+  .then(() => console.info('\nExample completed'))
   .catch((error) => console.error('Fatal error:', error));

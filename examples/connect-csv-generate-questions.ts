@@ -28,7 +28,7 @@ async function main() {
     });
 
     // First, get organizations
-    console.log('Fetching available organizations...');
+    console.info('Fetching available organizations...');
     const orgsResponse = await client.organizations.list();
 
     if (orgsResponse.error || !orgsResponse.data?.length) {
@@ -38,12 +38,12 @@ async function main() {
     }
 
     const organization = orgsResponse.data[0]; // Use the first available organization
-    console.log(
+    console.info(
       `Using organization: ${organization.name} (${organization.id})`,
     );
 
     // Now get teams for this organization
-    console.log('Fetching available teams...');
+    console.info('Fetching available teams...');
     const teamsResponse = await client.teams.getTeams(organization.id);
 
     if (teamsResponse.error || !teamsResponse.data?.length) {
@@ -53,9 +53,9 @@ async function main() {
     }
 
     const team = teamsResponse.data[0]; // Use the first available team
-    console.log(`Using team: ${team.name} (${team.id})`);
+    console.info(`Using team: ${team.name} (${team.id})`);
 
-    console.log('Creating a new project...');
+    console.info('Creating a new project...');
     // Step 1: Create a new project
     const projectResponse = await client.projects.createProject({
       name: `Mental Health Data Analysis ${new Date().toISOString()}`,
@@ -70,12 +70,12 @@ async function main() {
     }
 
     const project = projectResponse.data;
-    console.log(
+    console.info(
       `Project created successfully: ${project.name} (${project.id})`,
     );
 
     // Step 2: Connect the CSV file using the ActionsClient
-    console.log('\nConnecting CSV file...');
+    console.info('\nConnecting CSV file...');
     const csvFilePath = path.resolve(
       process.env.HOME || '~',
       'Downloads/Mental_Health_Care_in_the_Last_4_Weeks.csv',
@@ -97,23 +97,23 @@ async function main() {
     const dataSource = connectResponse.data.datasource;
     const testResult = connectResponse.data.testResult;
 
-    console.log(
+    console.info(
       `CSV file connected successfully: ${dataSource.name} (${dataSource.id})`,
     );
-    console.log(
+    console.info(
       `Connection test result: ${testResult?.success ? 'Success' : 'Failed'}`,
     );
 
     // Check for message and jobId based on the test result type
     if (testResult && 'message' in testResult) {
-      console.log(`Message: ${testResult.message}`);
+      console.info(`Message: ${testResult.message}`);
     }
     if (testResult && 'jobId' in testResult) {
-      console.log(`Job ID: ${testResult.jobId}`);
+      console.info(`Job ID: ${testResult.jobId}`);
     }
 
     // Step 3: Generate questions based on the data
-    console.log('\nGenerating questions from the data...');
+    console.info('\nGenerating questions from the data...');
 
     const questionsResponse = await client.generate.generateQuestions({
       projectId: project.id,
@@ -129,12 +129,12 @@ async function main() {
     }
 
     const questions = questionsResponse.data.questions;
-    console.log('\nGenerated Questions:');
+    console.info('\nGenerated Questions:');
     questions.forEach((question, index) => {
-      console.log(`${index + 1}. ${question}`);
+      console.info(`${index + 1}. ${question}`);
     });
 
-    console.log('\nExample completed successfully!');
+    console.info('\nExample completed successfully!');
   } catch (error) {
     console.error('Error in example:', error);
     process.exit(1);

@@ -44,16 +44,16 @@ describe('E2E Tests: Integration Workflows', () => {
       isServer: true,
       // Add logging for fetch operations
       fetch: (url, options) => {
-        console.log('FETCH URL:', url);
+        console.info('FETCH URL:', url);
         return fetch(url, options);
       },
     });
 
-    console.log('CLIENT CREATED WITH isServer: true');
+    console.info('CLIENT CREATED WITH isServer: true');
 
     try {
       // Step 1: Get organizations - use the first available organization
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       const orgsResponse = await client.organizations.list();
 
       if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -64,12 +64,12 @@ describe('E2E Tests: Integration Workflows', () => {
 
       // Get first organization
       organization = orgsResponse.data[0];
-      console.log(
+      console.info(
         `Using organization: ${organization.name} (${organization.id})`,
       );
 
       // Step 2: Get teams - use the first available team in the organization
-      console.log('Fetching teams...');
+      console.info('Fetching teams...');
       const teamsResponse = await client.teams.getTeams(organization.id);
 
       if (!teamsResponse.data || teamsResponse.data.length === 0) {
@@ -79,15 +79,15 @@ describe('E2E Tests: Integration Workflows', () => {
       }
 
       team = teamsResponse.data[0];
-      console.log(`Using team: ${team.name} (${team.id})`);
+      console.info(`Using team: ${team.name} (${team.id})`);
 
       // Step 3: Create a test project for integration testing
-      console.log(`Creating project: ${projectName} in team ${team.id}`);
+      console.info(`Creating project: ${projectName} in team ${team.id}`);
       const projectReq = { name: projectName, teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
-      console.log(`Created project ID: ${project.id}`);
+      console.info(`Created project ID: ${project.id}`);
     } catch (error) {
       console.error('Failed during setup:', error);
       throw error; // Re-throw to fail the test suite
@@ -101,10 +101,10 @@ describe('E2E Tests: Integration Workflows', () => {
     try {
       // Delete the project created for testing
       if (project) {
-        console.log(`Cleaning up - Deleting project: ${project.id}`);
+        console.info(`Cleaning up - Deleting project: ${project.id}`);
         const deleteResponse = await client.projects.deleteProject(project.id);
         expect(deleteResponse.error).toBeNull();
-        console.log('Project deleted successfully.');
+        console.info('Project deleted successfully.');
       }
     } catch (error) {
       console.warn('Error during cleanup:', error);
@@ -155,13 +155,13 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 1: Get Fivetran connector types (Source selection)
     it.skip('should retrieve available Fivetran connector types', async () => {
-      console.log('Skipping: Getting available Fivetran connector types...');
+      console.info('Skipping: Getting available Fivetran connector types...');
 
       // This test is skipped because direct API access is required for Fivetran metadata
       // In a real implementation, this would call an endpoint like:
       // GET /v1/integrations/fivetran/metadata/connector-types
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -172,7 +172,7 @@ describe('E2E Tests: Integration Workflows', () => {
       // For this test, we would use a common connector type like 'postgres'
       const connectorType = 'postgres';
 
-      console.log(
+      console.info(
         `Skipping: Getting configuration fields for ${connectorType} connector...`,
       );
 
@@ -180,7 +180,7 @@ describe('E2E Tests: Integration Workflows', () => {
       // In a real implementation, this would call an endpoint like:
       // GET /v1/integrations/fivetran/metadata/connector-types/postgres
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -189,25 +189,25 @@ describe('E2E Tests: Integration Workflows', () => {
     // Test 3: Test a Fivetran connection (without actually creating it)
     it.skip('should test a Fivetran connection configuration', async () => {
       // Create a test configuration for a Fivetran connector
-      const testConfig = {
-        service: 'postgres',
-        config: {
-          host: 'example-postgres-server.example.com',
-          port: 5432,
-          user: 'test_user',
-          password: 'test_password',
-          database: 'test_database',
-          schema: 'public',
-        },
-      };
+      // const testConfig = {
+      //   service: 'postgres',
+      //   config: {
+      //     host: 'example-postgres-server.example.com',
+      //     port: 5432,
+      //     user: 'test_user',
+      //     password: 'test_password',
+      //     database: 'test_database',
+      //     schema: 'public',
+      //   },
+      // };
 
-      console.log('Skipping: Testing Fivetran connection configuration...');
+      console.info('Skipping: Testing Fivetran connection configuration...');
 
       // This test is skipped because direct API access is required for testing connections
       // In a real implementation, this would call an endpoint like:
       // POST /v1/integrations/fivetran/connectors?run_setup_tests=true
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -229,7 +229,7 @@ describe('E2E Tests: Integration Workflows', () => {
         name: `e2e-test-postgres-${uniqueId}`,
       };
 
-      console.log('Creating Fivetran datasource...');
+      console.info('Creating Fivetran datasource...');
       try {
         const createResponse = await createFivetranDatasource({
           projectId: project.id,
@@ -239,13 +239,13 @@ describe('E2E Tests: Integration Workflows', () => {
 
         // Log the response
         if (createResponse.error) {
-          console.log(
+          console.info(
             'Expected error creating datasource with example credentials:',
             createResponse.error,
           );
           // Don't fail the test - creating with invalid credentials is expected to error
         } else {
-          console.log(
+          console.info(
             'Successfully created Fivetran datasource:',
             createResponse.data,
           );
@@ -256,7 +256,7 @@ describe('E2E Tests: Integration Workflows', () => {
       } catch (error) {
         console.error('Error creating Fivetran datasource:', error);
         // Don't fail the test - creating with invalid credentials might throw
-        console.log('Datasource creation handled expected error scenario');
+        console.info('Datasource creation handled expected error scenario');
       }
     }, 60000); // Longer timeout for datasource creation
 
@@ -264,22 +264,24 @@ describe('E2E Tests: Integration Workflows', () => {
     it('should clean up Fivetran resources', async () => {
       // Clean up any resources created during testing
       if (fivetranDatasourceId) {
-        console.log(`Cleaning up Fivetran datasource: ${fivetranDatasourceId}`);
+        console.info(
+          `Cleaning up Fivetran datasource: ${fivetranDatasourceId}`,
+        );
         try {
           const deleteResponse =
             await client.datasources.deleteDatasource(fivetranDatasourceId);
           expect(deleteResponse.error).toBeUndefined();
-          console.log('Fivetran datasource deleted successfully');
+          console.info('Fivetran datasource deleted successfully');
         } catch (error) {
           console.warn('Error deleting Fivetran datasource:', error);
         }
       } else {
-        console.log('No Fivetran datasource to clean up');
+        console.info('No Fivetran datasource to clean up');
       }
 
       // If we had direct connector deletion methods, we would clean up the connector as well
       if (fivetranConnectorId) {
-        console.log(
+        console.info(
           `Note: Fivetran connector ${fivetranConnectorId} cleanup would be handled here`,
         );
         // In a real implementation, we would call a method to delete the connector
@@ -291,23 +293,23 @@ describe('E2E Tests: Integration Workflows', () => {
   describe('Database Integration', () => {
     // Test 1: Test database connection
     it.skip('should test a database connection', async () => {
-      console.log('Skipping: Testing database connection...');
+      console.info('Skipping: Testing database connection...');
 
       // Example PostgreSQL configuration
-      const dbConfig = {
-        type: 'postgresql',
-        host: 'example-db-server.example.com',
-        port: 5432,
-        database: 'test_database',
-        username: 'test_user',
-        password: 'test_password',
-      };
+      // const dbConfig = {
+      //   type: 'postgresql',
+      //   host: 'example-db-server.example.com',
+      //   port: 5432,
+      //   database: 'test_database',
+      //   username: 'test_user',
+      //   password: 'test_password',
+      // };
 
       // This test is skipped because direct API access is required for database connections
       // In a real implementation, this would call an endpoint like:
       // POST /v1/database/test-connection
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -315,28 +317,28 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Execute a database query
     it.skip('should execute a database query', async () => {
-      console.log('Skipping: Executing database query...');
+      console.info('Skipping: Executing database query...');
 
       // Example PostgreSQL query parameters
-      const queryParams = {
-        connectionConfig: {
-          type: 'postgresql',
-          host: 'example-db-server.example.com',
-          port: 5432,
-          database: 'test_database',
-          username: 'test_user',
-          password: 'test_password',
-        },
-        query: 'SELECT * FROM users LIMIT 10',
-        projectId: project.id,
-        name: `Database Query ${uniqueId}`,
-      };
+      // const queryParams = {
+      //   connectionConfig: {
+      //     type: 'postgresql',
+      //     host: 'example-db-server.example.com',
+      //     port: 5432,
+      //     database: 'test_database',
+      //     username: 'test_user',
+      //     password: 'test_password',
+      //   },
+      //   query: 'SELECT * FROM users LIMIT 10',
+      //   projectId: project.id,
+      //   name: `Database Query ${uniqueId}`,
+      // };
 
       // This test is skipped because direct API access is required for database queries
       // In a real implementation, this would call an endpoint like:
       // POST /v1/database/execute-query
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -347,27 +349,27 @@ describe('E2E Tests: Integration Workflows', () => {
   describe('HTTP Integration', () => {
     // Test 1: Test HTTP connection
     it.skip('should test an HTTP API connection', async () => {
-      console.log('Skipping: Testing HTTP API connection...');
+      console.info('Skipping: Testing HTTP API connection...');
 
       // Example HTTP API configuration (using public API)
-      const httpConfig = {
-        url: 'https://jsonplaceholder.typicode.com/posts/1',
-        method: 'GET',
-        headers: {},
-        params: {},
-        auth: {
-          type: 'none',
-        },
-        body: {
-          type: 'none',
-        },
-      };
+      // const httpConfig = {
+      //   url: 'https://jsonplaceholder.typicode.com/posts/1',
+      //   method: 'GET',
+      //   headers: {},
+      //   params: {},
+      //   auth: {
+      //     type: 'none',
+      //   },
+      //   body: {
+      //     type: 'none',
+      //   },
+      // };
 
       // This test is skipped because direct API access is required for HTTP connections
       // In a real implementation, this would call an endpoint like:
       // POST /v1/http/test-connection
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -375,29 +377,29 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Execute an HTTP request
     it.skip('should execute an HTTP API request', async () => {
-      console.log('Skipping: Executing HTTP API request...');
+      console.info('Skipping: Executing HTTP API request...');
 
       // Example HTTP API request configuration
-      const requestConfig = {
-        connect_spec: {
-          url: 'https://jsonplaceholder.typicode.com/posts',
-          method: 'GET',
-          headers: {},
-          params: {},
-          auth: {
-            type: 'none',
-          },
-        },
-        projectId: project.id,
-        datasourceId: 'temp-http-datasource', // This would normally be a real datasource ID
-        name: `HTTP Request ${uniqueId}`,
-      };
+      // const requestConfig = {
+      //   connect_spec: {
+      //     url: 'https://jsonplaceholder.typicode.com/posts',
+      //     method: 'GET',
+      //     headers: {},
+      //     params: {},
+      //     auth: {
+      //       type: 'none',
+      //     },
+      //   },
+      //   projectId: project.id,
+      //   datasourceId: 'temp-http-datasource', // This would normally be a real datasource ID
+      //   name: `HTTP Request ${uniqueId}`,
+      // };
 
       // This test is skipped because direct API access is required for HTTP requests
       // In a real implementation, this would call an endpoint like:
       // POST /v1/http/execute-request
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -408,21 +410,21 @@ describe('E2E Tests: Integration Workflows', () => {
   describe('Cosmos DB Integration', () => {
     // Test 1: Test Cosmos DB connection
     it.skip('should test a Cosmos DB connection', async () => {
-      console.log('Skipping: Testing Cosmos DB connection...');
+      console.info('Skipping: Testing Cosmos DB connection...');
 
       // Example Cosmos DB configuration
-      const cosmosConfig = {
-        endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
-        key: 'example-cosmos-key',
-        databaseName: 'test-database',
-        maxContainers: 10,
-      };
+      // const cosmosConfig = {
+      //   endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
+      //   key: 'example-cosmos-key',
+      //   databaseName: 'test-database',
+      //   maxContainers: 10,
+      // };
 
       // This test is skipped because direct API access is required for Cosmos DB connections
       // In a real implementation, this would call an endpoint like:
       // POST /v1/cosmos/cosmos/test-connection
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -430,24 +432,24 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Sample Cosmos DB containers
     it.skip('should sample Cosmos DB containers', async () => {
-      console.log('Skipping: Sampling Cosmos DB containers...');
+      console.info('Skipping: Sampling Cosmos DB containers...');
 
       // Example Cosmos DB sample params
-      const sampleParams = {
-        endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
-        key: 'example-cosmos-key',
-        databaseName: 'test-database',
-        containerNames: ['users', 'products'],
-        projectId: project.id,
-        datasourceId: 'temp-cosmos-datasource', // This would normally be a real datasource ID
-        name: `Cosmos Sample ${uniqueId}`,
-      };
+      // const sampleParams = {
+      //   endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
+      //   key: 'example-cosmos-key',
+      //   databaseName: 'test-database',
+      //   containerNames: ['users', 'products'],
+      //   projectId: project.id,
+      //   datasourceId: 'temp-cosmos-datasource', // This would normally be a real datasource ID
+      //   name: `Cosmos Sample ${uniqueId}`,
+      // };
 
       // This test is skipped because direct API access is required for Cosmos DB container sampling
       // In a real implementation, this would call an endpoint like:
       // POST /v1/cosmos/cosmos/sample-containers
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -455,25 +457,25 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 3: Execute a Cosmos DB query
     it.skip('should execute a Cosmos DB query', async () => {
-      console.log('Skipping: Executing Cosmos DB query...');
+      console.info('Skipping: Executing Cosmos DB query...');
 
       // Example Cosmos DB query params
-      const queryParams = {
-        endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
-        key: 'example-cosmos-key',
-        databaseName: 'test-database',
-        containerName: 'users',
-        query: 'SELECT * FROM c LIMIT 10',
-        projectId: project.id,
-        datasourceId: 'temp-cosmos-datasource', // This would normally be a real datasource ID
-        name: `Cosmos Query ${uniqueId}`,
-      };
+      // const queryParams = {
+      //   endpoint: 'https://example-cosmos-account.documents.azure.com:443/',
+      //   key: 'example-cosmos-key',
+      //   databaseName: 'test-database',
+      //   containerName: 'users',
+      //   query: 'SELECT * FROM c LIMIT 10',
+      //   projectId: project.id,
+      //   datasourceId: 'temp-cosmos-datasource', // This would normally be a real datasource ID
+      //   name: `Cosmos Query ${uniqueId}`,
+      // };
 
       // This test is skipped because direct API access is required for Cosmos DB queries
       // In a real implementation, this would call an endpoint like:
       // POST /v1/cosmos/cosmos/execute-query
 
-      console.log(
+      console.info(
         'This test requires direct API access which is not available in e2e tests',
       );
       expect(true).toBe(true); // Dummy assertion since test is skipped
@@ -502,7 +504,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 1: Test database connection
     it.skip('should test a database connection', async () => {
-      console.log('Testing database connection...');
+      console.info('Testing database connection...');
 
       // Example PostgreSQL configuration
       const dbConfig = {
@@ -517,7 +519,7 @@ describe('E2E Tests: Integration Workflows', () => {
       const connectionResponse = await testDatabaseConnection(dbConfig);
 
       // Since we're using example credentials, we expect this to fail
-      console.log(
+      console.info(
         'Database connection test response:',
         connectionResponse.data || connectionResponse.error,
       );
@@ -528,7 +530,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Execute a database query
     it.skip('should execute a database query', async () => {
-      console.log('Executing database query...');
+      console.info('Executing database query...');
 
       // Example PostgreSQL query
       const queryParams = {
@@ -547,7 +549,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
       try {
         const queryResponse = await executeDatabaseQuery(queryParams);
-        console.log(
+        console.info(
           'Database query execution response:',
           queryResponse.data || queryResponse.error,
         );
@@ -575,7 +577,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 1: Test HTTP connection
     it.skip('should test an HTTP API connection', async () => {
-      console.log('Testing HTTP API connection...');
+      console.info('Testing HTTP API connection...');
 
       // Example HTTP API configuration (using public API)
       const httpConfig = {
@@ -593,7 +595,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
       const connectionResponse = await testHttpConnection(httpConfig);
 
-      console.log(
+      console.info(
         'HTTP connection test response:',
         connectionResponse.data || connectionResponse.error,
       );
@@ -609,7 +611,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Execute an HTTP request
     it.skip('should execute an HTTP API request', async () => {
-      console.log('Executing HTTP API request...');
+      console.info('Executing HTTP API request...');
 
       // Example HTTP API request configuration
       const requestConfig = {
@@ -629,7 +631,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
       try {
         const requestResponse = await executeHttpRequest(requestConfig);
-        console.log(
+        console.info(
           'HTTP request execution response:',
           requestResponse.data || requestResponse.error,
         );
@@ -666,7 +668,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 1: Test Cosmos DB connection
     it.skip('should test a Cosmos DB connection', async () => {
-      console.log('Testing Cosmos DB connection...');
+      console.info('Testing Cosmos DB connection...');
 
       // Example Cosmos DB configuration
       const cosmosConfig = {
@@ -679,7 +681,7 @@ describe('E2E Tests: Integration Workflows', () => {
       const connectionResponse = await testCosmosConnection(cosmosConfig);
 
       // Since we're using example credentials, we expect this to fail
-      console.log(
+      console.info(
         'Cosmos DB connection test response:',
         connectionResponse.data || connectionResponse.error,
       );
@@ -690,7 +692,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 2: Sample Cosmos DB containers
     it.skip('should sample Cosmos DB containers', async () => {
-      console.log('Sampling Cosmos DB containers...');
+      console.info('Sampling Cosmos DB containers...');
 
       // Example Cosmos DB sample params
       const sampleParams = {
@@ -705,7 +707,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
       try {
         const sampleResponse = await sampleCosmosContainers(sampleParams);
-        console.log(
+        console.info(
           'Cosmos DB container sampling response:',
           sampleResponse.data || sampleResponse.error,
         );
@@ -720,7 +722,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
     // Test 3: Execute a Cosmos DB query
     it.skip('should execute a Cosmos DB query', async () => {
-      console.log('Executing Cosmos DB query...');
+      console.info('Executing Cosmos DB query...');
 
       // Example Cosmos DB query params
       const queryParams = {
@@ -736,7 +738,7 @@ describe('E2E Tests: Integration Workflows', () => {
 
       try {
         const queryResponse = await executeCosmosQuery(queryParams);
-        console.log(
+        console.info(
           'Cosmos DB query execution response:',
           queryResponse.data || queryResponse.error,
         );

@@ -71,16 +71,16 @@ describe('E2E Tests: API Deployment Workflow', () => {
       baseURL: baseUrl,
       isServer: true,
       fetch: (url, options) => {
-        console.log('FETCH URL:', url);
+        console.info('FETCH URL:', url);
         return fetch(url, options);
       },
     });
 
-    console.log('Setting up test resources...');
+    console.info('Setting up test resources...');
 
     try {
       // Step 1: Get organizations - use the first available organization
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       const orgsResponse = await client.organizations.list();
 
       if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -91,12 +91,12 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       // Get first organization
       organization = orgsResponse.data[0];
-      console.log(
+      console.info(
         `Using organization: ${organization.name} (${organization.id})`,
       );
 
       // Step 2: Get teams - use the first available team in the organization
-      console.log('Fetching teams...');
+      console.info('Fetching teams...');
       const teamsResponse = await client.teams.getTeams(organization.id);
 
       if (!teamsResponse.data || teamsResponse.data.length === 0) {
@@ -106,15 +106,15 @@ describe('E2E Tests: API Deployment Workflow', () => {
       }
 
       team = teamsResponse.data[0];
-      console.log(`Using team: ${team.name} (${team.id})`);
+      console.info(`Using team: ${team.name} (${team.id})`);
 
       // Step 3: Create a test project for API deployment testing
-      console.log(`Creating project: ${projectName} in team ${team.id}`);
+      console.info(`Creating project: ${projectName} in team ${team.id}`);
       const projectReq = { name: projectName, teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
-      console.log(`Created project ID: ${project.id}`);
+      console.info(`Created project ID: ${project.id}`);
     } catch (error) {
       console.error('Failed during setup:', error);
       throw error; // Re-throw to fail the test suite
@@ -127,7 +127,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
     try {
       // Cleanup: Delete the project created for testing
       if (project?.id) {
-        console.log(`Cleaning up: Deleting project ${project.id}`);
+        console.info(`Cleaning up: Deleting project ${project.id}`);
         await client.projects.deleteProject(project.id);
       }
     } catch (error) {
@@ -137,7 +137,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
   }, 60000); // Increased timeout
 
   it('should create and publish a query program for API use', async () => {
-    console.log(`Creating query program: ${queryProgramName}`);
+    console.info(`Creating query program: ${queryProgramName}`);
     try {
       const createReq: CreateQueryProgramParams = {
         name: queryProgramName,
@@ -157,14 +157,14 @@ describe('E2E Tests: API Deployment Workflow', () => {
       expect(createResponse.data).toBeDefined();
       queryProgram = createResponse.data!;
       expect(queryProgram.id).toBeDefined();
-      console.log(`Created query program ID: ${queryProgram.id}`);
+      console.info(`Created query program ID: ${queryProgram.id}`);
 
       // Add a delay before publishing to allow the query program to be processed fully
-      console.log('Waiting 5 seconds before publishing...');
+      console.info('Waiting 5 seconds before publishing...');
       await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 second delay
 
       // Publish the query program so it can be used in an API
-      console.log(`Publishing query program ID: ${queryProgram.id}`);
+      console.info(`Publishing query program ID: ${queryProgram.id}`);
       try {
         const publishResponse = await client.queryPrograms.publishQueryProgram(
           queryProgram.id,
@@ -175,7 +175,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
             'Error publishing query program:',
             publishResponse.error,
           );
-          console.log(
+          console.info(
             'Will continue with tests using unpublished query program',
           );
           return;
@@ -194,12 +194,12 @@ describe('E2E Tests: API Deployment Workflow', () => {
         }
 
         expect(getResponse.data).toBeDefined();
-        console.log(`Published status: ${getResponse.data!.published}`);
+        console.info(`Published status: ${getResponse.data!.published}`);
 
         if (getResponse.data!.published) {
-          console.log('Query program published successfully');
+          console.info('Query program published successfully');
         } else {
-          console.log(
+          console.info(
             'Query program not showing as published yet, may take time to update',
           );
         }
@@ -208,7 +208,9 @@ describe('E2E Tests: API Deployment Workflow', () => {
           'Unexpected error publishing query program:',
           publishError,
         );
-        console.log('Will continue with tests using unpublished query program');
+        console.info(
+          'Will continue with tests using unpublished query program',
+        );
       }
     } catch (error) {
       console.error('Unexpected error in query program test:', error);
@@ -219,7 +221,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
     // This step corresponds to: CompletionsPlayground, Click "Run", CompletionsPlayground,
     // POST /v1/integrations/chat/[project_id]/chat/completions
 
-    console.log('Testing chat completions with project...');
+    console.info('Testing chat completions with project...');
 
     try {
       // Create a conversation to use for the chat
@@ -234,14 +236,14 @@ describe('E2E Tests: API Deployment Workflow', () => {
           'Error creating conversation:',
           conversationResponse.error,
         );
-        console.log('Skipping chat completions test...');
+        console.info('Skipping chat completions test...');
         return;
       }
 
       const conversationId = conversationResponse.data!.id;
 
       // Send a message to test completions
-      console.log(`Sending chat message in conversation ${conversationId}`);
+      console.info(`Sending chat message in conversation ${conversationId}`);
       const chatResponse = await client.chat.sendMessage(
         conversationId,
         {
@@ -255,16 +257,16 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       // For stream responses, we just verify something was returned
       expect(chatResponse).toBeDefined();
-      console.log('Chat completions request successful');
+      console.info('Chat completions request successful');
     } catch (error) {
       console.error('Error using chat completions:', error);
       // Log but don't fail the test as chat might not be fully available in all environments
-      console.log('Continuing with test suite...');
+      console.info('Continuing with test suite...');
     }
   }, 60000); // Increased timeout
 
   it('should create an API for the project', async () => {
-    console.log(`Creating API: ${apiName} for project ${project.id}`);
+    console.info(`Creating API: ${apiName} for project ${project.id}`);
 
     const createApiParams: CreateAPIParams = {
       projectId: project.id,
@@ -284,7 +286,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
       expect(createResponse.data).toBeDefined();
       api = createResponse.data!;
       expect(api.id).toBeDefined();
-      console.log(`Created API ID: ${api.id}`);
+      console.info(`Created API ID: ${api.id}`);
     } catch (error) {
       console.error('Unexpected error creating API:', error);
       // Continue with the test suite
@@ -294,7 +296,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should get all APIs for a project', async () => {
     // This step corresponds to: DeployedAPIs, Auto-loads first API, APIDetailLiveDocs, apisApi.getProjectApis
 
-    console.log(`Fetching APIs for project ${project.id}`);
+    console.info(`Fetching APIs for project ${project.id}`);
     const apisResponse = await client.apis.getProjectApis(project.id);
 
     if (apisResponse.error) {
@@ -304,29 +306,29 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
     expect(apisResponse.data).toBeDefined();
     expect(Array.isArray(apisResponse.data)).toBe(true);
-    console.log(`Found ${apisResponse.data!.length} APIs for the project`);
+    console.info(`Found ${apisResponse.data!.length} APIs for the project`);
 
     // If our API object is defined, verify it's in the list
     if (api?.id) {
       const foundApi = apisResponse.data!.find((a) => a.id === api.id);
       expect(foundApi).toBeDefined();
-      console.log(`Verified API ${api.id} is in the list`);
+      console.info(`Verified API ${api.id} is in the list`);
     } else {
-      console.log('API object not defined, skipping verification');
+      console.info('API object not defined, skipping verification');
     }
   }, 60000); // 60-second timeout
 
   it('should update API details', async () => {
     // Skip this test if API was not created
     if (!api?.id) {
-      console.log(
+      console.info(
         'Skipping API update test - API was not created successfully',
       );
       return;
     }
 
     // This step corresponds to: APIDetailEditDocs, Save API Details, APIDetailEditDocs, apisApi.updateApi
-    console.log(`Updating API ${api.id} details`);
+    console.info(`Updating API ${api.id} details`);
     const updateParams = {
       description: 'Updated API description for e2e tests',
       version: '1.0.1',
@@ -345,7 +347,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       // Update our local copy
       api = updateResponse.data!;
-      console.log('API details updated successfully');
+      console.info('API details updated successfully');
     } catch (error) {
       console.error('Unexpected error updating API:', error);
     }
@@ -355,7 +357,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
     // This step corresponds to: APIDetailEditDocs, Add Endpoint Click, AddEndpointDialog,
     // apisApi.getProjectPublishedPrograms (to populate dropdown)
 
-    console.log(`Fetching published query programs for project ${project.id}`);
+    console.info(`Fetching published query programs for project ${project.id}`);
     try {
       const programsResponse = await client.apis.getProjectPublishedPrograms(
         project.id,
@@ -370,7 +372,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       expect(programsResponse.data).toBeDefined();
       expect(Array.isArray(programsResponse.data)).toBe(true);
-      console.log(
+      console.info(
         `Found ${programsResponse.data!.length} published query programs`,
       );
 
@@ -380,7 +382,9 @@ describe('E2E Tests: API Deployment Workflow', () => {
           (p) => p.id === queryProgram.id,
         );
         expect(foundProgram).toBeDefined();
-        console.log(`Verified query program ${queryProgram.id} is in the list`);
+        console.info(
+          `Verified query program ${queryProgram.id} is in the list`,
+        );
       }
     } catch (error) {
       console.error('Unexpected error getting published programs:', error);
@@ -390,14 +394,14 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should create an API endpoint for the query program', async () => {
     // Skip if either API or query program is not available
     if (!api?.id || !queryProgram?.id) {
-      console.log(
+      console.info(
         'Skipping endpoint creation - API or QueryProgram not available',
       );
       return;
     }
 
     // This step corresponds to: AddEndpointDialog, Add Success, APIDetailEditDocs, apisApi.createApiEndpoint
-    console.log(`Creating API endpoint ${endpointName} for API ${api.id}`);
+    console.info(`Creating API endpoint ${endpointName} for API ${api.id}`);
     const createEndpointParams: CreateAPIEndpointParams = {
       apiId: api.id,
       endpointName: endpointName,
@@ -434,7 +438,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
       expect(createResponse.data).toBeDefined();
       endpoint = createResponse.data!;
       expect(endpoint.id).toBeDefined();
-      console.log(`Created API endpoint ID: ${endpoint.id}`);
+      console.info(`Created API endpoint ID: ${endpoint.id}`);
     } catch (error) {
       console.error('Unexpected error creating endpoint:', error);
     }
@@ -443,11 +447,11 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should get all endpoints for an API', async () => {
     // Skip if API is not available
     if (!api?.id) {
-      console.log('Skipping get endpoints test - API not available');
+      console.info('Skipping get endpoints test - API not available');
       return;
     }
 
-    console.log(`Fetching endpoints for API ${api.id}`);
+    console.info(`Fetching endpoints for API ${api.id}`);
     try {
       const endpointsResponse = await client.apis.getApiEndpoints(api.id);
       if (endpointsResponse.error) {
@@ -457,7 +461,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       expect(endpointsResponse.data).toBeDefined();
       expect(Array.isArray(endpointsResponse.data)).toBe(true);
-      console.log(
+      console.info(
         `Found ${endpointsResponse.data!.length} endpoints for the API`,
       );
 
@@ -467,7 +471,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
           (e) => e.id === endpoint.id,
         );
         expect(foundEndpoint).toBeDefined();
-        console.log(`Verified endpoint ${endpoint.id} is in the list`);
+        console.info(`Verified endpoint ${endpoint.id} is in the list`);
       }
     } catch (error) {
       console.error('Unexpected error getting endpoints:', error);
@@ -477,11 +481,11 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should update an API endpoint', async () => {
     // Skip if endpoint is not available
     if (!endpoint?.id) {
-      console.log('Skipping update endpoint test - Endpoint not available');
+      console.info('Skipping update endpoint test - Endpoint not available');
       return;
     }
 
-    console.log(`Updating API endpoint ${endpoint.id}`);
+    console.info(`Updating API endpoint ${endpoint.id}`);
     const updateParams = {
       description: 'Updated endpoint description for e2e tests',
       httpMethod: 'POST' as const, // Using type assertion to match the expected enum
@@ -503,7 +507,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       // Update our local copy
       endpoint = updateResponse.data!;
-      console.log('API endpoint updated successfully');
+      console.info('API endpoint updated successfully');
     } catch (error) {
       console.error('Unexpected error updating endpoint:', error);
     }
@@ -512,14 +516,14 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should delete an API endpoint', async () => {
     // Skip if endpoint or API is not available
     if (!endpoint?.id || !api?.id) {
-      console.log(
+      console.info(
         'Skipping delete endpoint test - Endpoint or API not available',
       );
       return;
     }
 
     // This step corresponds to: APIDetailEditDocs, Delete Endpoint, APIDetailEditDocs, apisApi.deleteApiEndpoint
-    console.log(`Deleting API endpoint ${endpoint.id}`);
+    console.info(`Deleting API endpoint ${endpoint.id}`);
     try {
       const deleteResponse = await client.apis.deleteApiEndpoint(endpoint.id);
       if (deleteResponse.error) {
@@ -542,7 +546,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
         (e) => e.id === endpoint.id,
       );
       expect(foundEndpoint).toBeUndefined();
-      console.log('API endpoint deleted successfully');
+      console.info('API endpoint deleted successfully');
     } catch (error) {
       console.error('Unexpected error deleting endpoint:', error);
     }
@@ -551,11 +555,11 @@ describe('E2E Tests: API Deployment Workflow', () => {
   it('should delete the API', async () => {
     // Skip if API is not available
     if (!api?.id) {
-      console.log('Skipping delete API test - API not available');
+      console.info('Skipping delete API test - API not available');
       return;
     }
 
-    console.log(`Deleting API ${api.id}`);
+    console.info(`Deleting API ${api.id}`);
     try {
       const deleteResponse = await client.apis.deleteApi(api.id);
       if (deleteResponse.error) {
@@ -568,14 +572,14 @@ describe('E2E Tests: API Deployment Workflow', () => {
         const getResponse = await client.apis.getApi(api.id);
         // If the API has a deletedAt field, it means soft delete was used
         if (getResponse.data?.deletedAt) {
-          console.log('API soft deleted successfully');
+          console.info('API soft deleted successfully');
         } else {
           console.warn('API still exists after delete operation');
         }
       } catch (error: any) {
         // If we get a 404, it means hard delete was used
         if (error.response?.status === 404) {
-          console.log('API hard deleted successfully (404 response)');
+          console.info('API hard deleted successfully (404 response)');
         } else {
           console.error('Unexpected error when checking deleted API:', error);
         }
@@ -586,11 +590,11 @@ describe('E2E Tests: API Deployment Workflow', () => {
   }, 60000); // 60-second timeout
 
   it('should clean up by deleting the query program', async () => {
-    console.log(`Deleting query program ${queryProgram.id}`);
+    console.info(`Deleting query program ${queryProgram.id}`);
     const deleteResponse = await client.queryPrograms.deleteQueryProgram(
       queryProgram.id,
     );
     expect(deleteResponse.error).toBeUndefined();
-    console.log('Query program deleted successfully');
+    console.info('Query program deleted successfully');
   }, 60000); // 60-second timeout
 });

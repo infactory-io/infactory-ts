@@ -36,7 +36,7 @@ const client = new InfactoryClient({
  */
 async function queryProgramsExample() {
   try {
-    console.log('=== Query Programs API Example ===');
+    console.info('=== Query Programs API Example ===');
 
     // First, get the current user to find a project
     const userResponse = await client.users.getCurrentUser();
@@ -57,7 +57,7 @@ async function queryProgramsExample() {
       await client.users.getTeamsWithOrganizationsAndProjects({
         userId: userId,
       });
-    console.log('Teams response:', teamsResponse);
+    console.info('Teams response:', teamsResponse);
 
     if (
       teamsResponse.error ||
@@ -80,10 +80,10 @@ async function queryProgramsExample() {
     }
 
     const projectId = firstTeam.projects[0].id;
-    console.log(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
+    console.info(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
 
     // Get query programs for the project
-    console.log('Getting query programs for the project:');
+    console.info('Getting query programs for the project:');
     const queryProgramsResponse =
       await client.queryPrograms.listQueryPrograms(projectId);
     if (queryProgramsResponse.error) {
@@ -92,7 +92,7 @@ async function queryProgramsExample() {
         queryProgramsResponse.error,
       );
     } else {
-      console.log(
+      console.info(
         `Found ${queryProgramsResponse.data?.length || 0} query programs`,
       );
       if (queryProgramsResponse.data && queryProgramsResponse.data.length > 0) {
@@ -104,7 +104,7 @@ async function queryProgramsExample() {
           }),
         );
         queryPrograms.forEach((qp, index) => {
-          console.log(
+          console.info(
             `${index + 1}. ${qp.name} (ID: ${qp.id}) - Published: ${qp.published ? 'Yes' : 'No'}`,
           );
         });
@@ -112,7 +112,7 @@ async function queryProgramsExample() {
     }
 
     // Create a new query program
-    console.log('\n2. Creating a new query program:');
+    console.info('\n2. Creating a new query program:');
     const createResponse = await client.queryPrograms.createQueryProgram({
       name: 'Example Query Program',
       projectId: projectId,
@@ -137,14 +137,14 @@ class AnswerQueryProgram(QueryProgram):
     if (createResponse.error) {
       console.error('Error creating query program:', createResponse.error);
     } else {
-      console.log(
+      console.info(
         `Created query program: ${createResponse.data?.name} (ID: ${createResponse.data?.id})`,
       );
 
       // Get details of the created query program
       const queryProgramId = createResponse.data?.id;
       if (queryProgramId) {
-        console.log('\n3. Getting query program details:');
+        console.info('\n3. Getting query program details:');
         const detailsResponse =
           await client.queryPrograms.getQueryProgram(queryProgramId);
         if (detailsResponse.error) {
@@ -153,26 +153,26 @@ class AnswerQueryProgram(QueryProgram):
             detailsResponse.error,
           );
         } else {
-          console.log('Query Program Details:');
-          console.log(`- ID: ${detailsResponse.data?.id}`);
-          console.log(`- Name: ${detailsResponse.data?.name}`);
-          console.log(`- Project ID: ${detailsResponse.data?.projectId}`);
-          console.log(`- Query: ${detailsResponse.data?.query}`);
-          console.log(
+          console.info('Query Program Details:');
+          console.info(`- ID: ${detailsResponse.data?.id}`);
+          console.info(`- Name: ${detailsResponse.data?.name}`);
+          console.info(`- Project ID: ${detailsResponse.data?.projectId}`);
+          console.info(`- Query: ${detailsResponse.data?.query}`);
+          console.info(
             `- Published: ${detailsResponse.data?.published ? 'Yes' : 'No'}`,
           );
-          console.log(`- Created: ${detailsResponse.data?.createdAt}`);
+          console.info(`- Created: ${detailsResponse.data?.createdAt}`);
         }
 
         // Add a delay before executing the query program
-        console.log(
+        console.info(
           '\n4. Waiting 5 seconds before executing the query program...',
         );
         await delay(5000); // 5 second delay - increased from 2 to 5 seconds
 
         try {
           // Execute the query program
-          console.log('Executing the query program:');
+          console.info('Executing the query program:');
           const executeResponse =
             await client.queryPrograms.evaluateQueryProgramSync(
               projectId,
@@ -180,43 +180,43 @@ class AnswerQueryProgram(QueryProgram):
             );
 
           if (isReadableStream(executeResponse)) {
-            console.log('Received streaming response, processing events...');
+            console.info('Received streaming response, processing events...');
             const processedResponse =
               await processStreamToApiResponse(executeResponse);
-            console.log('Execution result:', processedResponse.data);
+            console.info('Execution result:', processedResponse.data);
           } else if (executeResponse.error) {
             console.error(
               'Error executing query program:',
               executeResponse.error,
             );
-            console.log(
+            console.info(
               'Note: This may be because the query program is not yet ready to be executed.',
             );
           } else {
-            console.log('Execution result:');
-            console.log(`- Success: ${executeResponse.data?.success}`);
-            console.log(
+            console.info('Execution result:');
+            console.info(`- Success: ${executeResponse.data?.success}`);
+            console.info(
               `- Result: ${JSON.stringify(executeResponse.data?.result, null, 2)}`,
             );
-            console.log(
+            console.info(
               `- Execution Time: ${executeResponse.data?.executionTime}s`,
             );
           }
         } catch (error) {
           console.error('Unexpected error during execution:', error);
-          console.log(
+          console.info(
             'Note: New query programs may need more time before they can be executed.',
           );
         }
 
         // Add a delay before publishing the query program
-        console.log(
+        console.info(
           '\n5. Waiting 5 seconds before publishing the query program...',
         );
         await delay(5000); // 5 second delay - increased from 2 to 5 seconds
 
         // Publish the query program
-        console.log('Publishing the query program:');
+        console.info('Publishing the query program:');
         const publishResponse =
           await client.queryPrograms.publishQueryProgram(queryProgramId);
         if (publishResponse.error) {
@@ -224,31 +224,31 @@ class AnswerQueryProgram(QueryProgram):
             'Error publishing query program:',
             publishResponse.error,
           );
-          console.log(
+          console.info(
             'Note: Some query programs may not be eligible for publishing or may require additional processing time.',
           );
         } else {
-          console.log(
+          console.info(
             `Query program published successfully. Published status: ${publishResponse.data?.published}`,
           );
         }
 
         // Clean up by deleting the query program
-        console.log('\n6. Cleaning up - Deleting the query program:');
+        console.info('\n6. Cleaning up - Deleting the query program:');
         const deleteResponse =
           await client.queryPrograms.deleteQueryProgram(queryProgramId);
         if (deleteResponse.error) {
           console.error('Error deleting query program:', deleteResponse.error);
         } else {
-          console.log('Query program deleted successfully');
+          console.info('Query program deleted successfully');
         }
 
         // Try to get the query program again - should return 404
-        console.log('\n7. Getting query program details again:');
+        console.info('\n7. Getting query program details again:');
         const getResponse =
           await client.queryPrograms.getQueryProgram(queryProgramId);
         if (getResponse.error) {
-          console.log(
+          console.info(
             'Error getting query program details:',
             getResponse.error,
           );
@@ -264,5 +264,5 @@ class AnswerQueryProgram(QueryProgram):
 
 // Run the example
 queryProgramsExample()
-  .then(() => console.log('\nQuery Programs example completed'))
+  .then(() => console.info('\nQuery Programs example completed'))
   .catch((error) => console.error('Fatal error:', error));

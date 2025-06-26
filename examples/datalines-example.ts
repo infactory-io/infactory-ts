@@ -22,7 +22,7 @@ const client = new InfactoryClient({
  */
 async function datalinesExample() {
   try {
-    console.log('=== Datalines API Example ===');
+    console.info('=== Datalines API Example ===');
 
     // First, get the current user to find a project
     const userResponse = await client.users.getCurrentUser();
@@ -58,25 +58,25 @@ async function datalinesExample() {
     }
 
     const projectId = firstTeam.projects[0].id;
-    console.log(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
+    console.info(`Using project: ${firstTeam.projects[0].name} (${projectId})`);
 
     // List datalines for the project
-    console.log('\n1. Listing datalines for the project:');
+    console.info('\n1. Listing datalines for the project:');
     const datalinesResponse =
       await client.datalines.getProjectDatalines(projectId);
     if (datalinesResponse.error) {
       console.error('Error listing datalines:', datalinesResponse.error);
     } else {
-      console.log(`Found ${datalinesResponse.data?.length || 0} datalines`);
+      console.info(`Found ${datalinesResponse.data?.length || 0} datalines`);
       if (datalinesResponse.data && datalinesResponse.data.length > 0) {
         datalinesResponse.data.forEach((dl, index) => {
-          console.log(`${index + 1}. ${dl.name || 'Unnamed'} (ID: ${dl.id})`);
+          console.info(`${index + 1}. ${dl.name || 'Unnamed'} (ID: ${dl.id})`);
         });
 
         // If we have any datalines, get details for the first one
         const firstDataline = datalinesResponse.data[0];
 
-        console.log('\n2. Getting dataline details:');
+        console.info('\n2. Getting dataline details:');
         const detailsResponse = await client.datalines.getDataline(
           firstDataline.id,
         );
@@ -86,11 +86,11 @@ async function datalinesExample() {
             detailsResponse.error,
           );
         } else {
-          console.log('Dataline Details:');
-          console.log(`- ID: ${detailsResponse.data?.id}`);
-          console.log(`- Name: ${detailsResponse.data?.name}`);
-          console.log(`- Project ID: ${detailsResponse.data?.projectId}`);
-          console.log(
+          console.info('Dataline Details:');
+          console.info(`- ID: ${detailsResponse.data?.id}`);
+          console.info(`- Name: ${detailsResponse.data?.name}`);
+          console.info(`- Project ID: ${detailsResponse.data?.projectId}`);
+          console.info(
             `- Data Object ID: ${detailsResponse.data?.dataobjectId}`,
           );
 
@@ -100,15 +100,15 @@ async function datalinesExample() {
               0,
               100,
             );
-            console.log(
+            console.info(
               `- Schema Code (snippet): ${schemaSnippet}${detailsResponse.data.schemaCode.length > 100 ? '...' : ''}`,
             );
           }
 
           // If the dataline has a data model, print it
           if (detailsResponse.data?.dataModel) {
-            console.log('- Data Model:');
-            console.log(
+            console.info('- Data Model:');
+            console.info(
               JSON.stringify(detailsResponse.data.dataModel, null, 2),
             );
           }
@@ -117,7 +117,7 @@ async function datalinesExample() {
     }
 
     // Create a new dataline
-    console.log('\n3. Creating a new dataline:');
+    console.info('\n3. Creating a new dataline:');
     // First, let's check if we have any datasources to connect to
     const datasourcesResponse =
       await client.datasources.getProjectDatasources(projectId);
@@ -128,7 +128,7 @@ async function datalinesExample() {
       !datasourcesResponse.data ||
       datasourcesResponse.data.length === 0
     ) {
-      console.log(
+      console.info(
         'No datasources found for this project. Skipping dataline creation.',
       );
     } else {
@@ -159,7 +159,7 @@ async function datalinesExample() {
       if (createResponse.error) {
         console.error('Error creating dataline:', createResponse.error);
       } else {
-        console.log(
+        console.info(
           `Created dataline: ${createResponse.data?.name} (ID: ${createResponse.data?.id})`,
         );
 
@@ -167,7 +167,7 @@ async function datalinesExample() {
         if (createResponse.data) {
           const datalineId = createResponse.data.id;
 
-          console.log('\n4. Updating the dataline:');
+          console.info('\n4. Updating the dataline:');
           const updateResponse = await client.datalines.updateDataline(
             datalineId,
             {
@@ -198,10 +198,10 @@ async function datalinesExample() {
           if (updateResponse.error) {
             console.error('Error updating dataline:', updateResponse.error);
           } else {
-            console.log(`Updated dataline: ${updateResponse.data?.name}`);
+            console.info(`Updated dataline: ${updateResponse.data?.name}`);
 
             // Update just the schema
-            console.log('\n5. Updating the dataline schema:');
+            console.info('\n5. Updating the dataline schema:');
             const updatedSchemaCode = `
             {
               "title": "Updated Example Schema",
@@ -228,17 +228,17 @@ async function datalinesExample() {
                 schemaUpdateResponse.error,
               );
             } else {
-              console.log('Dataline schema updated successfully');
+              console.info('Dataline schema updated successfully');
             }
 
             // Clean up by deleting the dataline
-            console.log('\n6. Cleaning up - Deleting the dataline:');
+            console.info('\n6. Cleaning up - Deleting the dataline:');
             const deleteResponse =
               await client.datalines.deleteDataline(datalineId);
             if (deleteResponse.error) {
               console.error('Error deleting dataline:', deleteResponse.error);
             } else {
-              console.log('Dataline deleted successfully');
+              console.info('Dataline deleted successfully');
             }
           }
         }
@@ -251,5 +251,5 @@ async function datalinesExample() {
 
 // Run the example
 datalinesExample()
-  .then(() => console.log('\nDatalines example completed'))
+  .then(() => console.info('\nDatalines example completed'))
   .catch((error) => console.error('Fatal error:', error));

@@ -14,7 +14,7 @@ if (!apiKey) {
 
 // Get base URL from environment variable or use default
 const baseURL = process.env.NF_BASE_URL || 'https://api.infactory.ai';
-console.log(`Using API base URL: ${baseURL}`);
+console.info(`Using API base URL: ${baseURL}`);
 
 // Create a new instance of the InfactoryClient
 const client = new InfactoryClient({
@@ -30,7 +30,7 @@ const projectId = '51748cd5-da55-437e-a707-947d972cf9e4';
  */
 async function listQueryPrograms() {
   try {
-    console.log(`Listing query programs for project ID: ${projectId}`);
+    console.info(`Listing query programs for project ID: ${projectId}`);
 
     // Call the listQueryPrograms method
     const response = await client.queryPrograms.listQueryPrograms({
@@ -43,15 +43,15 @@ async function listQueryPrograms() {
     }
 
     // Display the results
-    console.log(`Found ${response.data?.length || 0} query programs:`);
+    console.info(`Found ${response.data?.length || 0} query programs:`);
     if (response.data && response.data.length > 0) {
       response.data.forEach((qp, index) => {
-        console.log(
+        console.info(
           `${index + 1}. ${qp.name || 'Unnamed'} (ID: ${qp.id}) - Published: ${qp.published ? 'Yes' : 'No'}`,
         );
       });
     } else {
-      console.log('No query programs found for this project.');
+      console.info('No query programs found for this project.');
     }
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -60,5 +60,5 @@ async function listQueryPrograms() {
 
 // Run the function
 listQueryPrograms()
-  .then(() => console.log('\nExample completed'))
+  .then(() => console.info('\nExample completed'))
   .catch((error) => console.error('Fatal error:', error));

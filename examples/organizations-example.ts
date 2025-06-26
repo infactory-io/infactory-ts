@@ -22,10 +22,10 @@ const client = new InfactoryClient({
  */
 async function organizationsExample() {
   try {
-    console.log('=== Organizations API Example ===');
+    console.info('=== Organizations API Example ===');
 
     // List all organizations
-    console.log('\n1. Listing all organizations:');
+    console.info('\n1. Listing all organizations:');
     const organizationsResponse = await client.organizations.list();
     if (organizationsResponse.error) {
       console.error(
@@ -33,17 +33,17 @@ async function organizationsExample() {
         organizationsResponse.error,
       );
     } else {
-      console.log(
+      console.info(
         `Found ${organizationsResponse.data?.length || 0} organizations`,
       );
       if (organizationsResponse.data && organizationsResponse.data.length > 0) {
         organizationsResponse.data.forEach((organization) => {
-          console.log(`- ${organization.name} (ID: ${organization.id})`);
+          console.info(`- ${organization.name} (ID: ${organization.id})`);
         });
 
         // Get details for the first organization
         const firstOrgId = organizationsResponse.data[0].id;
-        console.log(`\n2. Getting details for organization ${firstOrgId}:`);
+        console.info(`\n2. Getting details for organization ${firstOrgId}:`);
 
         const organizationResponse = await client.organizations.get(firstOrgId);
         if (organizationResponse.error) {
@@ -52,18 +52,18 @@ async function organizationsExample() {
             organizationResponse.error,
           );
         } else {
-          console.log('Organization details:');
-          console.log(JSON.stringify(organizationResponse.data, null, 2));
+          console.info('Organization details:');
+          console.info(JSON.stringify(organizationResponse.data, null, 2));
 
           // List teams for this organization
-          //   console.log(`\n3. Listing teams for organization ${firstOrgId}:`);
+          //   console.info(`\n3. Listing teams for organization ${firstOrgId}:`);
           //   const teamsResponse = await client.teams.getTeams(firstOrgId);
           //   if (teamsResponse.error) {
           //     console.error('Error listing teams:', teamsResponse.error);
           //   } else {
-          //     console.log(`Found ${teamsResponse.data?.length || 0} teams`);
+          //     console.info(`Found ${teamsResponse.data?.length || 0} teams`);
           //     teamsResponse.data?.forEach((team) => {
-          //       console.log(`- ${team.name} (ID: ${team.id})`);
+          //       console.info(`- ${team.name} (ID: ${team.id})`);
           //     });
           //   }
         }
@@ -72,7 +72,7 @@ async function organizationsExample() {
 
     // Create a new organization example (commented out to prevent accidental creation)
     /*
-        console.log('\n4. Creating a new organization:');
+        console.info('\n4. Creating a new organization:');
         const createResponse = await client.organizations.create({
           name: 'Example Organization',
           description: 'An organization created via the SDK example',
@@ -82,12 +82,12 @@ async function organizationsExample() {
         if (createResponse.error) {
           console.error('Error creating organization:', createResponse.error);
         } else {
-          console.log('Organization created:');
-          console.log(JSON.stringify(createResponse.data, null, 2));
+          console.info('Organization created:');
+          console.info(JSON.stringify(createResponse.data, null, 2));
           
           // Update the created organization
           const orgId = createResponse.data!.id;
-          console.log(`\n5. Updating organization ${orgId}:`);
+          console.info(`\n5. Updating organization ${orgId}:`);
           
           const updateResponse = await client.organizations.update(orgId, {
             description: 'Updated description via SDK example'
@@ -96,31 +96,31 @@ async function organizationsExample() {
           if (updateResponse.error) {
             console.error('Error updating organization:', updateResponse.error);
           } else {
-            console.log('Organization updated:');
-            console.log(JSON.stringify(updateResponse.data, null, 2));
+            console.info('Organization updated:');
+            console.info(JSON.stringify(updateResponse.data, null, 2));
           }
           
           // Delete the created organization
-          console.log(`\n6. Deleting organization ${orgId}:`);
+          console.info(`\n6. Deleting organization ${orgId}:`);
           
           const deleteResponse = await client.organizations.delete(orgId);
           if (deleteResponse.error) {
             console.error('Error deleting organization:', deleteResponse.error);
           } else {
-            console.log('Organization deleted successfully');
+            console.info('Organization deleted successfully');
           }
         }
         */
 
     // Example of organization client-side validation
-    console.log('\n7. Client-side validation:');
+    console.info('\n7. Client-side validation:');
     try {
       // @ts-ignore - Intentionally passing invalid parameters for demonstration
       await client.organizations.create({
         name: '', // Empty name should be invalid
       });
     } catch (validationError) {
-      console.log(
+      console.info(
         'Validation caught invalid parameters:',
         (validationError as Error).message,
       );
@@ -132,5 +132,5 @@ async function organizationsExample() {
 
 // Run the example
 organizationsExample()
-  .then(() => console.log('\nOrganizations example completed'))
+  .then(() => console.info('\nOrganizations example completed'))
   .catch((error) => console.error('Fatal error:', error));

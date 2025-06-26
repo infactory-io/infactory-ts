@@ -185,7 +185,7 @@ const client = new InfactoryClient({
 
 // Check if authenticated
 if (authManager.isAuthenticated()) {
-  console.log('Authenticated with API key!');
+  console.info('Authenticated with API key!');
 }
 
 // Update API key if needed
@@ -281,15 +281,15 @@ async function handleEventStreamingResponse() {
     for await (const event of streamEvents(result)) {
       switch (event.type) {
         case 'data':
-          console.log('Received data chunk:', event.data);
+          console.info('Received data chunk:', event.data);
           // Process data in real-time
           break;
         case 'thinking':
-          console.log('AI is thinking:', event.content);
+          console.info('AI is thinking:', event.content);
           // Update UI with thinking state
           break;
         case 'completion':
-          console.log('Received completion:', event.content);
+          console.info('Received completion:', event.content);
           // Handle final result
           break;
         case 'error':

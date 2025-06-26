@@ -48,7 +48,7 @@ describe('Subscription Management E2E Tests', () => {
       );
     }
 
-    console.log(`Connecting to API at: ${baseURL}`);
+    console.info(`Connecting to API at: ${baseURL}`);
 
     // Create client instance with absolute URL
     client = new InfactoryClient({
@@ -61,7 +61,7 @@ describe('Subscription Management E2E Tests', () => {
     // We'll skip tests if we can't connect to the API
     const skipTests = process.env.SKIP_E2E_TESTS === 'true';
     if (skipTests) {
-      console.log('Skipping E2E tests as SKIP_E2E_TESTS=true');
+      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
       // Mark all tests as skipped
       test.skipIf(true)('Skipping all tests', () => {});
       return;
@@ -69,7 +69,7 @@ describe('Subscription Management E2E Tests', () => {
 
     try {
       // Step 1: Get current user
-      console.log('Fetching current user...');
+      console.info('Fetching current user...');
       const userResponse = await client.auth.getMe();
 
       if (userResponse.error || !userResponse.data) {
@@ -81,10 +81,10 @@ describe('Subscription Management E2E Tests', () => {
       testData.user.id = userResponse.data.id;
       testData.user.name = userResponse.data.name || userResponse.data.email;
       testData.user.email = userResponse.data.email;
-      console.log(`Using user: ${testData.user.name} (${testData.user.id})`);
+      console.info(`Using user: ${testData.user.name} (${testData.user.id})`);
 
       // Step 2: Get organizations - use the first available organization
-      console.log('Fetching organizations...');
+      console.info('Fetching organizations...');
       const orgsResponse = await client.organizations.list();
 
       if (!orgsResponse.data || orgsResponse.data.length === 0) {
@@ -97,7 +97,7 @@ describe('Subscription Management E2E Tests', () => {
       testData.organization.id = organization.id;
       testData.organization.name = organization.name;
       testData.organization.clerkOrgId = organization.clerkOrgId || '';
-      console.log(
+      console.info(
         `Using organization: ${testData.organization.name} (${testData.organization.id})`,
       );
 
@@ -109,17 +109,17 @@ describe('Subscription Management E2E Tests', () => {
 
       // Step 3: Get current billing overage settings
       try {
-        console.log('Fetching billing settings...');
+        console.info('Fetching billing settings...');
         // Use the new subscriptions client instead of direct HTTP calls
         await client.subscriptions.updateOverageSettings({
           organizationId: testData.organization.id,
           overageEnabled: testData.billing.originalOverageSetting,
         });
 
-        console.log(
+        console.info(
           `Current overage setting: ${testData.billing.originalOverageSetting}`,
         );
-      } catch (error) {
+      } catch {
         console.warn(
           'Unable to fetch billing settings, proceeding with defaults',
         );
@@ -132,11 +132,11 @@ describe('Subscription Management E2E Tests', () => {
 
   afterAll(async () => {
     // Clean up any changes made during tests
-    console.log('Cleaning up test data...');
+    console.info('Cleaning up test data...');
 
     // Restore original billing settings if changed
     try {
-      console.log('Restoring original billing settings');
+      console.info('Restoring original billing settings');
       await client.subscriptions.updateOverageSettings({
         organizationId: testData.organization.id,
         overageEnabled: testData.billing.originalOverageSetting,
@@ -155,7 +155,7 @@ describe('Subscription Management E2E Tests', () => {
       return;
     }
 
-    console.log('Fetching subscription information');
+    console.info('Fetching subscription information');
     const response = await client.subscriptions.getSubscription(
       testData.organization.clerkOrgId,
     );
@@ -170,7 +170,7 @@ describe('Subscription Management E2E Tests', () => {
       testData.billing.subscription.currentPeriodEnd =
         response.data.currentPeriodEnd;
 
-      console.log('Subscription info:', {
+      console.info('Subscription info:', {
         id: response.data.id,
         status: response.data.status,
         product: response.data.product?.name,
@@ -178,25 +178,27 @@ describe('Subscription Management E2E Tests', () => {
         currentPeriodEnd: response.data.currentPeriodEnd,
       });
     } else if (response.error) {
-      console.log(`No subscription found or error: ${response.error.message}`);
+      console.info(`No subscription found or error: ${response.error.message}`);
     }
   });
 
   test('2. Create Customer in Stripe', async () => {
     // We'll attempt to create a customer but not assert anything specific
     // as the organization might already have a customer in Stripe
-    console.log('Attempting to create Stripe customer for the organization');
+    console.info('Attempting to create Stripe customer for the organization');
     const response = await client.subscriptions.createCustomer();
 
     if (response.data) {
-      console.log('Customer creation response:', response.data);
+      console.info('Customer creation response:', response.data);
     } else if (response.error) {
-      console.log(
+      console.info(
         `Customer creation failed or already exists: ${response.error.message}`,
       );
       // Don't fail the test if the customer already exists
       if (response.error.status === 409) {
-        console.log('Customer already exists - this is expected in most cases');
+        console.info(
+          'Customer already exists - this is expected in most cases',
+        );
       }
     }
   });
@@ -209,27 +211,27 @@ describe('Subscription Management E2E Tests', () => {
     }
 
     const returnUrl = 'https://example.com/billing';
-    console.log('Creating portal session');
+    console.info('Creating portal session');
     const response = await client.subscriptions.createPortalSession(
       testData.organization.clerkOrgId,
       returnUrl,
     );
 
     if (response.data) {
-      console.log(
+      console.info(
         'Portal session URL created:',
         response.data.url.substring(0, 60) + '...',
       );
       // In a real application, the user would be redirected to this URL
       expect(response.data.url).toContain('billing.stripe.com');
     } else if (response.error) {
-      console.log(`Portal session creation failed: ${response.error.message}`);
+      console.info(`Portal session creation failed: ${response.error.message}`);
       // Don't fail the test as the account might not be configured for Stripe
     }
   });
 
   test('4. Update Overage Settings', async () => {
-    console.log('Updating overage settings');
+    console.info('Updating overage settings');
     // Toggle the current overage setting
     const newSetting = !testData.billing.originalOverageSetting;
 
@@ -239,9 +241,9 @@ describe('Subscription Management E2E Tests', () => {
     });
 
     if (response.data) {
-      console.log(`Overage setting updated to: ${newSetting}`);
+      console.info(`Overage setting updated to: ${newSetting}`);
     } else if (response.error) {
-      console.log(`Overage setting update failed: ${response.error.message}`);
+      console.info(`Overage setting update failed: ${response.error.message}`);
       // Don't fail the test as permissions might be restrictive in test environment
     }
 
@@ -249,8 +251,8 @@ describe('Subscription Management E2E Tests', () => {
     try {
       // We don't have a direct get method for overage settings in the client
       // so we'll just log the expected setting
-      console.log(`Setting expected to be updated to: ${newSetting}`);
-    } catch (error) {
+      console.info(`Setting expected to be updated to: ${newSetting}`);
+    } catch {
       console.warn('Unable to verify overage settings');
     }
   });
@@ -262,7 +264,7 @@ describe('Subscription Management E2E Tests', () => {
       return;
     }
 
-    console.log('Fetching usage information');
+    console.info('Fetching usage information');
     const response = await client.subscriptions.getUsage(
       testData.organization.clerkOrgId,
     );
@@ -272,7 +274,7 @@ describe('Subscription Management E2E Tests', () => {
       testData.billing.usage.currentUsage = response.data.currentUsage;
       testData.billing.usage.includedQuantity = response.data.includedQuantity;
 
-      console.log('Usage info:', {
+      console.info('Usage info:', {
         currentUsage: response.data.currentUsage,
         includedQuantity: response.data.includedQuantity,
         usagePercentage:
@@ -284,35 +286,35 @@ describe('Subscription Management E2E Tests', () => {
 
       // Log metered features usage
       if (response.data.meteredFeatures) {
-        console.log('Metered features:');
+        console.info('Metered features:');
         for (const [feature, usage] of Object.entries(
           response.data.meteredFeatures,
         )) {
-          console.log(`- ${feature}: ${usage.used}/${usage.included}`);
+          console.info(`- ${feature}: ${usage.used}/${usage.included}`);
         }
       }
     } else if (response.error) {
-      console.log(`Usage information unavailable: ${response.error.message}`);
+      console.info(`Usage information unavailable: ${response.error.message}`);
       // Don't fail the test as usage tracking might not be enabled
     }
   });
 
   test('6. List Available Tiers', async () => {
-    console.log('Fetching available subscription tiers');
+    console.info('Fetching available subscription tiers');
     const response = await client.subscriptions.listAvailableTiers();
 
     if (response.data) {
       // Store products for later tests
       testData.billing.products = response.data;
 
-      console.log(`Found ${response.data.length} available product tiers:`);
+      console.info(`Found ${response.data.length} available product tiers:`);
       for (const tier of response.data) {
-        console.log(
+        console.info(
           `- ${tier.name}: $${tier.prices?.monthly?.unitAmount / 100}/month or $${tier.prices?.yearly?.unitAmount / 100}/year`,
         );
       }
     } else if (response.error) {
-      console.log(`Product tiers unavailable: ${response.error.message}`);
+      console.info(`Product tiers unavailable: ${response.error.message}`);
       // Don't fail the test as product catalog might not be configured
     }
   });
@@ -333,20 +335,20 @@ describe('Subscription Management E2E Tests', () => {
     const targetTier = testData.billing.products[0];
     const priceId = targetTier.prices?.monthly?.id;
 
-    console.log(`Previewing upgrade to tier: ${targetTier.name} (Monthly)`);
+    console.info(`Previewing upgrade to tier: ${targetTier.name} (Monthly)`);
     const response = await client.subscriptions.previewSubscriptionUpgrade({
       organizationId: testData.organization.clerkOrgId,
       newPriceId: priceId,
     });
 
     if (response.data) {
-      console.log('Upgrade preview:', {
+      console.info('Upgrade preview:', {
         prorationDate: response.data.prorationDate,
         costNow: `${response.data.costNow / 100} ${response.data.currency}`,
         costNextCycle: `${response.data.costNextCycle / 100} ${response.data.currency}`,
       });
     } else if (response.error) {
-      console.log(`Upgrade preview unavailable: ${response.error.message}`);
+      console.info(`Upgrade preview unavailable: ${response.error.message}`);
     }
   });
 
@@ -366,7 +368,7 @@ describe('Subscription Management E2E Tests', () => {
     const targetTier = testData.billing.products[0];
     const priceId = targetTier.prices?.monthly?.id;
 
-    console.log(
+    console.info(
       `Creating checkout session for tier: ${targetTier.name} (Monthly)`,
     );
     const response = await client.subscriptions.createCheckoutSession({
@@ -377,13 +379,13 @@ describe('Subscription Management E2E Tests', () => {
     });
 
     if (response.data) {
-      console.log(
+      console.info(
         `Checkout session URL created: ${response.data.url.substring(0, 60)}...`,
       );
       // In a real application, the user would be redirected to this URL
       expect(response.data.url).toContain('checkout.stripe.com');
     } else if (response.error) {
-      console.log(
+      console.info(
         `Checkout session creation failed: ${response.error.message}`,
       );
     }

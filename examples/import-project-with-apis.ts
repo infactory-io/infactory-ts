@@ -31,8 +31,8 @@ if (!fs.existsSync(importFilePath)) {
   process.exit(1);
 }
 
-console.log(`Using API base URL: ${baseURL}`);
-console.log(`Import file: ${importFilePath}`);
+console.info(`Using API base URL: ${baseURL}`);
+console.info(`Import file: ${importFilePath}`);
 
 const client = new InfactoryClient({
   apiKey: apiKey,
@@ -54,11 +54,11 @@ async function main() {
     throw new Error('Could not get user teams');
   }
   const team = teamsResp.data.teams[0];
-  console.log(`Importing into team: ${team.name} (${team.id})`);
+  console.info(`Importing into team: ${team.name} (${team.id})`);
 
   // 2. Import project using SDK with file path
   // The SDK will handle creating the FormData with the correct fields internally
-  console.log('Importing project...');
+  console.info('Importing project...');
   const importResp = await client.projects.importProject(
     team.id,
     importFilePath as string,
@@ -80,8 +80,8 @@ async function main() {
       importResp.data,
     );
   } else {
-    console.log(`Imported project: ${projectName} (${projectId})`);
-    console.log(`Server message: ${message}`);
+    console.info(`Imported project: ${projectName} (${projectId})`);
+    console.info(`Server message: ${message}`);
   }
 
   // 4. List connections (datasources)
@@ -95,11 +95,11 @@ async function main() {
   if (datasourcesResp.error) {
     throw new Error('Failed to list datasources');
   }
-  console.log(
+  console.info(
     `Connections/datasources (${datasourcesResp.data?.length || 0}):`,
   );
   (datasourcesResp.data || []).forEach((ds: any) => {
-    console.log(`- ${ds.name} (${ds.id}) [${ds.type}]`);
+    console.info(`- ${ds.name} (${ds.id}) [${ds.type}]`);
   });
 
   // 5. List query programs
@@ -110,14 +110,14 @@ async function main() {
     throw new Error('Failed to list query programs');
   }
   const queryPrograms = qpResp.data || [];
-  console.log(`Query programs (${queryPrograms.length}):`);
+  console.info(`Query programs (${queryPrograms.length}):`);
   queryPrograms.forEach((qp) => {
-    console.log(`- ${qp.name} (${qp.id})`);
+    console.info(`- ${qp.name} (${qp.id})`);
   });
 
   // 6. Evaluate each query program
   for (const qp of queryPrograms) {
-    console.log(`\nEvaluating query program: ${qp.name} (${qp.id})`);
+    console.info(`\nEvaluating query program: ${qp.name} (${qp.id})`);
     try {
       if (!projectId) {
         console.error('Cannot evaluate query program: projectId is undefined');
@@ -142,14 +142,14 @@ async function main() {
             result: result.data,
           }) + '\n',
         );
-        console.log(`Saved evaluation result to ${outputFile}`);
+        console.info(`Saved evaluation result to ${outputFile}`);
       }
     } catch (err) {
       console.error(`Exception evaluating query program ${qp.name}:`, err);
     }
   }
 
-  //     console.log('\nAll done.');
+  //     console.info('\nAll done.');
   //   } catch (err) {
   //     console.error('Error in import-project-with-apis example:', err);
   //     process.exit(1);
