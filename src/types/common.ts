@@ -342,28 +342,26 @@ export interface CreateSecretParams {
 // Query Program types
 export interface QueryProgram extends BaseEntity {
   name?: string | null;
-  query?: string | null;
-  queryProgram?: string | null;
+  cue?: string | null;
+  code?: string | null;
   steps?: string | null;
   slots?: string | null;
   stores?: string | null;
   published?: boolean | null;
   reason?: string | null;
-  prevId?: string | null;
   projectId: string;
   ontologyId?: string | null;
 }
 
 export interface CreateQueryProgramParams {
   name?: string;
-  query?: string;
-  queryProgram?: string;
+  cue?: string;
+  code?: string;
   steps?: string;
   slots?: string;
   stores?: string;
   published?: boolean;
   reason?: string;
-  prevId?: string;
   projectId: string;
 }
 
@@ -447,7 +445,7 @@ export interface API extends BaseEntity {
   name: string;
   description?: string;
   projectId: string;
-  basePath: string;
+  slug: string;
   version: string;
   tags?: string[];
   status: 'draft' | 'published' | 'deprecated';
@@ -456,7 +454,7 @@ export interface API extends BaseEntity {
 export interface CreateAPIParams {
   name: string;
   projectId: string;
-  basePath: string;
+  slug: string;
   version: string;
   description?: string;
   servers?: string[];
@@ -807,6 +805,19 @@ export interface ExtractSqlParametersRequest {
 export interface ExtractSqlParametersResponse {
   parameters: SqlParameter[];
   parsedQuery: string;
+}
+
+export interface DatabaseCapabilitiesListResponse {
+  capabilities: string[];
+}
+
+export interface DatabaseConnectionParams {
+  connection_string: string;
+}
+
+export interface ValidateQueryRequest {
+  connection_string: string;
+  query: string;
 }
 
 /**
