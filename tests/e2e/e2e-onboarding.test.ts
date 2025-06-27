@@ -245,16 +245,19 @@ describe('E2E Tests: User Onboarding Flow', () => {
     // Final verification that all resources exist
     expect(user).toBeDefined();
     expect(organization).toBeDefined();
+    expect(organization?.id).toBeDefined();
     expect(team).toBeDefined();
+    expect(team?.id).toBeDefined();
     expect(project).toBeDefined();
+    expect(project?.id).toBeDefined();
 
     // Log the full onboarding path that was taken
     console.info('\n🎉 Onboarding flow completed successfully!');
     console.info('=======================================');
     console.info(`User: ${user.email} (${user.id})`);
-    console.info(`Organization: ${organization!.name} (${organization!.id})`);
-    console.info(`Team: ${team!.name} (${team!.id})`);
-    console.info(`Project: ${project!.name} (${project!.id})`);
+    console.info(`Organization: ${organization?.name} (${organization?.id})`);
+    console.info(`Team: ${team?.name} (${team?.id})`);
+    console.info(`Project: ${project?.name} (${project?.id})`);
     console.info('=======================================');
   });
 });

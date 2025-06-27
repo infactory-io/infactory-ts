@@ -61,7 +61,7 @@ export class AuthClient {
    */
   async createApiKey(name: string): Promise<ApiKeyResponse<[ApiKey, string]>> {
     return (await this.httpClient.post<[ApiKey, string]>(
-      '/v1/authentication/api-keys',
+      '/v1/authentication/api-key',
       { name },
     )) as ApiKeyResponse<[ApiKey, string]>;
   }
@@ -84,7 +84,7 @@ export class AuthClient {
     name: string,
   ): Promise<ApiKeyResponse<ApiKey>> {
     return (await this.httpClient.patch<ApiKey>(
-      `/v1/authentication/api-keys/${keyId}`,
+      `/v1/authentication/api-key/${keyId}`,
       { name },
     )) as ApiKeyResponse<ApiKey>;
   }
@@ -104,7 +104,7 @@ export class AuthClient {
   async enableApiKey(keyId: string): Promise<ApiKeyResponse<ApiKey>> {
     // Assuming empty body for enable/disable based on previous tests
     return (await this.httpClient.patch<ApiKey>(
-      `/v1/authentication/api-keys/${keyId}/enable`,
+      `/v1/authentication/api-key/${keyId}/enable`,
       {},
     )) as ApiKeyResponse<ApiKey>;
   }
@@ -123,7 +123,7 @@ export class AuthClient {
    */
   async disableApiKey(keyId: string): Promise<ApiKeyResponse<ApiKey>> {
     return (await this.httpClient.patch<ApiKey>(
-      `/v1/authentication/api-keys/${keyId}/disable`,
+      `/v1/authentication/api-key/${keyId}/disable`,
       {},
     )) as ApiKeyResponse<ApiKey>;
   }
@@ -142,7 +142,7 @@ export class AuthClient {
    */
   async deleteApiKey(keyId: string): Promise<ApiResponse<void>> {
     return await this.httpClient.delete<void>(
-      `/v1/authentication/api-keys/${keyId}`,
+      `/v1/authentication/api-key/${keyId}`,
     );
   }
 }

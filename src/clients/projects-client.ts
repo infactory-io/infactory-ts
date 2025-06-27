@@ -188,7 +188,7 @@ export class ProjectsClient {
   ): Promise<ApiResponse<any>> {
     return this.httpClient.downloadFile<any>(
       `/projects/${projectId}/export`,
-      { teamId },
+      { teamId: teamId },
       `project_export_${projectId}.json`,
     );
   }
