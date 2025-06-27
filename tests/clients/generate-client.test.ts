@@ -101,32 +101,6 @@ describe('GenerateClient', () => {
     });
   });
 
-  describe('generateQueryProgram', () => {
-    it('should call the correct endpoint for generating a new query program', async () => {
-      const params = {
-        projectId: 'project-123',
-        naturalLanguageQuery: 'Show me sales data',
-      };
-      await generateClient.generateQueryProgram(params);
-      expect(httpClient.post).toHaveBeenCalledWith(
-        '/v1/actions/generate/queryprogram',
-        params,
-      );
-    });
-
-    it('should call the correct endpoint for fixing an existing query program', async () => {
-      const params = {
-        queryProgramId: 'qp-123',
-        errorDescription: 'Fix the join condition',
-      };
-      await generateClient.generateQueryProgram(params);
-      expect(httpClient.post).toHaveBeenCalledWith(
-        '/v1/actions/generate/queryprogram',
-        params,
-      );
-    });
-  });
-
   describe('generateQuestions', () => {
     it('should call the correct endpoint with the provided parameters', async () => {
       const params = { projectId: 'project-123', numberOfQuestions: 5 };

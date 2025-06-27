@@ -163,11 +163,11 @@ async function apisExample() {
     // Create a new API
     console.info('\n5. Creating a new API:');
     const createApiResponse = await client.apis.createApi({
-      name: 'Example API',
+      slug: 'example-api',
       projectId: projectId,
-      basePath: 'example-api',
-      version: 'v1',
+      name: 'Example API',
       description: 'An example API created via the SDK',
+      version: 'v1',
     });
 
     if (createApiResponse.error) {

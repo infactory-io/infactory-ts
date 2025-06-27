@@ -4,7 +4,7 @@ import { ApiResponse } from '../../src/types/common.js';
 import { Organization } from '../../src/types/common.js';
 import { Team } from '../../src/types/common.js';
 import { Project } from '../../src/types/common.js';
-import { randomBytes } from 'crypto';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
 
 describe('E2E Tests: Integration Workflows', () => {
   // Setup variables
@@ -12,9 +12,9 @@ describe('E2E Tests: Integration Workflows', () => {
   let organization: Organization;
   let team: Team;
   let project: Project;
+  let uniqueId: string;
 
-  const uniqueId = randomBytes(4).toString('hex');
-  const projectName = `e2e-integrations-${uniqueId}`;
+  const projectName = (id: string) => `e2e-integrations-${id}`;
 
   // Fivetran specific variables
   const fivetranConnectorId: string = '';
@@ -25,91 +25,30 @@ describe('E2E Tests: Integration Workflows', () => {
 
   // Test setup - run once before all tests
   beforeAll(async () => {
-    const apiKey = process.env.NF_API_KEY;
-    const baseUrl = process.env.NF_BASE_URL;
-
-    if (!apiKey) {
-      throw new Error('NF_API_KEY environment variable is not set.');
-    }
-    if (!baseUrl) {
-      throw new Error('NF_BASE_URL environment variable is not set.');
-    }
-
-    // No need to set custom baseUrl - we'll use the client directly
-
-    // Create client with isServer true for tests
-    client = new InfactoryClient({
-      apiKey,
-      baseURL: baseUrl,
-      isServer: true,
-      // Add logging for fetch operations
-      fetch: (url, options) => {
-        console.info('FETCH URL:', url);
-        return fetch(url, options);
-      },
-    });
-
-    console.info('CLIENT CREATED WITH isServer: true');
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
 
     try {
-      // Step 1: Get organizations - use the first available organization
-      console.info('Fetching organizations...');
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      // Get first organization
-      organization = orgsResponse.data[0];
       console.info(
-        `Using organization: ${organization.name} (${organization.id})`,
+        `Creating project: ${projectName(uniqueId)} in team ${team.id}`,
       );
-
-      // Step 2: Get teams - use the first available team in the organization
-      console.info('Fetching teams...');
-      const teamsResponse = await client.teams.getTeams(organization.id);
-
-      if (!teamsResponse.data || teamsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch teams or no teams available in the organization',
-        );
-      }
-
-      team = teamsResponse.data[0];
-      console.info(`Using team: ${team.name} (${team.id})`);
-
-      // Step 3: Create a test project for integration testing
-      console.info(`Creating project: ${projectName} in team ${team.id}`);
-      const projectReq = { name: projectName, teamId: team.id };
+      const projectReq = { name: projectName(uniqueId), teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
       console.info(`Created project ID: ${project.id}`);
     } catch (error) {
-      console.error('Failed during setup:', error);
+      console.error('Failed during project setup:', error);
       throw error; // Re-throw to fail the test suite
     }
   }, 60000); // Increase timeout for setup
 
   // Test cleanup - run once after all tests
   afterAll(async () => {
-    if (!client) return;
-
-    try {
-      // Delete the project created for testing
-      if (project) {
-        console.info(`Cleaning up - Deleting project: ${project.id}`);
-        const deleteResponse = await client.projects.deleteProject(project.id);
-        expect(deleteResponse.error).toBeNull();
-        console.info('Project deleted successfully.');
-      }
-    } catch (error) {
-      console.warn('Error during cleanup:', error);
-      // Continue with tests even if cleanup fails
-    }
+    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
   }, 30000);
 
   // Test suite for Fivetran integrations

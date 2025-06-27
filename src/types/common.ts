@@ -354,9 +354,8 @@ export interface QueryProgram extends BaseEntity {
 }
 
 export interface CreateQueryProgramParams {
-  name?: string;
-  cue?: string;
-  code?: string;
+  cue: string;
+  code: string;
   steps?: string;
   slots?: string;
   stores?: string;

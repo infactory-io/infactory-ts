@@ -63,11 +63,9 @@ export class TeamsClient {
       throw new Error('Organization ID is required');
     }
 
-    return this.httpClient.post<Team>('/v1/teams', undefined, {
-      params: {
-        name: params.name,
-        organization_id: params.organizationId,
-      },
+    return this.httpClient.post<Team>('/v1/teams', {
+      name: params.name,
+      organization_id: params.organizationId,
     });
   }
 
@@ -81,8 +79,8 @@ export class TeamsClient {
     id: string,
     params: UpdateTeamParams,
   ): Promise<ApiResponse<Team>> {
-    return this.httpClient.patch<Team>(`/v1/teams/${id}`, undefined, {
-      params: { name: params.name },
+    return this.httpClient.patch<Team>(`/v1/teams/${id}`, {
+      name: params.name,
     });
   }
 

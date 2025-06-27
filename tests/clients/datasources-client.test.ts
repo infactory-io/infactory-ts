@@ -754,7 +754,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('testDatabaseConnection', () => {
+  describe('testConnection', () => {
     it('should call the correct endpoint to test a database connection', async () => {
       // Mock response data
       const mockResponse = {
@@ -827,7 +827,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('sampleDatabaseTables', () => {
+  describe('sampleTables', () => {
     it('should call the correct endpoint to sample tables from a database', async () => {
       // Mock response data
       const mockResponse = {
@@ -881,7 +881,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('executeCustomSql', () => {
+  describe('executeSql', () => {
     it('should call the correct endpoint to execute custom SQL', async () => {
       // Mock response data
       const mockResponse = {
@@ -933,7 +933,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('validateSqlQuery', () => {
+  describe('validateQuery', () => {
     it('should call the correct endpoint to validate a SQL query', async () => {
       // Mock response data
       const mockResponse = {
@@ -994,7 +994,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('validateSqlSyntax', () => {
+  describe('validateSyntax', () => {
     it('should call the correct endpoint to validate SQL syntax', async () => {
       // Mock response data
       const mockResponse = {
@@ -1030,7 +1030,7 @@ describe('DatasourcesClient', () => {
     });
   });
 
-  describe('extractSqlParameters', () => {
+  describe('extractParameters', () => {
     it('should call the correct endpoint to extract parameters from a SQL query', async () => {
       // Mock response data
       const mockResponse = {

@@ -102,7 +102,7 @@ async function evaluateQueryProgramExample() {
     // Step 3: Evaluate the query program synchronously
     console.info('\n3. Evaluating query program synchronously:');
     try {
-      const evalResponse = await client.queryPrograms.evaluateQueryProgramSync(
+      const evalResponse = await client.run.evaluateQueryProgram(
         projectId,
         queryProgramId,
       );

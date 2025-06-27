@@ -77,7 +77,7 @@ async function main() {
     console.info('\n📊 Generating a query program from natural language...');
     let queryProgramResponse: any | undefined;
     try {
-      queryProgramResponse = await client.generate.generateQueryProgram({
+      queryProgramResponse = await client.build.createQueryProgram({
         projectId,
         naturalLanguageQuery: 'Show me the top 5 products by sales revenue',
       });

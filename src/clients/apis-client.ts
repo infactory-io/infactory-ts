@@ -48,8 +48,8 @@ export class APIsClient {
    * @param apiId - The ID of the API to retrieve
    * @returns A promise that resolves to an API response containing the API
    */
-  async getApi(apiId: string): Promise<ApiResponse<API>> {
-    return await this.httpClient.get<API>(`/v1/apis/${apiId}`);
+  async getApi(slug: string): Promise<ApiResponse<API>> {
+    return await this.httpClient.get<API>(`/v1/apis/${slug}`);
   }
 
   /**
@@ -70,10 +70,10 @@ export class APIsClient {
    * @returns A promise that resolves to an API response containing the updated API
    */
   async updateApi(
-    apiId: string,
+    slug: string,
     params: Partial<API>,
   ): Promise<ApiResponse<API>> {
-    return await this.httpClient.patch<API>(`/v1/apis/${apiId}`, {
+    return await this.httpClient.patch<API>(`/v1/apis/${slug}`, {
       body: params,
     });
   }
@@ -85,10 +85,10 @@ export class APIsClient {
    * @returns A promise that resolves to an API response with the deletion result
    */
   async deleteApi(
-    apiId: string,
+    slug: string,
     hardDelete: boolean = true,
   ): Promise<ApiResponse<void>> {
-    return await this.httpClient.delete<void>(`/v1/apis/${apiId}`, {
+    return await this.httpClient.delete<void>(`/v1/apis/${slug}`, {
       params: { hardDelete },
     });
   }

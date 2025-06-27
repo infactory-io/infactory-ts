@@ -60,11 +60,11 @@ async function databaseExample() {
     );
     console.info(`Using tables: ${tableNames.join(', ')}`);
 
-    // We'll use the datasources client for database operations
+    // We'll use the database client for database operations
     let datasourcesClient;
     try {
-      datasourcesClient = client.datasources;
-      console.info('Successfully initialized datasourcesClient');
+      datasourcesClient = client.database;
+      console.info('Successfully initialized databaseClient');
     } catch (error) {
       console.error('Error initializing datasourcesClient:', error);
       throw error;
@@ -133,7 +133,7 @@ async function databaseExample() {
         connectionString.replace(/:[^:]*@/, ':****@'),
       );
       const testConnectionResponse =
-        await datasourcesClient.testDatabaseConnection(connectionString);
+        await datasourcesClient.testConnection(connectionString);
 
       if (testConnectionResponse.error) {
         console.error('Error testing connection:');
@@ -185,15 +185,13 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const sampleTablesResponse = await datasourcesClient.sampleDatabaseTables(
-        {
-          connectionString, // Will be converted to connection_string
-          tableNames, // Will be converted to table_names
-          projectId, // Will be converted to project_id
-          datasourceId, // Will be converted to datasource_id
-          name: 'Sampled Tables Example',
-        },
-      );
+      const sampleTablesResponse = await datasourcesClient.sampleTables({
+        connectionString, // Will be converted to connection_string
+        tableNames, // Will be converted to table_names
+        projectId, // Will be converted to project_id
+        datasourceId, // Will be converted to datasource_id
+        name: 'Sampled Tables Example',
+      });
 
       if (sampleTablesResponse.error) {
         console.error('Error sampling tables:');
@@ -241,16 +239,14 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const executeCustomSqlResponse = await datasourcesClient.executeCustomSql(
-        {
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-          samplingSqlQuery, // Will be converted to sampling_sql_query
-          projectId, // Will be converted to project_id
-          datasourceId, // Will be converted to datasource_id
-          name: 'Custom SQL Example',
-        },
-      );
+      const executeCustomSqlResponse = await datasourcesClient.executeSql({
+        connectionString, // Will be converted to connection_string
+        sqlQuery, // Will be converted to sql_query
+        samplingSqlQuery, // Will be converted to sampling_sql_query
+        projectId, // Will be converted to project_id
+        datasourceId, // Will be converted to datasource_id
+        name: 'Custom SQL Example',
+      });
 
       if (executeCustomSqlResponse.error) {
         console.error('Error executing custom SQL:');
@@ -299,11 +295,10 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const validateSqlSyntaxResponse =
-        await datasourcesClient.validateSqlSyntax({
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-        });
+      const validateSqlSyntaxResponse = await datasourcesClient.validateSyntax({
+        connectionString, // Will be converted to connection_string
+        sqlQuery, // Will be converted to sql_query
+      });
 
       if (validateSqlSyntaxResponse.error) {
         console.error(
@@ -337,12 +332,10 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const validateSqlQueryResponse = await datasourcesClient.validateSqlQuery(
-        {
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-        },
-      );
+      const validateSqlQueryResponse = await datasourcesClient.validateQuery({
+        connectionString, // Will be converted to connection_string
+        sqlQuery, // Will be converted to sql_query
+      });
 
       if (validateSqlQueryResponse.error) {
         console.error(
@@ -379,7 +372,7 @@ async function databaseExample() {
 
       // Use the datasourcesClient for database operations
       const extractSqlParametersResponse =
-        await datasourcesClient.extractSqlParameters(parameterizedSqlQuery);
+        await datasourcesClient.extractParameters(parameterizedSqlQuery);
 
       if (extractSqlParametersResponse.error) {
         console.error(

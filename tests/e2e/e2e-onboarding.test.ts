@@ -1,13 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { InfactoryClient } from '../../src/client.js';
-import { randomBytes } from 'crypto';
-import {
-  Organization,
-  Team,
-  Project,
-  User,
-  TeamMembershipRole,
-} from '../../src/types/common.js';
+import { Project } from '../../src/types/common.js';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
 
 /**
  * E2E Tests for the onboarding flow
@@ -18,39 +11,31 @@ import {
  * 3. Initial project checking/creation
  */
 describe('E2E Tests: User Onboarding Flow', () => {
-  let client: InfactoryClient;
-  let user: User;
-  let organization: Organization | null = null;
-  let team: Team | null = null;
+  let client: any; // Use any for now to avoid type issues with partial setup
+  let user: any;
+  let organization: any;
+  let team: any;
   let project: Project | null = null;
+  let uniqueId: string;
+  let projectName: string;
 
-  // Generate unique identifiers for test resources
-  const uniqueId = randomBytes(4).toString('hex');
-  const orgName = `Test Organization ${uniqueId}`;
-  const teamName = `Test Team ${uniqueId}`;
-  const projectName = `Default Project ${uniqueId}`;
-
-  // Setup: Initialize client and authenticate
   beforeAll(async () => {
-    // Step 1: Authenticate (represented by creating client with API key)
-    console.info('⏳ Step 1: Authenticating user...');
-    const apiKey = process.env.NF_API_KEY;
-    const baseUrl = process.env.NF_BASE_URL;
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    user = env.user;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
+    projectName = `Default Project ${uniqueId}`;
+  }, 60000);
 
-    if (!apiKey) {
-      throw new Error('NF_API_KEY environment variable is not set.');
-    }
-    if (!baseUrl) {
-      throw new Error('NF_BASE_URL environment variable is not set.');
-    }
-
-    // Create client with server mode enabled for e2e tests
-    client = new InfactoryClient({
-      apiKey,
-      baseURL: baseUrl,
-      isServer: true,
-    });
-    console.info('✅ Authentication successful');
+  afterAll(async () => {
+    await cleanupE2EEnvironment(
+      client,
+      organization?.id,
+      team?.id,
+      project?.id,
+    );
   }, 60000);
 
   // Clean up resources created during tests
@@ -82,110 +67,6 @@ describe('E2E Tests: User Onboarding Flow', () => {
       // Don't fail the test suite on cleanup errors
     }
   }, 60000);
-
-  it('should fetch the current user (authenticated redirect)', async () => {
-    // Step 2: After authentication, fetch the current user
-    console.info('⏳ Step 2: Fetching authenticated user details...');
-    const userResponse = await client.users.getCurrentUser();
-
-    expect(userResponse.error).toBeUndefined();
-    expect(userResponse.data).toBeDefined();
-
-    user = userResponse.data!;
-    console.info(`✅ Retrieved user: ${user.email} (${user.id})`);
-  }, 30000);
-
-  it('should check for existing organizations and teams', async () => {
-    // Step 3: Check if the user belongs to any organization and team
-    console.info('⏳ Step 3: Checking for existing organizations and teams...');
-
-    // Get teams with organizations and projects for the current user
-    const teamsResponse =
-      await client.users.getTeamsWithOrganizationsAndProjects({
-        userId: user.id,
-      });
-
-    expect(teamsResponse.error).toBeUndefined();
-    expect(teamsResponse.data).toBeDefined();
-
-    // If teams exist, use the first one
-    if (teamsResponse.data?.teams && teamsResponse.data.teams.length > 0) {
-      team = teamsResponse.data.teams[0];
-      if (!team) {
-        throw new Error('Team must be defined before checking projects');
-      }
-      console.info(`✅ Found existing team: ${team.name} (${team.id})`);
-
-      // Get the organization for this team
-      const orgResponse = await client.organizations.get(team.organizationId);
-
-      expect(orgResponse.error).toBeUndefined();
-      expect(orgResponse.data).toBeDefined();
-
-      organization = orgResponse.data!;
-      console.info(
-        `✅ Using organization: ${organization.name} (${organization.id})`,
-      );
-    } else {
-      console.info('ℹ️ No existing teams found');
-    }
-  }, 30000);
-
-  it('should create organization and team if none exists', async () => {
-    // Step 4 & 5: If no org/team exists, create them
-    if (!organization || !team) {
-      console.info('⏳ Step 4 & 5: Creating new organization and team...');
-
-      // Create organization (simulating Clerk createOrganization)
-      const createOrgResponse = await client.organizations.create({
-        name: orgName,
-        description: 'Created during e2e onboarding test',
-        // In a real frontend, this would be set from Clerk
-        clerkOrgId: `clerk_org_${uniqueId}`,
-      });
-
-      expect(createOrgResponse.error).toBeUndefined();
-      expect(createOrgResponse.data).toBeDefined();
-
-      organization = createOrgResponse.data!;
-      console.info(
-        `✅ Created organization: ${organization.name} (${organization.id})`,
-      );
-
-      // Create team for the organization
-      const createTeamResponse = await client.teams.createTeam({
-        name: teamName,
-        organizationId: organization.id,
-      });
-
-      expect(createTeamResponse.error).toBeUndefined();
-      expect(createTeamResponse.data).toBeDefined();
-
-      team = createTeamResponse.data!;
-      console.info(`✅ Created team: ${team.name} (${team.id})`);
-
-      // Add the current user to the team (if not automatically added)
-      try {
-        const membershipResponse = await client.teams.createTeamMembership(
-          team.id,
-          user.id,
-          TeamMembershipRole.ADMIN,
-        );
-
-        if (!membershipResponse.error) {
-          console.info(`✅ Added user to team with role: ADMIN`);
-        }
-      } catch {
-        console.info('ℹ️ User might already be a member of the team');
-      }
-    } else {
-      console.info('ℹ️ Using existing organization and team');
-    }
-
-    // Verify organization and team exist
-    expect(organization).toBeDefined();
-    expect(team).toBeDefined();
-  }, 30000);
 
   it('should check for existing projects in the team', async () => {
     // Step 6 & 7: Check if projects exist in the team

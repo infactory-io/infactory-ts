@@ -297,7 +297,6 @@ describe('ProjectsClient', () => {
       // Call the method
       const result = await projectsClient.updateProject(
         'project-1',
-        'team-1',
         updateParams,
       );
 
@@ -400,12 +399,12 @@ describe('ProjectsClient', () => {
       });
 
       // Call the method
-      const result = await projectsClient.exportProject('project-1', 'team-1');
+      const result = await projectsClient.exportProject('project-1');
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.downloadFile).toHaveBeenCalledWith(
         '/projects/project-1/export',
-        { teamId: 'team-1' },
+        {},
         'project_export_project-1.json',
       );
 

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import {
-  ChatClient,
+  ExploreClient,
   setChatMessageData,
   setConversationGraphItemData,
   setConversationGraphData,
   processReadableChatResponseStream,
-} from '../../src/clients/chat-client.js';
+} from '../../src/clients/explore-client.js';
 import { HttpClient } from '../../src/core/http-client.js';
 import { createErrorFromStatus } from '../../src/errors/index.js';
 import type {
@@ -109,8 +109,8 @@ const createMockConversationGraph = (
   ...overrides,
 });
 
-describe('ChatClient', () => {
-  let chatClient: ChatClient;
+describe('ExploreClient', () => {
+  let exploreClient: ExploreClient;
   let mockHttpClient: HttpClient;
 
   beforeEach(() => {
@@ -123,8 +123,8 @@ describe('ChatClient', () => {
       apiKey: 'test-api-key',
     });
 
-    // Create a new ChatClient with the mock HttpClient
-    chatClient = new ChatClient(mockHttpClient);
+    // Create a new ExploreClient with the mock HttpClient
+    exploreClient = new ExploreClient(mockHttpClient);
   });
 
   describe('getProjectConversations', () => {
@@ -155,10 +155,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.getProjectConversations('project-1');
+      const result = await exploreClient.getProjectConversations('project-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/explore', {
         projectId: 'project-1',
       });
 
@@ -184,13 +184,13 @@ describe('ChatClient', () => {
       });
 
       // Call the method with queryProgramId
-      const result = await chatClient.getProjectConversations(
+      const result = await exploreClient.getProjectConversations(
         'project-1',
         'qp-1',
       );
 
       // Verify the HTTP client was called correctly with both params
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/explore', {
         projectId: 'project-1',
         queryprogramId: 'qp-1',
       });
@@ -212,10 +212,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.getProjectConversations('project-1');
+      const result = await exploreClient.getProjectConversations('project-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat', {
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/explore', {
         projectId: 'project-1',
       });
 
@@ -243,10 +243,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.getConversation('conv-1');
+      const result = await exploreClient.getConversation('conv-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat/conv-1');
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/explore/conv-1');
 
       // Verify the result
       expect(result.data).toEqual(mockConversation);
@@ -277,10 +277,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.createConversation(createParams);
+      const result = await exploreClient.createConversation(createParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/chat', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/explore', {
         projectId: 'project-1',
         title: 'New Conversation',
         defaultSlugModel: 'gpt-4',
@@ -315,10 +315,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.createConversation(createParams);
+      const result = await exploreClient.createConversation(createParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/chat', {
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/explore', {
         projectId: 'project-1',
         title: 'New Conversation with QueryProgram',
         defaultSlugModel: undefined,
@@ -327,77 +327,6 @@ describe('ChatClient', () => {
 
       // Verify the result
       expect(result.data).toEqual(mockResponse);
-    });
-  });
-
-  describe('sendMessage', () => {
-    it('should call the correct endpoint to send a message to a conversation', async () => {
-      // Mock request data
-      const messageParams = {
-        conversationId: 'conv-1',
-        projectId: 'project-1',
-        content: 'Hello, world!',
-        authorRole: 'user',
-      };
-
-      // Mock stream response
-      const mockStream = new ReadableStream();
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
-
-      // Call the method
-      const result = await chatClient.sendMessage('conv-1', messageParams);
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        '/v1/chat/conv-1',
-        {
-          url: '/v1/chat/conv-1',
-          method: 'POST',
-          params: {},
-          body: JSON.stringify(messageParams),
-        },
-      );
-
-      // Verify the result is the stream
-      expect(result).toBe(mockStream);
-    });
-
-    it('should support the noReply parameter', async () => {
-      // Mock request data
-      const messageParams = {
-        conversationId: 'conv-1',
-        projectId: 'project-1',
-        content: 'Hello, world!',
-      };
-
-      // Mock stream response
-      const mockStream = new ReadableStream();
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
-
-      // Call the method with noReply = true
-      const result = await chatClient.sendMessage(
-        'conv-1',
-        messageParams,
-        true,
-      );
-
-      // Verify the HTTP client was called correctly with no_reply parameter
-      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        '/v1/chat/conv-1',
-        {
-          url: '/v1/chat/conv-1',
-          method: 'POST',
-          params: { no_reply: 'true' },
-          body: JSON.stringify(messageParams),
-        },
-      );
-
-      // Verify the result is the stream
-      expect(result).toBe(mockStream);
     });
   });
 
@@ -417,7 +346,7 @@ describe('ChatClient', () => {
       vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
 
       // Call the method
-      const result = await chatClient.sendToolCall(
+      const result = await exploreClient.sendToolCall(
         'execute-tool',
         messageParams,
       );
@@ -452,7 +381,7 @@ describe('ChatClient', () => {
       vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
 
       // Call the method with noReply = true
-      const result = await chatClient.sendToolCall(
+      const result = await exploreClient.sendToolCall(
         'execute-tool',
         messageParams,
         true,
@@ -506,11 +435,11 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.getConversationMessages('conv-1');
+      const result = await exploreClient.getConversationMessages('conv-1');
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/chat/conv-1/messages',
+        '/v1/explore/conv-1/messages',
       );
 
       // Verify the result
@@ -549,11 +478,14 @@ describe('ChatClient', () => {
       });
 
       // Call the method with includeHidden = true
-      const result = await chatClient.getConversationMessages('conv-1', true);
+      const result = await exploreClient.getConversationMessages(
+        'conv-1',
+        true,
+      );
 
       // Verify the HTTP client was called correctly with include_hidden parameter
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/chat/conv-1/messages?include_hidden=true',
+        '/v1/explore/conv-1/messages?include_hidden=true',
       );
 
       // Verify the result
@@ -592,10 +524,12 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.getConversationGraph('conv-1');
+      const result = await exploreClient.getConversationGraph('conv-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith('/v1/chat/conv-1/graph');
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/v1/explore/conv-1/graph',
+      );
 
       // Verify the result
       expect(result.data).toEqual(mockGraph);
@@ -626,13 +560,13 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.updateConversation(
+      const result = await exploreClient.updateConversation(
         'conv-1',
         updateParams,
       );
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/chat/conv-1', {
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/explore/conv-1', {
         body: updateParams,
       });
 
@@ -658,11 +592,11 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.archiveConversation('conv-1');
+      const result = await exploreClient.archiveConversation('conv-1');
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/chat/conv-1/archive',
+        '/v1/explore/conv-1/archive',
       );
 
       // Verify the result
@@ -687,10 +621,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method to star the conversation
-      const result = await chatClient.toggleStar('conv-1', true);
+      const result = await exploreClient.toggleStar('conv-1', true);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/chat/conv-1', {
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/explore/conv-1', {
         body: {
           isStarred: true,
         },
@@ -716,10 +650,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method to unstar the conversation
-      const result = await chatClient.toggleStar('conv-1', false);
+      const result = await exploreClient.toggleStar('conv-1', false);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/chat/conv-1', {
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/explore/conv-1', {
         body: {
           isStarred: false,
         },
@@ -738,10 +672,10 @@ describe('ChatClient', () => {
       });
 
       // Call the method
-      const result = await chatClient.deleteConversation('conv-1');
+      const result = await exploreClient.deleteConversation('conv-1');
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/chat/conv-1');
+      expect(mockHttpClient.delete).toHaveBeenCalledWith('/v1/explore/conv-1');
 
       // Verify the result
       expect(result.data).toBeUndefined();

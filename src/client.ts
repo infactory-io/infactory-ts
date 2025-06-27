@@ -1,7 +1,6 @@
 import { HttpClient } from './core/http-client.js';
 import {
   GenerateClient,
-  GraphClient,
   PlatformsClient,
   TeamsClient,
   OrganizationsClient,
@@ -11,14 +10,17 @@ import {
   DatasourcesClient,
   DatalinesClient,
   APIsClient,
-  ChatClient,
+  ExploreClient,
   AuthClient,
   SecretsClient,
   SubscriptionsClient,
   IntegrationsClient,
   JobsClient,
   LiveClient,
-  ActionsClient,
+  DatabaseClient,
+  BuildClient,
+  RunClient,
+  ConnectClient,
 } from './clients/index.js';
 import { InfactoryAPIError } from './errors/index.js';
 
@@ -75,15 +77,17 @@ export class InfactoryClient {
   public readonly datalines: DatalinesClient;
   public readonly apis: APIsClient;
   public readonly generate: GenerateClient;
-  public readonly chat: ChatClient;
+  public readonly explore: ExploreClient;
   public readonly auth: AuthClient;
   public readonly secrets: SecretsClient;
   public readonly subscriptions: SubscriptionsClient;
-  public readonly graph: GraphClient;
   public readonly integrations: IntegrationsClient;
   public readonly jobs: JobsClient;
   public readonly live: LiveClient;
-  public readonly actions: ActionsClient;
+  public readonly database: DatabaseClient;
+  public readonly build: BuildClient;
+  public readonly run: RunClient;
+  public readonly connect: ConnectClient;
 
   /**
    * Creates a new Infactory client
@@ -132,7 +136,6 @@ export class InfactoryClient {
     // Clear mock call counts in tests to ensure single invocation for all resource clients
     [
       GenerateClient,
-      GraphClient,
       PlatformsClient,
       TeamsClient,
       OrganizationsClient,
@@ -142,13 +145,17 @@ export class InfactoryClient {
       DatasourcesClient,
       DatalinesClient,
       APIsClient,
-      ChatClient,
+      ExploreClient,
       AuthClient,
       SecretsClient,
       SubscriptionsClient,
       IntegrationsClient,
       JobsClient,
       LiveClient,
+      DatabaseClient,
+      BuildClient,
+      RunClient,
+      ConnectClient,
     ].forEach((ClientClass) => {
       if (typeof (ClientClass as any).mockClear === 'function') {
         (ClientClass as any).mockClear();
@@ -166,23 +173,17 @@ export class InfactoryClient {
     this.datalines = new DatalinesClient(this.httpClient);
     this.apis = new APIsClient(this.httpClient);
     this.generate = new GenerateClient(this.httpClient);
-    this.chat = new ChatClient(this.httpClient);
+    this.explore = new ExploreClient(this.httpClient);
     this.auth = new AuthClient(this.httpClient);
     this.secrets = new SecretsClient(this.httpClient);
     this.subscriptions = new SubscriptionsClient(this.httpClient);
-    this.graph = new GraphClient(this.httpClient);
     this.integrations = new IntegrationsClient(this.httpClient);
     this.jobs = new JobsClient(this.httpClient);
     this.live = new LiveClient(this.httpClient);
-
-    // Initialize the ActionsClient with necessary dependency clients
-    this.actions = new ActionsClient(
-      this.datasources,
-      this.integrations,
-      this.secrets,
-      this.teams,
-      this.organizations,
-    );
+    this.database = new DatabaseClient(this.httpClient);
+    this.build = new BuildClient(this.httpClient);
+    this.run = new RunClient(this.httpClient);
+    this.connect = new ConnectClient(this.httpClient);
   }
 
   /**

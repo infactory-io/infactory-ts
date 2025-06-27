@@ -78,6 +78,9 @@ const client = new InfactoryClient({
 
 The SDK provides access to the following Infactory API resources:
 
+- **Build** - Create and manage query programs, APIs, and other build-time assets
+- **Run** - Execute query programs and APIs
+- **Connect** - Manage connections to external data sources and services
 - **Projects** - Create and manage projects
 - **Teams** - Manage teams and team memberships
 - **Organizations** - Access organization information
@@ -110,28 +113,17 @@ const projectResponse = await client.projects.createProject({
 });
 const project = projectResponse.data;
 
-// Create a datasource
-const datasourceResponse = await client.datasources.createDatasource({
-  name: 'Stock Data',
-  projectId: project.id,
-  type: 'csv',
-});
-const datasource = datasourceResponse.data;
+// Upload a CSV file
+const csvFilePath = './data/stocks.csv'; // Replace with your actual CSV file path
+const uploadResult = await client.datasources.uploadCsvFile(
+  project.id,
+  csvFilePath,
+  'Stock Data',
+);
 
-// Upload a CSV file (This is a simplified example)
-const formData = new FormData();
-formData.append('file', fs.createReadStream('./data/stocks.csv'));
-
-// Upload using the datasource
-await fetch(
-  `${client.getBaseURL()}/v1/actions/load/${project.id}?datasourceId=${datasource.id}`,
-  {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${client.getApiKey()}`,
-    },
-    body: formData,
-  },
+const datasource = uploadResult.datasource;
+console.log(
+  `Uploaded CSV to datasource: ${datasource.name} (${datasource.id})`,
 );
 ```
 
@@ -139,16 +131,23 @@ await fetch(
 
 ```typescript
 // Get query programs for a project
-const queryProgramsResponse =
-  await client.queryPrograms.getQueryProgramsByProject(projectId);
+const queryProgramsResponse = await client.queryPrograms.listQueryPrograms({
+  projectId,
+});
 const queryPrograms = queryProgramsResponse.data;
 
-// Execute a query program
-const evaluateResponse = await client.queryPrograms.evaluateQueryProgramSync(
+// Evaluate a query program
+const evaluateResponse = await client.run.evaluateQueryProgram(
   projectId,
   queryProgramId,
 );
-const queryResult = evaluateResponse.data;
+// For streaming responses, process the stream
+if (isReadableStream(evaluateResponse)) {
+  const result = await processStreamToApiResponse(evaluateResponse);
+  console.log('Query Result:', result.data);
+} else {
+  console.log('Query Result:', evaluateResponse.data);
+}
 
 // Publish a query program to make it available as an API
 await client.queryPrograms.publishQueryProgram(queryProgramId);

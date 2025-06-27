@@ -1,21 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { InfactoryClient } from '../../src/client.js';
-import { Organization } from '../../src/types/common.js';
-import { Team } from '../../src/types/common.js';
-import { Project } from '../../src/types/common.js';
 import {
+  Organization,
+  Team,
+  Project,
   CreateQueryProgramParams,
   QueryProgram,
 } from '../../src/types/common.js';
-import { randomBytes } from 'crypto';
 import {
   Conversation,
   ChatMessageCreate,
-} from '../../src/clients/chat-client.js';
-
-// Ensure environment variables are loaded (e.g., using dotenv in a setup file)
-// import dotenv from 'dotenv';
-// dotenv.config({ path: '.env.local' });
+} from '../../src/clients/explore-client.js';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
 
 describe('E2E Tests: Query Editor Workflow', () => {
   let client: InfactoryClient;
@@ -24,10 +20,10 @@ describe('E2E Tests: Query Editor Workflow', () => {
   let project: Project;
   let queryProgram: QueryProgram;
   let conversation: Conversation | null = null;
+  let uniqueId: string;
 
-  const uniqueId = randomBytes(4).toString('hex');
-  const projectName = `e2e-project-${uniqueId}`;
-  const queryProgramName = `e2e-query-${uniqueId}`;
+  const projectName = (id: string) => `e2e-project-${id}`;
+  const queryProgramName = (id: string) => `e2e-query-${id}`;
   const initialQueryCode = `class AnswerQueryProgram(QueryProgram):
     """
     Make an empty DataFrame.
@@ -48,92 +44,34 @@ describe('E2E Tests: Query Editor Workflow', () => {
             .new(store=At.A)
             .move(At.A, At.MAIN)
         )`;
-  const updatedQueryCode = `// Updated code for ${queryProgramName}\n\n${initialQueryCode}`;
+  const updatedQueryCode = (name: string) =>
+    `// Updated code for ${name}\n\n${initialQueryCode}`;
 
   beforeAll(async () => {
-    const apiKey = process.env.NF_API_KEY;
-    const baseUrl = process.env.NF_BASE_URL;
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
 
-    if (!apiKey) {
-      throw new Error('NF_API_KEY environment variable is not set.');
-    }
-    if (!baseUrl) {
-      throw new Error('NF_BASE_URL environment variable is not set.');
-    }
-
-    // Force isServer true for tests to avoid URL construction issues
-    client = new InfactoryClient({
-      apiKey,
-      baseURL: baseUrl,
-      isServer: true,
-      // Add an explicit fetch implementation that logs the URL being fetched
-      fetch: (url, options) => {
-        console.info('FETCH URL:', url);
-        return fetch(url, options);
-      },
-    });
-
-    console.info('CLIENT CREATED WITH isServer:', true);
-
-    // 1. Setup: Use existing Org, Team, create Project
     try {
-      // Step 1: Get organizations - use the first available organization
-      console.info('Fetching organizations...');
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      // Get first organization
-      organization = orgsResponse.data[0];
       console.info(
-        `Using organization: ${organization.name} (${organization.id})`,
+        `Creating project: ${projectName(uniqueId)} in team ${team.id}`,
       );
-
-      // Step 2: Get teams - use the first available team in the organization
-      console.info('Fetching teams...');
-      const teamsResponse = await client.teams.getTeams(organization.id);
-
-      if (!teamsResponse.data || teamsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch teams or no teams available in the organization',
-        );
-      }
-
-      team = teamsResponse.data[0];
-      console.info(`Using team: ${team.name} (${team.id})`);
-
-      // Step 3: Create a test project to use for query program testing
-      console.info(`Creating project: ${projectName} in team ${team.id}`);
-      const projectReq = { name: projectName, teamId: team.id };
+      const projectReq = { name: projectName(uniqueId), teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
       console.info(`Created project ID: ${project.id}`);
     } catch (error) {
-      console.error('Failed during setup:', error);
+      console.error('Failed during project setup:', error);
       throw error; // Re-throw to fail the test suite
     }
-  }, 60000); // Increase timeout for setup
+  }, 60000);
 
   afterAll(async () => {
-    if (!client) return;
-    // Cleanup: Just delete the Project we created
-    try {
-      if (project) {
-        console.info(`Deleting project ID: ${project.id}`);
-        await client.projects.deleteProject(project.id);
-        console.info('Project deleted.');
-      }
-      // Don't delete the team or organization as we didn't create them
-    } catch (error) {
-      console.error('Error during cleanup:', error);
-      // Log error but don't throw to allow other cleanup steps
-    }
-  }, 60000); // Increase timeout for cleanup
+    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
+  }, 60000);
 
   it('should list initial query programs (empty)', async () => {
     console.info(`Listing queries for project ID: ${project.id}`);
@@ -148,11 +86,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
   });
 
   it('should create a new query program', async () => {
-    console.info(`Creating query program: ${queryProgramName}`);
+    console.info(`Creating query program: ${queryProgramName(uniqueId)}`);
     const createReq: CreateQueryProgramParams = {
-      name: queryProgramName,
+      cue: queryProgramName(uniqueId),
       projectId: project.id,
-      query: initialQueryCode,
+      code: initialQueryCode,
     };
     const qpResponse = await client.queryPrograms.createQueryProgram(createReq);
     expect(qpResponse.data).toBeDefined();
@@ -161,7 +99,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
     expect(queryProgram.id).toBeDefined();
     expect(queryProgram.name).toBe(queryProgramName);
     expect(queryProgram.projectId).toBe(project.id);
-    expect(queryProgram.query).toBe(initialQueryCode);
+    expect(queryProgram.code).toBe(initialQueryCode);
     expect(queryProgram.published).toBe(false);
     console.info(`Created query program ID: ${queryProgram.id}`);
   });
@@ -176,7 +114,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
     expect(fetchedProgram).toBeDefined();
     expect(fetchedProgram.id).toBe(queryProgram.id);
     expect(fetchedProgram.name).toBe(queryProgramName);
-    expect(fetchedProgram.query).toBe(initialQueryCode);
+    expect(fetchedProgram.code).toBe(initialQueryCode);
     console.info('Fetched query program successfully.');
   });
 
@@ -185,14 +123,14 @@ describe('E2E Tests: Query Editor Workflow', () => {
     const updateResponse = await client.queryPrograms.updateQueryProgram(
       queryProgram.id,
       {
-        query: updatedQueryCode,
+        code: updatedQueryCode(uniqueId),
       },
     );
     expect(updateResponse.data).toBeDefined();
     const updatedProgram = updateResponse.data!;
     expect(updatedProgram).toBeDefined();
     expect(updatedProgram.id).toBe(queryProgram.id);
-    expect(updatedProgram.query).toBe(updatedQueryCode);
+    expect(updatedProgram.code).toBe(updatedQueryCode);
     // Update local copy if needed (ensure queryProgram reflects latest state)
     queryProgram = updatedProgram; // Assign the whole updated object
     console.info('Query program code updated successfully.');
@@ -357,11 +295,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
     );
     try {
       // Check if client.conversations exists before calling methods
-      if (!client.chat) {
+      if (!client.explore) {
         throw new Error('ChatClient is not available on InfactoryClient');
       }
       // Use getProjectConversations and filter for the queryProgram ID
-      const convoResponse = await client.chat.getProjectConversations(
+      const convoResponse = await client.explore.getProjectConversations(
         project.id,
         queryProgram.id,
       );
@@ -399,12 +337,12 @@ describe('E2E Tests: Query Editor Workflow', () => {
       }
     }
 
-    if (conversation && client.chat) {
+    if (conversation && client.explore) {
       console.info(`Sending message to conversation ID: ${conversation.id}`);
       const messageContent = 'Help me improve this query.';
       try {
         // Use the proper signature: sendMessage(conversationId, params, noReply)
-        const chatResponse = await client.chat.sendMessage(
+        const chatResponse = await client.explore.sendMessage(
           conversation.id,
           {
             conversationId: conversation.id,
@@ -528,12 +466,11 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
       try {
         // Create a new conversation
-        const createConversationResponse = await client.chat.createConversation(
-          {
+        const createConversationResponse =
+          await client.explore.createConversation({
             projectId: project.id,
             title: conversationTitle,
-          },
-        );
+          });
 
         console.info('CreateConversation', createConversationResponse);
 
@@ -548,7 +485,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
         // Verify the conversation exists by listing all conversations for the project
         const listConversationsResponse =
-          await client.chat.getProjectConversations(project.id);
+          await client.explore.getProjectConversations(project.id);
         expect(listConversationsResponse?.error).not.toBeDefined();
         expect(listConversationsResponse?.data).toBeDefined();
 
@@ -591,7 +528,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         };
 
         // Send the message to the conversation
-        const messageResponse = await client.chat.sendMessage(
+        const messageResponse = await client.explore.sendMessage(
           conversation.id,
           messageParams,
           true, // noReply = true to avoid waiting for AI response
@@ -605,14 +542,14 @@ describe('E2E Tests: Query Editor Workflow', () => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Verify the message was added to the conversation
-        const conversationWithMessages = await client.chat.getConversation(
+        const conversationWithMessages = await client.explore.getConversation(
           conversation.id,
         );
         expect(conversationWithMessages.error).toBeNull();
         expect(conversationWithMessages.data).toBeDefined();
 
         // Get messages for the conversation
-        const messagesResponse = await client.chat.getConversationMessages(
+        const messagesResponse = await client.explore.getConversationMessages(
           conversation.id,
         );
         expect(messagesResponse.error).toBeNull();
@@ -644,7 +581,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
 
       try {
         // Delete the conversation
-        const deleteResponse = await client.chat.deleteConversation(
+        const deleteResponse = await client.explore.deleteConversation(
           conversation.id,
         );
         expect(deleteResponse.error).toBeUndefined();
@@ -654,7 +591,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         let deletionVerified = false;
 
         try {
-          const getResponse = await client.chat.getConversation(
+          const getResponse = await client.explore.getConversation(
             conversation.id,
           );
 
@@ -679,7 +616,7 @@ describe('E2E Tests: Query Editor Workflow', () => {
         }
 
         // Verify deletion by listing conversations
-        const listResponse = await client.chat.getProjectConversations(
+        const listResponse = await client.explore.getProjectConversations(
           project.id,
         );
 

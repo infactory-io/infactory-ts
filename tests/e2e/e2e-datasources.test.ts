@@ -3,6 +3,8 @@ import { InfactoryClient } from '../../src/client.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
+import { Organization, Team, Project } from '../../src/types/common.js';
 
 // Setup paths
 const __filename = fileURLToPath(import.meta.url);
@@ -17,14 +19,13 @@ if (!fs.existsSync(testDataDir)) {
 
 // Initialize client and global variables for tests
 let client: InfactoryClient;
-let apiKey: string | undefined;
-let baseURL: string | undefined;
+let organization: Organization;
+let team: Team;
+let project: Project;
+let uniqueId: string;
 
 // Test data and state management
 const testData = {
-  organization: { id: '', name: '' },
-  team: { id: '', name: '' },
-  project: { id: '', name: '' },
   datasource: { id: '', name: '' },
   csvDatasource: { id: '', name: '' },
   dataline: { id: '', name: '' },
@@ -34,86 +35,20 @@ const testData = {
 
 describe('Data Source Management E2E Tests', () => {
   beforeAll(async () => {
-    // Ensure API key is set and store in module scope for all tests
-    apiKey = process.env.NF_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'NF_API_KEY environment variable is required for E2E tests',
-      );
-    }
-
-    // Ensure baseURL is properly formatted for Node.js environment and store in module scope
-    baseURL = process.env.NF_BASE_URL;
-    if (!baseURL) {
-      throw new Error(
-        'NF_BASE_URL environment variable is required for E2E tests',
-      );
-    }
-
-    console.info(`Connecting to API at: ${baseURL}`);
-
-    // Create client instance with absolute URL
-    client = new InfactoryClient({
-      apiKey,
-      baseURL,
-      isServer: true,
-    });
-
-    // For E2E testing, we don't want to attempt any real API calls if the API is down
-    // We'll skip tests if we can't connect to the API
-    const skipTests = process.env.SKIP_E2E_TESTS === 'true';
-    if (skipTests) {
-      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
-      // Mark all tests as skipped
-      test.skipIf(true)('Skipping all tests', () => {});
-      return;
-    }
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
 
     try {
-      // Organization and team IDs will be fetched from the API, no mocks
-      console.info('Setting up test data using API...');
-
-      // Step 1: Get organizations - use the first available organization
-      console.info('Fetching organizations...');
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      const organization = orgsResponse.data[0];
-      testData.organization.id = organization.id;
-      testData.organization.name = organization.name;
-      console.info(
-        `Using organization: ${testData.organization.name} (${testData.organization.id})`,
-      );
-
-      // Step 2: Get teams - use the first available team in the organization
-      console.info('Fetching teams...');
-      const teamsResponse = await client.teams.getTeams(
-        testData.organization.id,
-      );
-
-      if (!teamsResponse.data || teamsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch teams or no teams available in the organization',
-        );
-      }
-
-      const team = teamsResponse.data[0];
-      testData.team.id = team.id;
-      testData.team.name = team.name;
-      console.info(`Using team: ${testData.team.name} (${testData.team.id})`);
-
       // Step 3: Create a test project to use for datasource testing
       console.info('Creating a test project for datasource tests...');
-      const projectName = `Datasource Test Project ${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).substring(2, 7)}`;
+      const projectName = `Datasource Test Project ${uniqueId}`;
       const createProjectResponse = await client.projects.createProject({
         name: projectName,
         description: 'Project created for datasource E2E testing',
-        teamId: testData.team.id,
+        teamId: team.id,
       });
 
       if (createProjectResponse.error || !createProjectResponse.data) {
@@ -122,11 +57,8 @@ describe('Data Source Management E2E Tests', () => {
         );
       }
 
-      testData.project.id = createProjectResponse.data.id;
-      testData.project.name = createProjectResponse.data.name;
-      console.info(
-        `Created test project: ${testData.project.name} (${testData.project.id})`,
-      );
+      project = createProjectResponse.data;
+      console.info(`Created test project: ${project.name} (${project.id})`);
 
       // Ensure test CSV file exists
       if (!fs.existsSync(testCsvPath)) {
@@ -137,13 +69,12 @@ describe('Data Source Management E2E Tests', () => {
       console.error('Setup failed:', error);
       throw error;
     }
-  });
+  }, 60000);
 
   afterAll(async () => {
-    // Clean up any datasources created during tests
-    console.info('Cleaning up test data...');
+    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
 
-    // Delete all datasources created during tests
+    // Clean up any datasources created during tests that were not cleaned by project deletion
     for (const datasource of testData.createdDatasources) {
       try {
         console.info(
@@ -162,29 +93,6 @@ describe('Data Source Management E2E Tests', () => {
       } catch (error) {
         console.warn(
           `Error during datasource cleanup: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-
-    // Delete the test project
-    if (testData.project.id) {
-      try {
-        console.info(
-          `Deleting test project: ${testData.project.name} (${testData.project.id})`,
-        );
-        const deleteResponse = await client.projects.deleteProject(
-          testData.project.id,
-        );
-        if (deleteResponse.error) {
-          console.warn(
-            `Warning: Failed to delete project ${testData.project.id}: ${deleteResponse.error.message}`,
-          );
-        } else {
-          console.info(`Successfully deleted project: ${testData.project.id}`);
-        }
-      } catch (error) {
-        console.warn(
-          `Error during project cleanup: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }

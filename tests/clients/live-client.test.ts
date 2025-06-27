@@ -125,7 +125,7 @@ describe('LiveClient', () => {
         name: 'test-api',
         functions: [
           {
-            name: 'test_function',
+            name: '/test-api/v1/test_function',
             description: 'A test function',
             parameters: {
               type: 'object',
@@ -139,7 +139,7 @@ describe('LiveClient', () => {
           },
         ],
         fn_mapping: {
-          function: 'test_function',
+          function: '/test-api/v1/test_function',
         },
       };
 

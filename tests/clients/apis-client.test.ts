@@ -182,9 +182,8 @@ describe('APIsClient', () => {
     it('should call the correct endpoint to create an API', async () => {
       // Mock request data
       const createParams = {
-        name: 'New API',
+        slug: 'new-api',
         projectId: 'project-1',
-        basePath: '/new-api',
         version: 'v1',
         description: 'A new API',
       };
@@ -192,9 +191,8 @@ describe('APIsClient', () => {
       // Mock response data
       const mockResponse = {
         id: 'new-api',
-        name: 'New API',
+        slug: 'new-api',
         projectId: 'project-1',
-        basePath: '/new-api',
         version: 'v1',
         description: 'A new API',
         status: 'draft',
@@ -212,7 +210,12 @@ describe('APIsClient', () => {
 
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/apis', {
-        body: createParams,
+        body: {
+          slug: createParams.slug,
+          projectId: createParams.projectId,
+          version: createParams.version,
+          description: createParams.description,
+        },
       });
 
       // Verify the result
@@ -224,17 +227,15 @@ describe('APIsClient', () => {
     it('should call the correct endpoint to update an API', async () => {
       // Mock request data
       const updateParams = {
-        name: 'Updated API',
         description: 'Updated description',
-        basePath: '/updated-path',
       };
 
       // Mock response data
       const mockResponse = {
         id: 'api-1',
-        name: 'Updated API',
+        name: 'API 1',
         projectId: 'project-1',
-        basePath: '/updated-path',
+        basePath: '/api1',
         version: 'v1',
         description: 'Updated description',
         status: 'published',

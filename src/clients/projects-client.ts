@@ -1,5 +1,5 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse, Project } from '../types/common.js';
+import { ApiResponse, GetCoverageResponse, Project } from '../types/common.js';
 import { InfactoryAPIError } from '../errors/index.js';
 
 /**
@@ -133,15 +133,9 @@ export class ProjectsClient {
    */
   async updateProject(
     projectId: string,
-    teamId: string,
     params: UpdateProjectParams,
   ): Promise<ApiResponse<Project>> {
-    // Prepare payload with snake_case teamId
-    const payload = {
-      ...params,
-      teamId: teamId,
-    };
-    return this.httpClient.patch<Project>(`/v1/projects/${projectId}`, payload);
+    return this.httpClient.patch<Project>(`/v1/projects/${projectId}`, params);
   }
 
   /**
@@ -324,5 +318,18 @@ export class ProjectsClient {
       console.error('Error validating import:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get coverage information for a project's query programs
+   * @param projectId - The ID of the project
+   * @returns A promise that resolves to an API response containing coverage information
+   */
+  async getCoverage(
+    projectId: string,
+  ): Promise<ApiResponse<GetCoverageResponse>> {
+    return await this.httpClient.get<GetCoverageResponse>(
+      `/v1/coverage/${projectId}`,
+    );
   }
 }
