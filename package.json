@@ -1,6 +1,6 @@
 {
   "name": "@infactory/infactory-ts",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "type": "module",
   "description": "Infactory TypeScript SDK for use with Infactory Workshop, MCP Server and API",
   "license": "MIT",
