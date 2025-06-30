@@ -70,7 +70,8 @@ describe('E2E Tests: Query Editor Workflow', () => {
   }, 60000);
 
   afterAll(async () => {
-    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
+    if (!organization || !team || !project) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id, project.id);
   }, 60000);
 
   it('should list initial query programs (empty)', async () => {

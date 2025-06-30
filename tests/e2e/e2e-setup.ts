@@ -45,17 +45,26 @@ export async function setupE2EEnvironment(): Promise<E2EEnvironment> {
   let organization: Organization | null = null;
   let team: Team | null = null;
 
-  const teamsResponse = await client.users.getTeamsWithOrganizationsAndProjects(
-    {
+  let teamFetchSucceeded = false;
+  let teamsResponse;
+  try {
+    teamsResponse = await client.users.getTeamsWithOrganizationsAndProjects({
       userId: user.id,
-    },
-  );
-
-  if (teamsResponse.error) {
-    console.warn('Could not fetch existing teams:', teamsResponse.error);
+    });
+    teamFetchSucceeded = !teamsResponse.error;
+  } catch (err) {
+    console.info(
+      'ℹ️ Falling back to creating org/team – teams endpoint not available:',
+      err,
+    );
+    teamFetchSucceeded = false;
   }
 
-  if (teamsResponse.data?.teams && teamsResponse.data.teams.length > 0) {
+  if (
+    teamsResponse &&
+    teamFetchSucceeded &&
+    teamsResponse?.data?.teams?.length > 0
+  ) {
     team = teamsResponse.data.teams[0];
     if (!team) {
       throw new Error('Team was not found');
@@ -66,6 +75,7 @@ export async function setupE2EEnvironment(): Promise<E2EEnvironment> {
     }
     organization = orgResponse.data!;
   } else {
+    // either fetch failed or returned zero teams
     const createOrgResponse = await client.organizations.create({
       name: orgName,
       description: 'Created during e2e onboarding test',

@@ -58,13 +58,17 @@ describe('Subscription Management E2E Tests', () => {
   }, 60000);
 
   afterAll(async () => {
-    await cleanupE2EEnvironment(client, organization.id);
+    await cleanupE2EEnvironment(client, organization?.id);
 
     // Restore original billing settings if changed
     try {
+      if (!client) {
+        console.info('No client available, skipping billing settings restore');
+        return;
+      }
       console.info('Restoring original billing settings');
       await client.subscriptions.updateOverageSettings({
-        organizationId: organization.id,
+        organizationId: organization?.id,
         overageEnabled: testData.billing.originalOverageSetting,
       });
     } catch (error) {

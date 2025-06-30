@@ -66,7 +66,8 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
 
   // Clean up test resources
   afterAll(async () => {
-    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
+    if (!organization || !team || !project) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id, project.id);
 
     try {
       // First, delete the secret if it was created

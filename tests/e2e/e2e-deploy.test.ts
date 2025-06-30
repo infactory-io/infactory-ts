@@ -77,7 +77,8 @@ describe('E2E Tests: API Deployment Workflow', () => {
   }, 60000); // Increase timeout for setup
 
   afterAll(async () => {
-    await cleanupE2EEnvironment(client, organization.id, team.id, project?.id);
+    if (!organization || !team || !project) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id, project.id);
   }, 60000); // Increased timeout
 
   it('should create and publish a query program for API use', async () => {

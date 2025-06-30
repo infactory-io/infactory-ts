@@ -40,6 +40,7 @@ describe('Project Management E2E Tests', () => {
   }, 60000);
 
   afterAll(async () => {
+    if (!organization || !team) return;
     await cleanupE2EEnvironment(client, organization.id, team.id);
 
     // Clean up any projects created during tests that weren't already cleaned up

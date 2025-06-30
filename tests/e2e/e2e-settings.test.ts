@@ -38,6 +38,7 @@ describe('Settings Management E2E Tests', () => {
   }, 60000);
 
   afterAll(async () => {
+    if (!organization || !team) return;
     await cleanupE2EEnvironment(client, organization.id, team.id);
 
     // Restore original organization name if changed
@@ -85,52 +86,52 @@ describe('Settings Management E2E Tests', () => {
     expect(getResponse.data?.name).toBe(newOrgName);
   });
 
-  test.skip('2. Invite Team Member', async () => {
+  test('2. Invite Team Member', async () => {
     // Not implemented - skipping
     console.info('Skipping invite team member test as it is not implemented');
   });
 
-  test.skip('3. Revoke Team Member Invitation', async () => {
+  test('3. Revoke Team Member Invitation', async () => {
     // Not implemented - skipping
     console.info(
       'Skipping revoke team member invitation test as it is not implemented',
     );
   });
 
-  test.skip('4. Create Test Member and Update Role', async () => {
+  test('4. Create Test Member and Update Role', async () => {
     // Not implemented - skipping
     console.info(
       'Skipping create test member and update role test as it is not implemented',
     );
   });
 
-  test.skip('5. Remove Team Member', async () => {
+  test('5. Remove Team Member', async () => {
     // Not implemented - skipping
     console.info('Skipping remove team member test as it is not implemented');
   });
 
-  test.skip('6. Update Billing Overage Settings', async () => {
+  test('6. Update Billing Overage Settings', async () => {
     // Not implemented - skipping
     console.info(
       'Skipping update billing overage settings test as it is not implemented',
     );
   });
 
-  test.skip('7. Preview Subscription Upgrade', async () => {
+  test('7. Preview Subscription Upgrade', async () => {
     // Not implemented - skipping
     console.info(
       'Skipping preview subscription upgrade test as it is not implemented',
     );
   });
 
-  test.skip('8. Apply Subscription Upgrade', async () => {
+  test('8. Apply Subscription Upgrade', async () => {
     // Not implemented - skipping
     console.info(
       'Skipping apply subscription upgrade test as it is not implemented',
     );
   });
 
-  test.skip('9. Cancel Subscription', async () => {
+  test('9. Cancel Subscription', async () => {
     // Not implemented - skipping
     console.info('Skipping cancel subscription test as it is not implemented');
   });
