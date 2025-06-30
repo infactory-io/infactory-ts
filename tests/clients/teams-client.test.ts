@@ -158,11 +158,9 @@ describe('TeamsClient', () => {
       const result = await teamsClient.createTeam(createParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/teams', undefined, {
-        params: {
-          name: 'New Team',
-          organization_id: 'org-123',
-        },
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/teams', {
+        name: 'New Team',
+        organization_id: 'org-123',
       });
 
       // Verify the result
@@ -223,10 +221,7 @@ describe('TeamsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.patch).toHaveBeenCalledWith(
         '/v1/teams/team-1',
-        undefined,
-        {
-          params: { name: 'Updated Team' },
-        },
+        updateParams,
       );
 
       // Verify the result
@@ -274,10 +269,7 @@ describe('TeamsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         '/v1/teams/team-1/move',
-        undefined,
-        {
-          params: { new_organization_id: 'new-org-123' },
-        },
+        { new_organization_id: 'new-org-123' },
       );
 
       // Verify the result

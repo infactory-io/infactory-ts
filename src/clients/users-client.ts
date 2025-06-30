@@ -65,13 +65,11 @@ export class UsersClient {
     organizationId?: string;
     role?: string;
   }): Promise<ApiResponse<User>> {
-    return this.httpClient.post<User>('/v1/users', undefined, {
-      params: {
-        email: params.email,
-        name: params.name,
-        organization_id: params.organizationId,
-        role: params.role,
-      },
+    return this.httpClient.post<User>('/v1/users', {
+      email: params.email,
+      name: params.name,
+      organization_id: params.organizationId,
+      role: params.role,
     });
   }
 
@@ -89,12 +87,10 @@ export class UsersClient {
       role?: string;
     },
   ): Promise<ApiResponse<User>> {
-    return this.httpClient.patch<User>(`/v1/users/${userId}`, undefined, {
-      params: {
-        email: params.email,
-        name: params.name,
-        role: params.role,
-      },
+    return this.httpClient.patch<User>(`/v1/users/${userId}`, {
+      email: params.email,
+      name: params.name,
+      role: params.role,
     });
   }
 
@@ -117,10 +113,8 @@ export class UsersClient {
     userId: string,
     newOrganizationId: string,
   ): Promise<ApiResponse<User>> {
-    return this.httpClient.post<User>(`/v1/users/${userId}/move`, undefined, {
-      params: {
-        new_organization_id: newOrganizationId,
-      },
+    return this.httpClient.post<User>(`/v1/users/${userId}/move`, {
+      new_organization_id: newOrganizationId,
     });
   }
 

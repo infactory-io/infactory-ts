@@ -230,17 +230,11 @@ describe('UsersClient', () => {
       const result = await usersClient.updateUser('user-1', updateParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.patch).toHaveBeenCalledWith(
-        '/v1/users/user-1',
-        undefined,
-        {
-          params: {
-            email: 'updated@example.com',
-            name: 'Updated User',
-            role: 'admin',
-          },
-        },
-      );
+      expect(mockHttpClient.patch).toHaveBeenCalledWith('/v1/users/user-1', {
+        email: 'updated@example.com',
+        name: 'Updated User',
+        role: 'admin',
+      });
 
       // Verify the result
       expect(result.data).toEqual(mockResponse);
@@ -300,12 +294,7 @@ describe('UsersClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         '/v1/users/user-1/move',
-        undefined,
-        {
-          params: {
-            new_organization_id: 'org-2',
-          },
-        },
+        { new_organization_id: 'org-2' },
       );
 
       // Verify the result
@@ -635,13 +624,11 @@ describe('UsersClient', () => {
       const result = await usersClient.createUser(createParams);
 
       // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/users', undefined, {
-        params: {
-          email: 'newuser@example.com',
-          name: 'New User',
-          organization_id: 'org-1',
-          role: 'user',
-        },
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/v1/users', {
+        email: 'newuser@example.com',
+        name: 'New User',
+        organization_id: 'org-1',
+        role: 'user',
       });
 
       // Verify the result

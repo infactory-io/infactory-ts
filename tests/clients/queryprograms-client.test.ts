@@ -305,7 +305,8 @@ describe('QueryProgramsClient', () => {
       const createParams = {
         name: 'New Query Program',
         projectId: 'project-1',
-        query: 'select * from users',
+        cue: 'select * from users',
+        code: 'class MyProgram(QueryProgram):\n    def run(self):\n        pass',
         published: false,
       };
       // Mock response data
@@ -313,7 +314,8 @@ describe('QueryProgramsClient', () => {
         id: 'qp-new',
         name: 'New Query Program',
         projectId: 'project-1',
-        query: 'select * from users',
+        cue: 'select * from users',
+        code: 'class MyProgram(QueryProgram):\n    def run(self):\n        pass',
         published: false,
         createdAt: '2025-01-03T00:00:00Z',
         updatedAt: '2025-01-03T00:00:00Z',
@@ -376,7 +378,7 @@ describe('QueryProgramsClient', () => {
       const updateParams = {
         name: 'Updated Query Program',
         description: 'Updated description',
-        query: 'SELECT * FROM updated_table',
+        code: 'SELECT * FROM updated_table',
       };
 
       // Mock response data
@@ -582,144 +584,6 @@ describe('QueryProgramsClient', () => {
 
       // Verify the result is the mock stream
       expect(result).toBe(mockStream);
-    });
-  });
-
-  describe('evaluateQueryProgram', () => {
-    it('should call the correct endpoint to execute a query program with streaming', async () => {
-      const mockStream = new ReadableStream();
-      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
-
-      // Call the method with streaming
-      const result = await queryProgramsClient.evaluateQueryProgram(
-        'project-1', // projectId
-        'qp-1', // queryProgramId
-        { param1: 'value1' },
-      );
-
-      // Verify the HTTP client was called correctly with the new endpoints
-      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-        {
-          url: expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-          method: 'POST',
-          jsonBody: {
-            projectId: 'project-1',
-            queryprogramId: 'qp-1',
-            stream: true,
-          },
-          headers: {
-            Accept: 'text/event-stream',
-          },
-        },
-      );
-
-      // Verify the result is the mock stream
-      expect(result).toBe(mockStream);
-    });
-
-    it('should handle null parameters when executing a query program with streaming', async () => {
-      // Mock stream response
-      const mockStream = new ReadableStream();
-      vi.mocked(mockHttpClient.createStream).mockResolvedValueOnce(mockStream);
-
-      // Call the method with null parameters
-      const result = await queryProgramsClient.evaluateQueryProgram(
-        'project-1', // projectId
-        'qp-1', // queryProgramId
-        undefined,
-      );
-
-      // Verify the HTTP client was called correctly with null parameters
-      expect(mockHttpClient.createStream).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-        {
-          url: expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-          method: 'POST',
-          jsonBody: {
-            projectId: 'project-1',
-            queryprogramId: 'qp-1',
-            stream: true,
-          },
-          headers: {
-            Accept: 'text/event-stream',
-          },
-        },
-      );
-
-      // Verify the result is the mock stream
-      expect(result).toBe(mockStream);
-    });
-  });
-
-  describe('evaluateQueryProgramSync', () => {
-    it('should call the correct endpoint to execute a query program', async () => {
-      const queryProgramsClient = new QueryProgramsClient(mockHttpClient);
-      const executeParams = {
-        param1: 'value1',
-        param2: 42,
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: { result: 'success' },
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.evaluateQueryProgramSync(
-        'project-1', // projectId
-        'qp-1', // queryProgramId
-        executeParams,
-      );
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-        {
-          projectId: 'project-1',
-          queryprogramId: 'qp-1',
-          stream: false,
-        },
-        executeParams,
-      );
-
-      // Verify the result
-      expect(result.data).toEqual({ result: 'success' });
-    });
-
-    it('should filter out null and undefined values when validating', async () => {
-      // Mock request data with some null values
-      const validateParams = {
-        param1: 'value1',
-        param2: null,
-        param3: undefined,
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.post).mockResolvedValueOnce({
-        data: { result: 'success' },
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.evaluateQueryProgramSync(
-        'project-1', // projectId
-        'qp-1', // queryProgramId
-        validateParams,
-      );
-
-      // Verify the HTTP client was called correctly with filtered parameters
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/actions/evaluate/queryprogram'),
-        {
-          projectId: 'project-1',
-          queryprogramId: 'qp-1',
-          stream: false,
-        },
-        validateParams,
-      );
-
-      // Verify the result
-      expect(result.data).toEqual({ result: 'success' });
     });
   });
 
@@ -1101,37 +965,6 @@ describe('QueryProgramsClient', () => {
 
       // Verify the result shows it's still published
       expect(result.data?.published).toBe(true);
-    });
-  });
-
-  describe('getCoverage', () => {
-    it('should call the correct endpoint to get coverage information', async () => {
-      // Mock response data
-      const mockResponse = {
-        total: 10,
-        covered: 8,
-        coverage: 0.8,
-        details: {
-          tables: ['users', 'orders', 'products'],
-          uncoveredTables: ['payments', 'shipments'],
-        },
-      };
-
-      // Setup the mock response
-      vi.mocked(mockHttpClient.get).mockResolvedValueOnce({
-        data: mockResponse,
-      });
-
-      // Call the method
-      const result = await queryProgramsClient.getCoverage('project-1');
-
-      // Verify the HTTP client was called correctly
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/v1/queryprograms/coverage/project-1',
-      );
-
-      // Verify the result
-      expect(result.data).toEqual(mockResponse);
     });
   });
 });

@@ -296,13 +296,11 @@ export class HttpClient {
   public async post<T, U = any>(
     endpoint: string,
     body?: U,
-    params: Record<string, any> = {},
     options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     return this.request<T>({
       url: endpoint,
       method: 'POST',
-      params,
       jsonBody: body,
       ...options,
     });
@@ -342,13 +340,11 @@ export class HttpClient {
   public async patch<T, U = any>(
     endpoint: string,
     body?: U,
-    params: Record<string, any> = {},
     options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
     return this.request<T>({
       url: endpoint,
       method: 'PATCH',
-      params,
       jsonBody: body,
       ...options,
     });

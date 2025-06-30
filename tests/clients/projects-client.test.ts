@@ -297,7 +297,6 @@ describe('ProjectsClient', () => {
       // Call the method
       const result = await projectsClient.updateProject(
         'project-1',
-        'team-1',
         updateParams,
       );
 
@@ -375,8 +374,7 @@ describe('ProjectsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         '/v1/projects/project-1/move',
-        undefined,
-        { newTeamId: 'new-team-1' },
+        { new_team_id: 'new-team-1' },
       );
 
       // Verify the result

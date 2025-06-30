@@ -1,10 +1,7 @@
 // examples/database-example.ts
 import { InfactoryClient } from '../src/client.js';
 import * as dotenv from 'dotenv';
-import {
-  ValidateSqlQueryResponse,
-  ExtractSqlParametersResponse,
-} from '../src/types/common.js';
+import { ValidateSqlQueryResponse } from '../src/types/common.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -60,11 +57,11 @@ async function databaseExample() {
     );
     console.info(`Using tables: ${tableNames.join(', ')}`);
 
-    // We'll use the datasources client for database operations
+    // We'll use the database client for database operations
     let datasourcesClient;
     try {
-      datasourcesClient = client.datasources;
-      console.info('Successfully initialized datasourcesClient');
+      datasourcesClient = client.database;
+      console.info('Successfully initialized databaseClient');
     } catch (error) {
       console.error('Error initializing datasourcesClient:', error);
       throw error;
@@ -132,8 +129,9 @@ async function databaseExample() {
         'About to call testDatabaseConnection with:',
         connectionString.replace(/:[^:]*@/, ':****@'),
       );
-      const testConnectionResponse =
-        await datasourcesClient.testDatabaseConnection(connectionString);
+      const testConnectionResponse = await datasourcesClient.testConnection({
+        connectionString,
+      });
 
       if (testConnectionResponse.error) {
         console.error('Error testing connection:');
@@ -185,15 +183,17 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const sampleTablesResponse = await datasourcesClient.sampleDatabaseTables(
-        {
-          connectionString, // Will be converted to connection_string
-          tableNames, // Will be converted to table_names
-          projectId, // Will be converted to project_id
-          datasourceId, // Will be converted to datasource_id
-          name: 'Sampled Tables Example',
-        },
-      );
+      if (!datasourceId) {
+        console.error('Error: datasourceId is undefined');
+        return;
+      }
+      const sampleTablesResponse = await datasourcesClient.sampleTables({
+        connectionString, // Will be converted to connection_string
+        tableNames, // Will be converted to table_names
+        projectId, // Will be converted to project_id
+        datasourceId, // Will be converted to datasource_id
+        name: 'Sampled Tables Example',
+      });
 
       if (sampleTablesResponse.error) {
         console.error('Error sampling tables:');
@@ -241,16 +241,18 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const executeCustomSqlResponse = await datasourcesClient.executeCustomSql(
-        {
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-          samplingSqlQuery, // Will be converted to sampling_sql_query
-          projectId, // Will be converted to project_id
-          datasourceId, // Will be converted to datasource_id
-          name: 'Custom SQL Example',
-        },
-      );
+      if (!datasourceId) {
+        console.error('Error: datasourceId is undefined');
+        return;
+      }
+      const executeCustomSqlResponse = await datasourcesClient.executeQuery({
+        connectionString, // Will be converted to connection_string
+        sqlQuery, // Will be converted to sql_query
+        samplingSqlQuery, // Will be converted to sampling_sql_query
+        projectId, // Will be converted to project_id
+        datasourceId, // Will be converted to datasource_id
+        name: 'Custom SQL Example',
+      });
 
       if (executeCustomSqlResponse.error) {
         console.error('Error executing custom SQL:');
@@ -299,11 +301,10 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const validateSqlSyntaxResponse =
-        await datasourcesClient.validateSqlSyntax({
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-        });
+      const validateSqlSyntaxResponse = await datasourcesClient.validateQuery({
+        connectionString, // Will be converted to connection_string
+        query: sqlQuery, // Will be converted to sql_query
+      });
 
       if (validateSqlSyntaxResponse.error) {
         console.error(
@@ -337,12 +338,10 @@ async function databaseExample() {
     try {
       // Use the datasourcesClient for database operations
       // Note: The client method will convert camelCase to snake_case internally
-      const validateSqlQueryResponse = await datasourcesClient.validateSqlQuery(
-        {
-          connectionString, // Will be converted to connection_string
-          sqlQuery, // Will be converted to sql_query
-        },
-      );
+      const validateSqlQueryResponse = await datasourcesClient.validateQuery({
+        connectionString, // Will be converted to connection_string
+        query: sqlQuery, // Will be converted to sql_query
+      });
 
       if (validateSqlQueryResponse.error) {
         console.error(
@@ -350,7 +349,7 @@ async function databaseExample() {
           validateSqlQueryResponse.error,
         );
         console.error(
-          'Please check that your SQL query is valid and the max_rows parameter is appropriate.',
+          'Please check that your SQL query is valid and the maxRows parameter is appropriate.',
         );
       } else {
         console.info('SQL query validation result:');
@@ -366,54 +365,7 @@ async function databaseExample() {
     } catch (error) {
       console.error('Error in validate SQL query:', error);
       console.error(
-        'Make sure your SQL query is valid and returns fewer rows than max_rows.',
-      );
-    }
-
-    // EXAMPLE 6: Extract SQL parameters
-    console.info('\n7. Extracting SQL parameters:');
-    try {
-      // Use a SQL query with parameters for this example
-      const parameterizedSqlQuery =
-        "SELECT * FROM users WHERE status = '{{status}}' AND created_at > '{{start_date}}'";
-
-      // Use the datasourcesClient for database operations
-      const extractSqlParametersResponse =
-        await datasourcesClient.extractSqlParameters(parameterizedSqlQuery);
-
-      if (extractSqlParametersResponse.error) {
-        console.error(
-          'Error extracting SQL parameters:',
-          extractSqlParametersResponse.error,
-        );
-        console.error(
-          'Please check that your SQL query contains properly formatted parameters like {{parameter_name}}.',
-        );
-      } else {
-        console.info('SQL parameters extraction result:');
-        // Use the proper type from the imported interfaces
-        const paramsData =
-          extractSqlParametersResponse.data as ExtractSqlParametersResponse;
-        console.info(
-          `- Parameters found: ${paramsData.parameters?.length || 0}`,
-        );
-        console.info(`- Parsed Query: ${paramsData.parsedQuery}`);
-
-        if (paramsData.parameters && paramsData.parameters.length > 0) {
-          console.info('Parameters:');
-          paramsData.parameters.forEach((param: any, index: number) => {
-            console.info(`  ${index + 1}. ${param.displayName}`);
-            console.info(`     Type: ${param.type}`);
-            console.info(`     Field: ${param.field}`);
-            console.info(`     Operator: ${param.operator}`);
-            console.info(`     Value: ${param.value}`);
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in extract SQL parameters:', error);
-      console.error(
-        'Make sure your SQL query contains properly formatted parameters like {{parameter_name}}.',
+        'Make sure your SQL query is valid and returns fewer rows than maxRows.',
       );
     }
 

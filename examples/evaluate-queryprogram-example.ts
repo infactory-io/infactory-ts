@@ -101,11 +101,17 @@ async function evaluateQueryProgramExample() {
 
     // Step 3: Evaluate the query program synchronously
     console.info('\n3. Evaluating query program synchronously:');
-    try {
-      const evalResponse = await client.queryPrograms.evaluateQueryProgramSync(
-        projectId,
-        queryProgramId,
+    if (!queryProgramId) {
+      console.error(
+        'Error evaluating query program: Query Program ID is undefined',
       );
+      return;
+    }
+    try {
+      const evalResponse = await client.run.evaluateQueryProgram({
+        projectId,
+        queryprogramId: queryProgramId,
+      });
 
       if (evalResponse.error) {
         console.error('Error evaluating query program:', evalResponse.error);

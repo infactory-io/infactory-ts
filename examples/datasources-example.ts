@@ -255,76 +255,30 @@ async function datasourcesExample() {
           const fileBuffer = fs.readFileSync(stocksCsvPath);
           console.info(`Read file buffer of size: ${fileBuffer.length} bytes`);
 
-          // Step 2b: Upload the file to the datasource using fetch
-          console.info('\nUploading file to datasource...');
-
-          // Create a FormData object for the upload
-          const FormData = await import('form-data');
-          const formData = new FormData.default();
-
-          // Add the file to the FormData
-          formData.append('file', fileBuffer, {
-            filename: path.basename(stocksCsvPath),
-            contentType: 'text/csv',
-          });
-
-          // Add the file type
-          formData.append('file_type', 'csv');
-
-          // Get the headers from the FormData
-          const formHeaders = formData.getHeaders();
-
-          // Log what we're doing
+          // Step 2b: Upload the file to the datasource using the SDK method
           console.info(
-            `Uploading to: ${baseUrl}/v1/datasources/${datasourceId}/upload?project_id=${projectId}`,
+            '\nUploading file to datasource using client.datasources.uploadCsvFile...',
           );
-          console.info(
-            'Headers:',
-            JSON.stringify(
-              {
-                ...formHeaders,
-                Authorization: 'Bearer ***API_KEY***', // Masked for security
-              },
-              null,
-              2,
-            ),
+          const uploadResult = await client.datasources.uploadCsvFile(
+            projectId,
+            stocksCsvPath,
+            csvDatasource.data?.name,
           );
 
-          // Now let's actually perform the upload
-          console.info('\nPerforming the actual upload...');
-
-          // Import node-fetch since we're in Node.js environment
-          const fetch = (await import('node-fetch')).default;
-
-          // Upload using fetch - using the correct endpoint based on the error message
-          console.info(
-            'Using the correct endpoint: /v1/actions/load/{projectId}',
-          );
-          const response = await fetch(
-            `${baseUrl}/v1/actions/load/${projectId}`,
-            {
-              method: 'POST',
-              headers: {
-                ...formHeaders,
-                Authorization: `Bearer ${apiKey}`,
-              },
-              body: formData,
-            },
-          );
-
-          // Check the response
-          if (response.status >= 200 && response.status < 300) {
+          if (uploadResult.uploadResponse.ok) {
             console.info('CSV file uploaded successfully!');
-            console.info(`Status: ${response.status} ${response.statusText}`);
-
-            // Parse the response body
-            const responseBody = await response.text();
-            console.info(`Response: ${responseBody}`);
+            console.info(
+              `Status: ${uploadResult.uploadResponse.status} ${uploadResult.uploadResponse.statusText}`,
+            );
+            console.info(`Job ID: ${uploadResult.jobId}`);
           } else {
             console.error(
-              `Error uploading CSV file: ${response.status} ${response.statusText}`,
+              `Error uploading CSV file: ${uploadResult.uploadResponse.status} ${uploadResult.uploadResponse.statusText}`,
             );
-            console.error('Response:', await response.text());
+            console.error(
+              'Response:',
+              await uploadResult.uploadResponse.text(),
+            );
           }
 
           // Wait a moment for processing to start
@@ -338,6 +292,12 @@ async function datasourcesExample() {
         console.info('\nStep 3: Verifying the datasource status...');
 
         // Get datasource details to verify status
+        if (!datasourceId) {
+          console.error(
+            'Error verifying datasource: Datasource ID is undefined',
+          );
+          return;
+        }
         const verifyResponse =
           await client.datasources.getDatasource(datasourceId);
         if (verifyResponse.error) {

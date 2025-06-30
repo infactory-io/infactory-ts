@@ -171,6 +171,10 @@ export enum DatasourceStatus {
   WORKING = 'working',
   READY = 'ready',
   FAILED = 'failed',
+  /**
+   * Newly created datasource that has not started any processing yet
+   */
+  CREATED = 'created',
 }
 
 // Phase enum
@@ -236,6 +240,10 @@ export interface DatasourceWithDatalines extends BaseEntity {
   credentials: any;
   status: DatasourceStatus | null;
   phase: DatasourcePhase | null;
+  /** Optional JSON schema for the datasource */
+  schema?: Record<string, any>;
+  /** Array of datalines (rows preview / sample) */
+  datalines?: Dataline[];
   dataobjects: DataObject[];
   projects: any;
 }
@@ -294,13 +302,27 @@ export interface Datasource extends BaseEntity {
 }
 
 export interface CreateDatasourceParams {
+  /** Parent project ID */
   projectId: string;
+  /** Human-friendly datasource name */
   name?: string;
+  /** Type, e.g. `csv`, `http`, `database`, … */
   type?: string;
+  /** Optional source URI */
   uri?: string;
+  /** Processing status */
   status?: DatasourceStatus;
+  /** Processing phase */
   phase?: DatasourcePhase;
+  /** Optional status / error message */
   message?: string;
+  /** Optional detailed description */
+  description?: string;
+  /**
+   * Rich configuration object used by HTTP / database sources in the UI.
+   * This is intentionally loose-typed because each connector stores different keys.
+   */
+  dataSourceConfig?: Record<string, any>;
 }
 
 // Credential types
@@ -312,7 +334,7 @@ export interface Credential extends BaseEntity {
 }
 
 export interface CreateCredentialParams {
-  name: string;
+  name: string | ((id: string) => string);
   type: string;
   description?: string;
   metadata?: Record<string, any>;
@@ -333,7 +355,7 @@ export interface Secret extends BaseEntity {
 }
 
 export interface CreateSecretParams {
-  name: string;
+  name: string | ((id: string) => string);
   teamId: string;
   type?: string;
   value: string;
@@ -342,29 +364,28 @@ export interface CreateSecretParams {
 // Query Program types
 export interface QueryProgram extends BaseEntity {
   name?: string | null;
-  query?: string | null;
-  queryProgram?: string | null;
+  cue?: string | null;
+  code?: string | null;
   steps?: string | null;
   slots?: string | null;
   stores?: string | null;
   published?: boolean | null;
   reason?: string | null;
-  prevId?: string | null;
   projectId: string;
   ontologyId?: string | null;
 }
 
 export interface CreateQueryProgramParams {
-  name?: string;
-  query?: string;
-  queryProgram?: string;
+  cue?: string;
+  code?: string;
   steps?: string;
   slots?: string;
   stores?: string;
   published?: boolean;
   reason?: string;
-  prevId?: string;
   projectId: string;
+  /** Allow additional dynamic properties */
+  [key: string]: any;
 }
 
 /**
@@ -447,16 +468,17 @@ export interface API extends BaseEntity {
   name: string;
   description?: string;
   projectId: string;
-  basePath: string;
+  slug: string;
   version: string;
   tags?: string[];
   status: 'draft' | 'published' | 'deprecated';
   specification?: Record<string, any>;
 }
 export interface CreateAPIParams {
-  name: string;
+  /** API friendly display name */
+  name?: string;
   projectId: string;
-  basePath: string;
+  slug: string;
   version: string;
   description?: string;
   servers?: string[];
@@ -553,8 +575,10 @@ export interface ContextInfo {
 }
 
 export interface FunctionMessageReference {
-  requestId: string;
+  requestId?: string;
   conversationId: string;
+  /** Original function message ID (optional – back-compat) */
+  messageId?: string;
   authorUserId?: string;
   projectId?: string;
   nodeId?: string;
@@ -684,7 +708,7 @@ export interface TestHttpAPIRequest {
  * Database connection test request
  */
 export interface TestConnectionRequest {
-  connection_string: string;
+  connectionString: string;
 }
 
 /**
@@ -714,24 +738,24 @@ export interface ExecuteCustomSqlRequest {
  * Validate SQL syntax request
  */
 export interface ValidateSqlSyntaxRequest {
-  connection_string: string;
-  sql_query: string;
+  connectionString: string;
+  sqlQuery: string;
 }
 
 /**
  * Validate SQL query request
  */
 export interface ValidateSqlQueryRequest {
-  connection_string: string;
-  sql_query: string;
-  max_rows?: number;
+  connectionString: string;
+  sqlQuery: string;
+  maxRows?: number;
 }
 
 /**
  * Extract SQL parameters request
  */
 export interface ExtractSqlParametersRequest {
-  sql_query: string;
+  sqlQuery: string;
 }
 
 export interface TableInfo {
@@ -807,6 +831,19 @@ export interface ExtractSqlParametersRequest {
 export interface ExtractSqlParametersResponse {
   parameters: SqlParameter[];
   parsedQuery: string;
+}
+
+export interface DatabaseCapabilitiesListResponse {
+  capabilities: string[];
+}
+
+export interface DatabaseConnectionParams {
+  connectionString: string;
+}
+
+export interface ValidateQueryRequest {
+  connectionString: string;
+  query: string;
 }
 
 /**

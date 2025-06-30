@@ -3,6 +3,8 @@ import { InfactoryClient } from '../../src/client.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
+import { Organization, Team } from '../../src/types/common.js';
 
 // Setup paths
 const __filename = fileURLToPath(import.meta.url);
@@ -16,121 +18,63 @@ if (!fs.existsSync(testDataDir)) {
 
 // Initialize client and global variables for tests
 let client: InfactoryClient;
-let apiKey: string | undefined;
-let baseURL: string | undefined;
+let organization: Organization;
+let team: Team;
 
 // Test data and state management
 const testData = {
-  organization: { id: '', name: '' },
-  team: { id: '', name: '' },
   project: { id: '', name: '' },
   updatedProject: { id: '', name: '' },
   exportedProjectPath: path.join(testDataDir, 'exported-project.json'),
   importedProject: { id: '', name: '' },
   exampleProject: { id: '', name: '' },
+  team: { id: '', name: '' },
 };
 
 describe('Project Management E2E Tests', () => {
   beforeAll(async () => {
-    // Ensure API key is set and store in module scope for all tests
-    apiKey = process.env.NF_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'NF_API_KEY environment variable is required for E2E tests',
-      );
-    }
-
-    // Ensure baseURL is properly formatted for Node.js environment and store in module scope
-    baseURL = process.env.NF_BASE_URL;
-    if (!baseURL) {
-      throw new Error(
-        'NF_BASE_URL environment variable is required for E2E tests',
-      );
-    }
-
-    console.info(`Connecting to API at: ${baseURL}`);
-
-    // Create client instance with absolute URL
-    client = new InfactoryClient({
-      apiKey,
-      baseURL,
-      isServer: true,
-    });
-
-    // For E2E testing, we don't want to attempt any real API calls if the API is down
-    // We'll skip tests if we can't connect to the API
-    const skipTests = process.env.SKIP_E2E_TESTS === 'true';
-    if (skipTests) {
-      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
-      // Mark all tests as skipped
-      test.skipIf(true)('Skipping all tests', () => {});
-      return;
-    }
-
-    try {
-      // Organization and team IDs will be fetched from the API, no mocks
-      console.info('Setting up test data using API...');
-
-      // // Step 1: Get the platform - use the first available platform
-      // console.info('Fetching platform information...');
-      // const platformsResponse = await client.platforms.list();
-
-      // if (!platformsResponse.data || platformsResponse.data.length === 0) {
-      //   throw new Error('Failed to fetch platforms or no platforms available');
-      // }
-
-      // const platform = platformsResponse.data[platformsResponse.data.length - 1];
-      // console.info(`Using platform: ${platform.name} (${platform.id})`);
-
-      // Step 2: Get organizations - use the first available organization in the platform
-      console.info('Fetching organizations...');
-      // Since we don't have a direct filter method, we'll get all orgs and filter client-side
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      // Find organizations for this platform
-      const platformOrgs = orgsResponse.data; // .filter(org => org.platformId === platform.id);
-
-      if (platformOrgs.length === 0) {
-        throw new Error(`No organizations found for platform`);
-      }
-
-      const organization = platformOrgs[0];
-      testData.organization.id = organization.id;
-      testData.organization.name = organization.name;
-      console.info(
-        `Using organization: ${testData.organization.name} (${testData.organization.id})`,
-      );
-
-      // Step 3: Get teams - use the first available team in the organization
-      console.info('Fetching teams...');
-      const teamsResponse = await client.teams.getTeams(
-        testData.organization.id,
-      );
-
-      if (!teamsResponse.data || teamsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch teams or no teams available in the organization',
-        );
-      }
-
-      const team = teamsResponse.data[0];
-      testData.team.id = team.id;
-      testData.team.name = team.name;
-      console.info(`Using team: ${testData.team.name} (${testData.team.id})`);
-    } catch (error) {
-      console.error('Setup failed:', error);
-      throw error;
-    }
-  });
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+  }, 60000);
 
   afterAll(async () => {
+    if (!organization || !team) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id);
+
     // Clean up any projects created during tests that weren't already cleaned up
+    if (testData.project.id) {
+      try {
+        await client.projects.deleteProject(testData.project.id, true);
+      } catch (error) {
+        console.warn(
+          `Error cleaning up project ${testData.project.id}:`,
+          error,
+        );
+      }
+    }
+    if (testData.importedProject.id) {
+      try {
+        await client.projects.deleteProject(testData.importedProject.id, true);
+      } catch (error) {
+        console.warn(
+          `Error cleaning up imported project ${testData.importedProject.id}:`,
+          error,
+        );
+      }
+    }
+    if (testData.exampleProject.id) {
+      try {
+        await client.projects.deleteProject(testData.exampleProject.id, true);
+      } catch (error) {
+        console.warn(
+          `Error cleaning up example project ${testData.exampleProject.id}:`,
+          error,
+        );
+      }
+    }
+
     // Clean up exported project file if it exists
     if (fs.existsSync(testData.exportedProjectPath)) {
       fs.unlinkSync(testData.exportedProjectPath);
@@ -236,7 +180,6 @@ describe('Project Management E2E Tests', () => {
     // In frontend, this would happen when user clicks Save button in EditProject view
     const updateResponse = await client.projects.updateProject(
       testData.project.id,
-      testData.team.id,
       {
         name: updatedName,
         description: updatedDescription,

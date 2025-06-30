@@ -81,35 +81,27 @@ async function main() {
       'Downloads/Mental_Health_Care_in_the_Last_4_Weeks.csv',
     );
 
-    const connectResponse = await client.actions.connect({
-      projectId: project.id,
-      name: 'Mental Health Data',
-      type: 'csv',
-      filePath: csvFilePath, // This will use the uploadCsvFile method behind the scenes
-    });
+    const connectResponse = await client.datasources.uploadCsvFile(
+      project.id,
+      csvFilePath,
+      'Mental Health Data',
+    );
 
-    if (connectResponse.error || !connectResponse.data) {
-      throw new Error(
-        `Failed to connect CSV file: ${connectResponse.error?.message}`,
-      );
-    }
-
-    const dataSource = connectResponse.data.datasource;
-    const testResult = connectResponse.data.testResult;
+    const dataSource = connectResponse.datasource;
+    const uploadResponse = connectResponse.uploadResponse;
 
     console.info(
       `CSV file connected successfully: ${dataSource.name} (${dataSource.id})`,
     );
     console.info(
-      `Connection test result: ${testResult?.success ? 'Success' : 'Failed'}`,
+      `Upload response status: ${uploadResponse.status} ${uploadResponse.statusText}`,
     );
 
     // Check for message and jobId based on the test result type
-    if (testResult && 'message' in testResult) {
-      console.info(`Message: ${testResult.message}`);
-    }
-    if (testResult && 'jobId' in testResult) {
-      console.info(`Job ID: ${testResult.jobId}`);
+    if (!uploadResponse.ok) {
+      throw new Error(
+        `File upload failed with status ${uploadResponse.status}: ${uploadResponse.statusText}`,
+      );
     }
 
     // Step 3: Generate questions based on the data

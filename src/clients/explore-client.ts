@@ -233,9 +233,9 @@ export const processReadableChatResponseStream = async (
 };
 
 /**
- * Client for managing chats and conversations in the Infactory API
+ * Client for managing explorations and conversations in the Infactory API
  */
-export class ChatClient {
+export class ExploreClient {
   /**
    * Creates a new ChatClient instance
    * @param httpClient - The HTTP client to use for API requests
@@ -256,7 +256,7 @@ export class ChatClient {
     if (queryProgramId) {
       params['queryprogramId'] = queryProgramId;
     }
-    return await this.httpClient.get<Conversation[]>(`/v1/chat`, params);
+    return await this.httpClient.get<Conversation[]>(`/v1/explore`, params);
   }
 
   /**
@@ -268,7 +268,7 @@ export class ChatClient {
     conversationId: string,
   ): Promise<ApiResponse<Conversation>> {
     return await this.httpClient.get<Conversation>(
-      `/v1/chat/${conversationId}`,
+      `/v1/explore/${conversationId}`,
     );
   }
 
@@ -280,7 +280,7 @@ export class ChatClient {
   async createConversation(
     params: CreateConversationParams,
   ): Promise<ApiResponse<Conversation>> {
-    return await this.httpClient.post<Conversation>('/v1/chat', {
+    return await this.httpClient.post<Conversation>('/v1/explore', {
       projectId: params.projectId,
       title: params.title,
       defaultSlugModel: params.defaultSlugModel,
@@ -302,15 +302,16 @@ export class ChatClient {
   ): Promise<ReadableStream<Uint8Array>> {
     const queryParams: Record<string, string> = {};
     if (noReply) {
-      queryParams['no_reply'] = 'true';
+      queryParams['noReply'] = 'true';
     }
-    const url = `/v1/chat/${conversationId}`;
+
+    const url = `/v1/explore/${conversationId}`;
 
     return this.httpClient.createStream(url, {
       url,
       method: 'POST',
       params: queryParams,
-      body: JSON.stringify(params),
+      jsonBody: params,
     });
   }
 
@@ -355,7 +356,7 @@ export class ChatClient {
       queryParams.append('include_hidden', 'true');
     }
     const queryString = queryParams.toString();
-    const url = `/v1/chat/${conversationId}/messages${queryString ? `?${queryString}` : ''}`;
+    const url = `/v1/explore/${conversationId}/messages${queryString ? `?${queryString}` : ''}`;
 
     return await this.httpClient.get<ChatMessage[]>(url);
   }
@@ -369,7 +370,7 @@ export class ChatClient {
     conversationId: string,
   ): Promise<ApiResponse<ConversationGraph>> {
     return await this.httpClient.get<ConversationGraph>(
-      `/v1/chat/${conversationId}/graph`,
+      `/v1/explore/${conversationId}/graph`,
     );
   }
 
@@ -384,7 +385,7 @@ export class ChatClient {
     params: UpdateConversationParams,
   ): Promise<ApiResponse<Conversation>> {
     return await this.httpClient.patch<Conversation>(
-      `/v1/chat/${conversationId}`,
+      `/v1/explore/${conversationId}`,
       {
         body: params,
       },
@@ -400,7 +401,7 @@ export class ChatClient {
     conversationId: string,
   ): Promise<ApiResponse<Conversation>> {
     return await this.httpClient.patch<Conversation>(
-      `/v1/chat/${conversationId}/archive`,
+      `/v1/explore/${conversationId}/archive`,
     );
   }
 
@@ -418,7 +419,7 @@ export class ChatClient {
       isStarred: starred,
     };
     return await this.httpClient.patch<Conversation>(
-      `/v1/chat/${conversationId}`,
+      `/v1/explore/${conversationId}`,
       {
         body,
       },
@@ -431,6 +432,6 @@ export class ChatClient {
    * @returns A promise that resolves to an API response with the deletion result
    */
   async deleteConversation(conversationId: string): Promise<ApiResponse<void>> {
-    return await this.httpClient.delete<void>(`/v1/chat/${conversationId}`);
+    return await this.httpClient.delete<void>(`/v1/explore/${conversationId}`);
   }
 }

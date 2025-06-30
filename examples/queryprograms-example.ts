@@ -116,8 +116,8 @@ async function queryProgramsExample() {
     const createResponse = await client.queryPrograms.createQueryProgram({
       name: 'Example Query Program',
       projectId: projectId,
-      query: 'Show me the total number of users',
-      queryProgram: `
+      cue: 'Show me the total number of users',
+      code: `
 class AnswerQueryProgram(QueryProgram):
     def __init__(self, data):
         super().__init__(data)
@@ -157,7 +157,7 @@ class AnswerQueryProgram(QueryProgram):
           console.info(`- ID: ${detailsResponse.data?.id}`);
           console.info(`- Name: ${detailsResponse.data?.name}`);
           console.info(`- Project ID: ${detailsResponse.data?.projectId}`);
-          console.info(`- Query: ${detailsResponse.data?.query}`);
+          console.info(`- Query: ${detailsResponse.data?.cue}`);
           console.info(
             `- Published: ${detailsResponse.data?.published ? 'Yes' : 'No'}`,
           );
@@ -173,11 +173,10 @@ class AnswerQueryProgram(QueryProgram):
         try {
           // Execute the query program
           console.info('Executing the query program:');
-          const executeResponse =
-            await client.queryPrograms.evaluateQueryProgramSync(
-              projectId,
-              queryProgramId,
-            );
+          const executeResponse = await client.run.evaluateQueryProgram({
+            projectId,
+            queryprogramId: queryProgramId,
+          });
 
           if (isReadableStream(executeResponse)) {
             console.info('Received streaming response, processing events...');

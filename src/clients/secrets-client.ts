@@ -65,7 +65,7 @@ export class SecretsClient {
   async createCredential(
     params: CreateCredentialParams,
   ): Promise<ApiResponse<Credential>> {
-    if (!params.name || params.name.trim() === '') {
+    if (!params.name || params.name === '') {
       throw new Error('Credential name is required');
     }
     if (!params.organizationId) {
@@ -171,7 +171,7 @@ export class SecretsClient {
    * @returns A promise that resolves to an API response containing the created secret
    */
   async createSecret(params: CreateSecretParams): Promise<ApiResponse<Secret>> {
-    if (!params.name || params.name.trim() === '') {
+    if (!params.name || params.name === '') {
       throw new Error('Secret name is required');
     }
     if (!params.teamId) {

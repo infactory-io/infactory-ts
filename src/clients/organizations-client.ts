@@ -64,11 +64,7 @@ export class OrganizationsClient {
     id: string,
     params: Partial<CreateOrganizationParams>,
   ): Promise<ApiResponse<Organization>> {
-    return this.httpClient.patch<Organization>(
-      `/v1/orgs/${id}`,
-      undefined,
-      params,
-    );
+    return this.httpClient.patch<Organization>(`/v1/orgs/${id}`, params);
   }
 
   /**

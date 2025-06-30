@@ -1,15 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { InfactoryClient } from '../../src/client.js';
-import { randomBytes } from 'crypto';
 import {
   Organization,
   Team,
   Project,
-  User,
   Credential,
   Secret,
-  TeamMembershipRole,
 } from '../../src/types/common.js';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
 
 /**
  * E2E Tests for the Secrets & Credentials Management
@@ -22,141 +20,58 @@ import {
  */
 describe('E2E Tests: Secrets & Credentials Management', () => {
   let client: InfactoryClient;
-  let user: User;
   let organization: Organization;
   let team: Team;
   let project: Project;
   let credential: Credential;
   let secret: Secret;
+  let uniqueId: string;
 
   // Generate unique identifiers for test resources
-  const uniqueId = randomBytes(4).toString('hex');
-  // We're now using existing organizations instead of creating new ones
-  const teamName = `Test Team ${uniqueId}`;
-  const projectName = `Test Project ${uniqueId}`;
-  const credentialName = `Test AWS Credential ${uniqueId}`;
-  const secretName = `Test API Key Secret ${uniqueId}`;
-  const updatedSecretName = `Updated API Key Secret ${uniqueId}`;
-  const updatedCredentialName = `Updated AWS Credential ${uniqueId}`;
+  const credentialName = (id: string) => `Test AWS Credential ${id}`;
+  const secretName = (id: string) => `Test API Key Secret ${id}`;
+  const updatedSecretName = (id: string) => `Updated API Key Secret ${id}`;
+  const updatedCredentialName = (id: string) => `Updated AWS Credential ${id}`;
 
   // Setup: Initialize client and create test resources
   beforeAll(async () => {
-    // Step 1: Authenticate and set up environment
-    console.info(
-      '⏳ Step 1: Authenticating user and setting up environment...',
-    );
-    // Use known API credentials from environment variables or fall back to hardcoded values
-    const apiKey =
-      process.env.NF_API_KEY ||
-      'nf-2FEUOhBAeMOtzyTqK1VEMFc7D-AMsL89gQOTsDURJn0';
-    const baseUrl = process.env.NF_BASE_URL || 'http://localhost:8000';
-    if (!apiKey) {
-      throw new Error('Missing API key');
-    }
-    if (!baseUrl) {
-      throw new Error('Missing base URL');
-    }
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
 
-    console.info(`Using API endpoint: ${baseUrl}`);
-
-    // Create client with server mode enabled for e2e tests
-    client = new InfactoryClient({
-      apiKey,
-      baseURL: baseUrl,
-      isServer: true,
-    });
-    console.info('✅ Authentication successful');
-
-    // Get current user
-    const userResponse = await client.users.getCurrentUser();
-    if (userResponse.error || !userResponse.data) {
-      throw new Error(
-        `Failed to get current user: ${userResponse.error?.message}`,
-      );
-    }
-    user = userResponse.data;
-    console.info(`👤 Current user: ${user.email} (${user.id})`);
-
-    // Find an existing organization instead of creating one
-    console.info('Fetching organizations...');
-    const orgsResponse = await client.organizations.list();
-
-    if (!orgsResponse.data || orgsResponse.data.length === 0) {
-      throw new Error(
-        'Failed to fetch organizations or no organizations available',
-      );
-    }
-
-    // Use the first available organization
-    organization = orgsResponse.data[0];
-    console.info(
-      `🏢 Using organization: ${organization.name} (${organization.id})`,
-    );
-
-    // Find an existing team or create one
-    console.info('Fetching teams...');
-    const teamsResponse = await client.teams.getTeams(organization.id);
-
-    if (!teamsResponse.data || teamsResponse.data.length === 0) {
-      console.info(`Creating team: ${teamName}`);
-      const createTeamResponse = await client.teams.createTeam({
-        name: teamName,
-        organizationId: organization.id,
+    try {
+      // Create project
+      const createProjectResponse = await client.projects.createProject({
+        name: `Test Project ${uniqueId}`,
+        description: 'Project for testing secrets and credentials',
+        teamId: team.id,
       });
 
-      if (createTeamResponse.error || !createTeamResponse.data) {
+      if (createProjectResponse.error || !createProjectResponse.data) {
         throw new Error(
-          `Failed to create team: ${createTeamResponse.error?.message}`,
+          `Failed to create project: ${createProjectResponse.error?.message}`,
         );
       }
-      team = createTeamResponse.data;
-      console.info(`👥 Created team: ${team.name} (${team.id})`);
-    } else {
-      // Use the first available team
-      team = teamsResponse.data[0];
-      console.info(`👥 Using existing team: ${team.name} (${team.id})`);
+      project = createProjectResponse.data;
+      console.info(`📁 Created project: ${project.name} (${project.id})`);
+
+      console.info('✅ Successfully set up testing environment');
+    } catch (error) {
+      console.error('Failed during project setup:', error);
+      throw error; // Re-throw to fail the test suite
     }
-
-    // Add the current user to the team
-    try {
-      await client.teams.createTeamMembership(
-        team.id,
-        user.id,
-        TeamMembershipRole.ADMIN,
-      );
-      console.info('👤 Added user to team with role: ADMIN');
-    } catch {
-      console.info('ℹ️ User might already be a member of the team');
-    }
-
-    // Create project
-    const createProjectResponse = await client.projects.createProject({
-      name: projectName,
-      description: 'Project for testing secrets and credentials',
-      teamId: team.id,
-    });
-
-    if (createProjectResponse.error || !createProjectResponse.data) {
-      throw new Error(
-        `Failed to create project: ${createProjectResponse.error?.message}`,
-      );
-    }
-    project = createProjectResponse.data;
-    console.info(`📁 Created project: ${project.name} (${project.id})`);
-
-    console.info('✅ Successfully set up testing environment');
   }, 60000);
 
   // Clean up test resources
   afterAll(async () => {
-    if (!client) return;
-
-    console.info('\n🧹 Starting cleanup...');
+    if (!organization || !team || !project) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id, project.id);
 
     try {
-      // Clean up in reverse order of creation
       // First, delete the secret if it was created
-      if (secret?.id) {
+      if (secret?.id && !secret.id.startsWith('placeholder')) {
         console.info(
           `🧹 Cleaning up secret: ${secret.name} (${secret.id}) in team: ${team.id}`,
         );
@@ -181,22 +96,6 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
           console.info('✅ Credential deleted successfully');
         }
       }
-
-      // Delete project
-      if (project?.id) {
-        console.info(`🧹 Cleaning up project: ${project.name} (${project.id})`);
-        await client.projects.deleteProject(project.id, true);
-      }
-
-      // Delete team
-      if (team?.id) {
-        console.info(`🧹 Cleaning up team: ${team.name} (${team.id})`);
-        await client.teams.deleteTeam(team.id);
-      }
-
-      // We don't delete the organization as it might be used by other tests
-
-      console.info('✅ Cleanup completed successfully');
     } catch (error) {
       console.error('Error during cleanup:', error);
       // Don't fail the test suite on cleanup errors
@@ -349,7 +248,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         // Initialize a placeholder secret in case API call fails
         secret = {
           id: `placeholder-${uniqueId}`,
-          name: secretName,
+          name: secretName(uniqueId),
           teamId: team.id,
           type: 'api_key',
           value: 'sk_test_51NZQBsLSIJ7WvUQoDQrAgQwLcm0ExAmPLEkEy',
@@ -358,7 +257,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         };
 
         const createParams = {
-          name: secretName,
+          name: secretName(uniqueId),
           teamId: team.id,
           type: 'api_key',
           value: 'sk_test_51NZQBsLSIJ7WvUQoDQrAgQwLcm0ExAmPLEkEy',

@@ -1,5 +1,5 @@
 import { InfactoryClient } from '../src/client.js';
-import { ConnectOptions } from '../src/types/common.js';
+import { TestHttpConnectionRequest } from '../src/clients/integrations-client.js';
 import { HttpMethod } from '../src/clients/integrations-client.js';
 import * as dotenv from 'dotenv';
 
@@ -33,14 +33,14 @@ const client = new InfactoryClient({
  * This script demonstrates using connectAPI to establish a connection to the Tiingo API
  * and retrieve historical stock prices for Apple (AAPL)
  */
-async function main(projectId: string, apiKey: string, ticker: string) {
+async function main(apiKey: string, ticker: string) {
   try {
     console.info('Connecting to Tiingo Stock API...');
 
     // Define the ticker symbol
 
     // Prepare connection options for Tiingo API
-    const connectOptions: ConnectOptions = {
+    const connectOptions: TestHttpConnectionRequest = {
       // Target API details (Tiingo API)
       url: `https://api.tiingo.com/tiingo/daily/${ticker}/prices`,
       method: 'GET' as HttpMethod,
@@ -65,50 +65,32 @@ async function main(projectId: string, apiKey: string, ticker: string) {
         startDate: '2019-01-02',
         // We're not specifying endDate, so it will default to the latest date
       },
-
-      // Infactory platform details
-      projectId: projectId,
-      connectionName: `Tiingo Historical Prices - ${ticker}`,
     };
 
-    // Call the connectAPI method to establish the connection
-    const result = await client.actions.connectAPI(connectOptions);
+    // Call the testHttpConnection method to establish the connection
+    const result = await client.integrations.testHttpConnection(connectOptions);
 
     // Check if the connection was successful
     console.info('result', result);
-    if (result.success) {
+    if (result.data?.success) {
       console.info('Successfully connected to Tiingo API');
-      console.info(`Datasource ID: ${result.datasourceId}`);
 
-      if (result.testResult) {
+      if (result.data) {
         console.info('\nConnection Test Results:');
-        console.info(`Response Time: ${result.testResult.responseTime}ms`);
-        console.info(`Content Type: ${result.testResult.contentType}`);
+        console.info(`Response Time: ${result.data.responseTime}ms`);
+        console.info(`Content Type: ${result.data.contentType}`);
 
         // Print a sample of the data (first 2 records)
-        if (result.testResult.data && Array.isArray(result.testResult.data)) {
+        if (result.data.data && Array.isArray(result.data.data)) {
           console.info('\nSample Data (first 2 records):');
-          console.info(
-            JSON.stringify(result.testResult.data.slice(0, 2), null, 2),
-          );
+          console.info(JSON.stringify(result.data.data.slice(0, 2), null, 2));
         }
-      }
-
-      if (result.jobs && result.jobs.length > 0) {
-        console.info('\nJobs Created:');
-        result.jobs.forEach((job) => {
-          console.info(
-            `- Job ID: ${job.id}, Type: ${job.job_type}, Status: ${job.status}`,
-          );
-        });
       }
     } else {
       console.error('Failed to connect to Tiingo API');
-      console.error('Steps completed:', result.stepsCompleted);
-      console.error('Errors:');
-      result.errors.forEach((error) => {
-        console.error(`- ${error.step}: ${error.error}`);
-      });
+      if (result.error) {
+        console.error('Error details:', result.error);
+      }
     }
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -130,4 +112,4 @@ if (!project.data) {
   process.exit(1);
 }
 
-main(project.data.id, process.env.TIINGO_API_KEY, 'AAPL').catch(console.error);
+main(process.env.TIINGO_API_KEY, 'AAPL').catch(console.error);

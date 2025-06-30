@@ -1,21 +1,18 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { InfactoryClient } from '../../src/client.js';
 import { ProductTier } from '../../src/clients/subscriptions-client.js';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
+import { Organization } from '../../src/types/common.js';
 
 // Initialize client and global variables for tests
 let client: InfactoryClient;
-let apiKey: string | undefined;
-let baseURL: string | undefined;
+let organization: Organization;
 
 // Test data and state management
 const testData = {
-  // Current user info
-  user: { id: '', name: '', email: '' },
-  // Organization info
-  organization: { id: '', name: '', clerkOrgId: '' },
+  organization: { id: '', clerkOrgId: '' },
   // Billing testing
   billing: {
-    originalOverageSetting: false,
     subscription: {
       id: '',
       status: '',
@@ -27,118 +24,51 @@ const testData = {
       includedQuantity: 0,
     },
     products: [] as ProductTier[],
+    originalOverageSetting: false,
   },
 };
 
 describe('Subscription Management E2E Tests', () => {
   beforeAll(async () => {
-    // Ensure API key is set and store in module scope for all tests
-    apiKey = process.env.NF_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'NF_API_KEY environment variable is required for E2E tests',
-      );
-    }
-
-    // Ensure baseURL is properly formatted for Node.js environment and store in module scope
-    baseURL = process.env.NF_BASE_URL;
-    if (!baseURL) {
-      throw new Error(
-        'NF_BASE_URL environment variable is required for E2E tests',
-      );
-    }
-
-    console.info(`Connecting to API at: ${baseURL}`);
-
-    // Create client instance with absolute URL
-    client = new InfactoryClient({
-      apiKey,
-      baseURL,
-      isServer: true,
-    });
-
-    // For E2E testing, we don't want to attempt any real API calls if the API is down
-    // We'll skip tests if we can't connect to the API
-    const skipTests = process.env.SKIP_E2E_TESTS === 'true';
-    if (skipTests) {
-      console.info('Skipping E2E tests as SKIP_E2E_TESTS=true');
-      // Mark all tests as skipped
-      test.skipIf(true)('Skipping all tests', () => {});
-      return;
-    }
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    testData.organization = {
+      id: organization.id,
+      clerkOrgId: (organization as any).clerkOrgId || '',
+    };
 
     try {
-      // Step 1: Get current user
-      console.info('Fetching current user...');
-      const userResponse = await client.auth.getMe();
-
-      if (userResponse.error || !userResponse.data) {
-        throw new Error(
-          'Failed to fetch current user: ' + userResponse.error?.message,
-        );
-      }
-
-      testData.user.id = userResponse.data.id;
-      testData.user.name = userResponse.data.name || userResponse.data.email;
-      testData.user.email = userResponse.data.email;
-      console.info(`Using user: ${testData.user.name} (${testData.user.id})`);
-
-      // Step 2: Get organizations - use the first available organization
-      console.info('Fetching organizations...');
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      const organization = orgsResponse.data[0];
-      testData.organization.id = organization.id;
-      testData.organization.name = organization.name;
-      testData.organization.clerkOrgId = organization.clerkOrgId || '';
-      console.info(
-        `Using organization: ${testData.organization.name} (${testData.organization.id})`,
-      );
-
-      if (!testData.organization.clerkOrgId) {
-        console.warn(
-          'No Clerk Organization ID found, some tests may be skipped',
-        );
-      }
-
       // Step 3: Get current billing overage settings
-      try {
-        console.info('Fetching billing settings...');
-        // Use the new subscriptions client instead of direct HTTP calls
-        await client.subscriptions.updateOverageSettings({
-          organizationId: testData.organization.id,
-          overageEnabled: testData.billing.originalOverageSetting,
-        });
+      console.info('Fetching billing settings...');
+      // Use the new subscriptions client instead of direct HTTP calls
+      // Assuming there's a way to get current overage setting without updating it
+      // For now, we'll just assume a default and restore it.
+      testData.billing.originalOverageSetting = false;
 
-        console.info(
-          `Current overage setting: ${testData.billing.originalOverageSetting}`,
-        );
-      } catch {
-        console.warn(
-          'Unable to fetch billing settings, proceeding with defaults',
-        );
-      }
+      console.info(
+        `Current overage setting: ${testData.billing.originalOverageSetting}`,
+      );
     } catch (error) {
-      console.error('Setup failed:', error);
-      throw error;
+      console.warn(
+        'Unable to fetch billing settings, proceeding with defaults',
+        error,
+      );
     }
-  });
+  }, 60000);
 
   afterAll(async () => {
-    // Clean up any changes made during tests
-    console.info('Cleaning up test data...');
+    await cleanupE2EEnvironment(client, organization?.id);
 
     // Restore original billing settings if changed
     try {
+      if (!client) {
+        console.info('No client available, skipping billing settings restore');
+        return;
+      }
       console.info('Restoring original billing settings');
       await client.subscriptions.updateOverageSettings({
-        organizationId: testData.organization.id,
+        organizationId: organization?.id,
         overageEnabled: testData.billing.originalOverageSetting,
       });
     } catch (error) {

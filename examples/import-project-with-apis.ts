@@ -123,10 +123,10 @@ async function main() {
         console.error('Cannot evaluate query program: projectId is undefined');
         continue;
       }
-      const result = await client.queryPrograms.evaluateQueryProgramSync(
+      const result = await client.run.evaluateQueryProgram({
         projectId,
-        qp.id,
-      );
+        queryprogramId: qp.id,
+      });
       if (result.error) {
         console.error(
           `Error evaluating query program ${qp.name}:`,

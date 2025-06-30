@@ -99,7 +99,7 @@ export class LiveClient {
           tools.push({
             type: toolName,
             function: {
-              name: `/${apiSlug}/${version}/${fnDef.name}`,
+              name: fnDef.name,
               description: fnDef.description,
               parameters: fnDef.parameters,
             },

@@ -91,7 +91,7 @@ async function apisExample() {
       if (apisResponse.data && apisResponse.data.length > 0) {
         apisResponse.data.forEach((api, index) => {
           console.info(
-            `${index + 1}. ${api.name} (ID: ${api.id}) - Path: ${api.basePath}/${api.version} - Status: ${api.status}`,
+            `${index + 1}. ${api.name} (ID: ${api.id}) - Path: ${api.slug}/${api.version} - Status: ${api.status}`,
           );
         });
 
@@ -106,7 +106,7 @@ async function apisExample() {
           console.info('API Details:');
           console.info(`- ID: ${apiResponse.data?.id}`);
           console.info(`- Name: ${apiResponse.data?.name}`);
-          console.info(`- Base Path: ${apiResponse.data?.basePath}`);
+          console.info(`- Base Path: ${apiResponse.data?.slug}`);
           console.info(`- Version: ${apiResponse.data?.version}`);
           console.info(`- Status: ${apiResponse.data?.status}`);
           console.info(
@@ -163,11 +163,11 @@ async function apisExample() {
     // Create a new API
     console.info('\n5. Creating a new API:');
     const createApiResponse = await client.apis.createApi({
-      name: 'Example API',
+      slug: 'example-api',
       projectId: projectId,
-      basePath: 'example-api',
-      version: 'v1',
+      name: 'Example API',
       description: 'An example API created via the SDK',
+      version: 'v1',
     });
 
     if (createApiResponse.error) {
@@ -245,7 +245,7 @@ async function apisExample() {
 
       // Update the API
       console.info('\n9. Updating the API:');
-      const updateApiResponse = await client.apis.updateApi(apiId, {
+      const updateApiResponse = await client.apis.updateApi(apiId!, {
         description: 'Updated description for the example API',
       });
 
@@ -259,7 +259,7 @@ async function apisExample() {
 
       // Delete the API
       console.info('\n10. Deleting the API:');
-      const deleteApiResponse = await client.apis.deleteApi(apiId);
+      const deleteApiResponse = await client.apis.deleteApi(apiId!);
       if (deleteApiResponse.error) {
         console.error('Error deleting API:', deleteApiResponse.error);
       } else {

@@ -4,6 +4,9 @@ import { PlatformsClient } from '../src/clients/platforms-client.js';
 import { OrganizationsClient } from '../src/clients/organizations-client.js';
 import { TeamsClient } from '../src/clients/teams-client.js';
 import { ProjectsClient } from '../src/clients/projects-client.js';
+import { BuildClient } from '../src/clients/build-client.js';
+import { RunClient } from '../src/clients/run-client.js';
+import { ConnectClient } from '../src/clients/connect-client.js';
 
 // Mock the HttpClient
 vi.mock('../src/core/http-client', () => {
@@ -76,6 +79,30 @@ vi.mock('../src/clients/projects-client', () => {
   };
 });
 
+vi.mock('../src/clients/build-client', () => {
+  return {
+    BuildClient: vi.fn().mockImplementation(() => ({
+      // Mock methods as needed
+    })),
+  };
+});
+
+vi.mock('../src/clients/run-client', () => {
+  return {
+    RunClient: vi.fn().mockImplementation(() => ({
+      // Mock methods as needed
+    })),
+  };
+});
+
+vi.mock('../src/clients/connect-client', () => {
+  return {
+    ConnectClient: vi.fn().mockImplementation(() => ({
+      // Mock methods as needed
+    })),
+  };
+});
+
 describe('InfactoryClient', () => {
   describe('constructor', () => {
     it('should create a client with valid API key', () => {
@@ -107,12 +134,18 @@ describe('InfactoryClient', () => {
       expect(OrganizationsClient).toHaveBeenCalledTimes(1);
       expect(TeamsClient).toHaveBeenCalledTimes(1);
       expect(ProjectsClient).toHaveBeenCalledTimes(1);
+      expect(BuildClient).toHaveBeenCalledTimes(1);
+      expect(RunClient).toHaveBeenCalledTimes(1);
+      expect(ConnectClient).toHaveBeenCalledTimes(1);
 
       // Check that all clients are accessible on the instance
       expect(client.platforms).toBeDefined();
       expect(client.organizations).toBeDefined();
       expect(client.teams).toBeDefined();
       expect(client.projects).toBeDefined();
+      expect(client.build).toBeDefined();
+      expect(client.run).toBeDefined();
+      expect(client.connect).toBeDefined();
     });
   });
 

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { InfactoryClient } from '../../src/client.js';
-import { Organization } from '../../src/types/common.js';
-import { Team } from '../../src/types/common.js';
-import { Project } from '../../src/types/common.js';
 import {
+  Organization,
+  Team,
+  Project,
   CreateQueryProgramParams,
   QueryProgram,
   CreateAPIParams,
@@ -11,7 +11,7 @@ import {
   APIEndpoint,
   CreateAPIEndpointParams,
 } from '../../src/types/common.js';
-import { randomBytes } from 'crypto';
+import { setupE2EEnvironment, cleanupE2EEnvironment } from './e2e-setup.js';
 
 describe('E2E Tests: API Deployment Workflow', () => {
   let client: InfactoryClient;
@@ -21,13 +21,13 @@ describe('E2E Tests: API Deployment Workflow', () => {
   let queryProgram: QueryProgram;
   let api: API;
   let endpoint: APIEndpoint;
+  let uniqueId: string;
 
   // Generate unique names for test resources
-  const uniqueId = randomBytes(4).toString('hex');
-  const projectName = `e2e-api-project-${uniqueId}`;
-  const queryProgramName = `e2e-api-query-${uniqueId}`;
-  const apiName = `e2e-api-${uniqueId}`;
-  const endpointName = `e2e-endpoint-${uniqueId}`;
+  const projectName = (id: string) => `e2e-api-project-${id}`;
+  const queryProgramName = (id: string) => `e2e-api-query-${id}`;
+  const apiName = (id: string) => `e2e-api-${id}`;
+  const endpointName = (id: string) => `e2e-endpoint-${id}`;
 
   // Query program code for our test
   const queryProgramCode = `class AnswerQueryProgram(QueryProgram):
@@ -55,95 +55,39 @@ describe('E2E Tests: API Deployment Workflow', () => {
   const chatMessage = 'Tell me about this API endpoint';
 
   beforeAll(async () => {
-    const apiKey = process.env.NF_API_KEY;
-    const baseUrl = process.env.NF_BASE_URL;
-
-    if (!apiKey) {
-      throw new Error('NF_API_KEY environment variable is not set.');
-    }
-    if (!baseUrl) {
-      throw new Error('NF_BASE_URL environment variable is not set.');
-    }
-
-    // Create client with server mode enabled for e2e tests
-    client = new InfactoryClient({
-      apiKey,
-      baseURL: baseUrl,
-      isServer: true,
-      fetch: (url, options) => {
-        console.info('FETCH URL:', url);
-        return fetch(url, options);
-      },
-    });
-
-    console.info('Setting up test resources...');
+    const env = await setupE2EEnvironment();
+    client = env.client;
+    organization = env.organization;
+    team = env.team;
+    uniqueId = env.uniqueId;
 
     try {
-      // Step 1: Get organizations - use the first available organization
-      console.info('Fetching organizations...');
-      const orgsResponse = await client.organizations.list();
-
-      if (!orgsResponse.data || orgsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch organizations or no organizations available',
-        );
-      }
-
-      // Get first organization
-      organization = orgsResponse.data[0];
       console.info(
-        `Using organization: ${organization.name} (${organization.id})`,
+        `Creating project: ${projectName(uniqueId)} in team ${team.id}`,
       );
-
-      // Step 2: Get teams - use the first available team in the organization
-      console.info('Fetching teams...');
-      const teamsResponse = await client.teams.getTeams(organization.id);
-
-      if (!teamsResponse.data || teamsResponse.data.length === 0) {
-        throw new Error(
-          'Failed to fetch teams or no teams available in the organization',
-        );
-      }
-
-      team = teamsResponse.data[0];
-      console.info(`Using team: ${team.name} (${team.id})`);
-
-      // Step 3: Create a test project for API deployment testing
-      console.info(`Creating project: ${projectName} in team ${team.id}`);
-      const projectReq = { name: projectName, teamId: team.id };
+      const projectReq = { name: projectName(uniqueId), teamId: team.id };
       const projectResponse = await client.projects.createProject(projectReq);
       expect(projectResponse.data).toBeDefined();
       project = projectResponse.data!;
       console.info(`Created project ID: ${project.id}`);
     } catch (error) {
-      console.error('Failed during setup:', error);
+      console.error('Failed during project setup:', error);
       throw error; // Re-throw to fail the test suite
     }
   }, 60000); // Increase timeout for setup
 
   afterAll(async () => {
-    if (!client) return;
-
-    try {
-      // Cleanup: Delete the project created for testing
-      if (project?.id) {
-        console.info(`Cleaning up: Deleting project ${project.id}`);
-        await client.projects.deleteProject(project.id);
-      }
-    } catch (error) {
-      console.error('Error during cleanup:', error);
-      // Don't fail the test suite on cleanup errors
-    }
+    if (!organization || !team || !project) return;
+    await cleanupE2EEnvironment(client, organization.id, team.id, project.id);
   }, 60000); // Increased timeout
 
   it('should create and publish a query program for API use', async () => {
-    console.info(`Creating query program: ${queryProgramName}`);
+    console.info(`Creating query program: ${queryProgramName(uniqueId)}`);
     try {
       const createReq: CreateQueryProgramParams = {
-        name: queryProgramName,
+        cue: queryProgramName(uniqueId),
         projectId: project.id,
-        query: 'API test query',
-        queryProgram: queryProgramCode,
+        code: queryProgramCode,
         published: false, // Start unpublished, then publish later
       };
 
@@ -225,7 +169,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
     try {
       // Create a conversation to use for the chat
-      const conversationResponse = await client.chat.createConversation({
+      const conversationResponse = await client.explore.createConversation({
         projectId: project.id,
         title: `API Test Conversation - ${uniqueId}`,
       });
@@ -244,7 +188,7 @@ describe('E2E Tests: API Deployment Workflow', () => {
 
       // Send a message to test completions
       console.info(`Sending chat message in conversation ${conversationId}`);
-      const chatResponse = await client.chat.sendMessage(
+      const chatResponse = await client.explore.sendMessage(
         conversationId,
         {
           conversationId: conversationId,
@@ -266,14 +210,16 @@ describe('E2E Tests: API Deployment Workflow', () => {
   }, 60000); // Increased timeout
 
   it('should create an API for the project', async () => {
-    console.info(`Creating API: ${apiName} for project ${project.id}`);
+    console.info(
+      `Creating API: ${apiName(uniqueId)} for project ${project.id}`,
+    );
 
     const createApiParams: CreateAPIParams = {
       projectId: project.id,
-      name: apiName,
+      name: apiName(uniqueId),
       description: 'API created for e2e tests',
       version: '1.0.0',
-      basePath: '/test_api_' + uniqueId,
+      slug: uniqueId,
     };
 
     try {
@@ -401,15 +347,17 @@ describe('E2E Tests: API Deployment Workflow', () => {
     }
 
     // This step corresponds to: AddEndpointDialog, Add Success, APIDetailEditDocs, apisApi.createApiEndpoint
-    console.info(`Creating API endpoint ${endpointName} for API ${api.id}`);
+    console.info(
+      `Creating API endpoint ${endpointName(uniqueId)} for API ${api.id}`,
+    );
     const createEndpointParams: CreateAPIEndpointParams = {
       apiId: api.id,
-      endpointName: endpointName,
+      endpointName: endpointName(uniqueId),
       httpMethod: 'GET',
       path: '/sample',
       queryprogramId: queryProgram.id,
       description: 'Sample endpoint created for e2e testing',
-      operationId: `get${endpointName}`,
+      operationId: `get${endpointName(uniqueId)}`,
       // Optional parameters
       tags: 'test,e2e',
       parameters: '',

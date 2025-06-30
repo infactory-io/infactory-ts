@@ -1,5 +1,5 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse, GetCoverageResponse, Graph } from '../types/common.js';
+import { ApiResponse, Graph } from '../types/common.js';
 import {
   QueryProgram,
   CreateQueryProgramParams,
@@ -48,12 +48,9 @@ export class QueryProgramsClient {
   async createQueryProgram(
     params: CreateQueryProgramParams,
   ): Promise<ApiResponse<QueryProgram>> {
-    const filteredParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value != null),
-    );
     return await this.httpClient.post<QueryProgram>(
       '/v1/queryprograms',
-      filteredParams,
+      params,
     );
   }
 
@@ -67,12 +64,9 @@ export class QueryProgramsClient {
     id: string,
     params: Partial<CreateQueryProgramParams>,
   ): Promise<ApiResponse<QueryProgram>> {
-    const filteredParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value != null),
-    );
     return await this.httpClient.patch<QueryProgram>(
       `/v1/queryprograms/${id}`,
-      filteredParams,
+      params,
     );
   }
 
@@ -211,19 +205,6 @@ export class QueryProgramsClient {
   }
 
   /**
-   * Get coverage information for a project's query programs
-   * @param projectId - The ID of the project
-   * @returns A promise that resolves to an API response containing coverage information
-   */
-  async getCoverage(
-    projectId: string,
-  ): Promise<ApiResponse<GetCoverageResponse>> {
-    return await this.httpClient.get<GetCoverageResponse>(
-      `/v1/queryprograms/coverage/${projectId}`,
-    );
-  }
-
-  /**
    * Evaluate a query program with streaming response
    * @param projectId - The ID of the project
    * @param queryprogramId - The ID of the query program to evaluate
@@ -235,7 +216,7 @@ export class QueryProgramsClient {
     params?: Record<string, any>,
   ): Promise<ReadableStream<Uint8Array>> {
     params = params || {};
-    let url = '/v1/actions/evaluate/queryprogram';
+    let url = '/v1/run/queryprogram';
     const query_params = new URLSearchParams(params).toString();
     if (query_params) {
       url = `${url}?${query_params}`;
@@ -267,7 +248,7 @@ export class QueryProgramsClient {
     params?: Record<string, any>,
   ): Promise<ApiResponse<any>> {
     params = params || {};
-    let url = '/v1/actions/evaluate/queryprogram';
+    let url = '/v1/run/queryprogram';
     const query_params = new URLSearchParams(params).toString();
     if (query_params) {
       url = `${url}?${query_params}`;

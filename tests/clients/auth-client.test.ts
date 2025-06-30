@@ -113,7 +113,7 @@ describe('AuthClient', () => {
       expect(httpClientMock.post).toHaveBeenCalledOnce();
       // Ensure the endpoint and payload are correct
       expect(httpClientMock.post).toHaveBeenCalledWith(
-        '/v1/authentication/api-keys',
+        '/v1/authentication/api-key',
         { name: keyName },
       );
       expect(result).toEqual(mockResponse);
@@ -152,7 +152,7 @@ describe('AuthClient', () => {
 
       expect(httpClientMock.patch).toHaveBeenCalledOnce();
       expect(httpClientMock.patch).toHaveBeenCalledWith(
-        `/v1/authentication/api-keys/${keyId}`,
+        `/v1/authentication/api-key/${keyId}`,
         { name: newName },
       );
       expect(result).toEqual(mockResponse);
@@ -190,7 +190,7 @@ describe('AuthClient', () => {
 
       expect(httpClientMock.patch).toHaveBeenCalledOnce();
       expect(httpClientMock.patch).toHaveBeenCalledWith(
-        `/v1/authentication/api-keys/${keyId}/enable`,
+        `/v1/authentication/api-key/${keyId}/enable`,
         {},
       );
       expect(result).toEqual(mockResponse);
@@ -228,7 +228,7 @@ describe('AuthClient', () => {
 
       expect(httpClientMock.patch).toHaveBeenCalledOnce();
       expect(httpClientMock.patch).toHaveBeenCalledWith(
-        `/v1/authentication/api-keys/${keyId}/disable`,
+        `/v1/authentication/api-key/${keyId}/disable`,
         {},
       );
       expect(result).toEqual(mockResponse);
@@ -262,7 +262,7 @@ describe('AuthClient', () => {
 
       expect(httpClientMock.delete).toHaveBeenCalledOnce();
       expect(httpClientMock.delete).toHaveBeenCalledWith(
-        `/v1/authentication/api-keys/${keyId}`,
+        `/v1/authentication/api-key/${keyId}`,
       );
       expect(result).toEqual(mockResponse);
       expect(result.data).toBeUndefined();

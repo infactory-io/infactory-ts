@@ -75,6 +75,7 @@ export default tseslint.config(
       '**/*.js',
       'eslint.config.js',
       'vitest.config.ts',
+      'vitest.setup-env.ts',
       'examples/**/*.ts',
     ],
   },
