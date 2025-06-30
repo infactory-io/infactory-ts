@@ -269,10 +269,7 @@ describe('TeamsClient', () => {
       // Verify the HTTP client was called correctly
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         '/v1/teams/team-1/move',
-        undefined,
-        {
-          params: { new_organization_id: 'new-org-123' },
-        },
+        { new_organization_id: 'new-org-123' },
       );
 
       // Verify the result
