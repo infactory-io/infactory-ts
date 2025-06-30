@@ -157,7 +157,7 @@ class AnswerQueryProgram(QueryProgram):
           console.info(`- ID: ${detailsResponse.data?.id}`);
           console.info(`- Name: ${detailsResponse.data?.name}`);
           console.info(`- Project ID: ${detailsResponse.data?.projectId}`);
-          console.info(`- Query: ${detailsResponse.data?.query}`);
+          console.info(`- Query: ${detailsResponse.data?.cue}`);
           console.info(
             `- Published: ${detailsResponse.data?.published ? 'Yes' : 'No'}`,
           );
@@ -173,10 +173,10 @@ class AnswerQueryProgram(QueryProgram):
         try {
           // Execute the query program
           console.info('Executing the query program:');
-          const executeResponse = await client.run.evaluateQueryProgram(
+          const executeResponse = await client.run.evaluateQueryProgram({
             projectId,
-            queryProgramId,
-          );
+            queryprogramId: queryProgramId,
+          });
 
           if (isReadableStream(executeResponse)) {
             console.info('Received streaming response, processing events...');

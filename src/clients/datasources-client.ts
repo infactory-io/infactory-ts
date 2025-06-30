@@ -431,7 +431,7 @@ export class DatasourcesClient {
     connectionString: string,
   ): Promise<ApiResponse<TestConnectionResponse>> {
     return await this.httpClient.post('/v1/database/test-connection', {
-      body: { connection_string: connectionString },
+      body: { connectionString: connectionString },
     });
   }
 
@@ -487,8 +487,8 @@ export class DatasourcesClient {
     // Convert camelCase to snake_case for API request
     return await this.httpClient.post('/v1/database/validate-sql-query', {
       body: {
-        connection_string: request.connectionString,
-        sql_query: request.sqlQuery,
+        connectionString: request.connectionString,
+        sqlQuery: request.sqlQuery,
       },
     });
   }
@@ -505,8 +505,8 @@ export class DatasourcesClient {
     // Convert camelCase to snake_case for API request
     return await this.httpClient.post('/v1/database/validate-sql-syntax', {
       body: {
-        connection_string: request.connectionString,
-        sql_query: request.sqlQuery,
+        connectionString: request.connectionString,
+        sqlQuery: request.sqlQuery,
       },
     });
   }
@@ -521,7 +521,7 @@ export class DatasourcesClient {
   ): Promise<ApiResponse<ExtractSqlParametersResponse>> {
     // Convert camelCase to snake_case for API request
     return await this.httpClient.post('/v1/database/extract-sql-parameters', {
-      body: { sql_query: sqlQuery },
+      body: { sqlQuery: sqlQuery },
     });
   }
 }

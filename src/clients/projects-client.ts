@@ -163,11 +163,9 @@ export class ProjectsClient {
     projectId: string,
     newTeamId: string,
   ): Promise<ApiResponse<Project>> {
-    return this.httpClient.post<Project>(
-      `/v1/projects/${projectId}/move`,
-      undefined,
-      { newTeamId },
-    );
+    return this.httpClient.post<Project>(`/v1/projects/${projectId}/move`, {
+      newTeamId,
+    });
   }
 
   /**

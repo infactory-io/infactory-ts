@@ -71,3 +71,22 @@ export interface ConversationGraph {
   conversationId: string; // UUID string
   items: GraphItem[];
 }
+
+export interface ChatMessageCreate {
+  conversation_id: string;
+  project_id: string;
+  queryprogram_id?: string | null;
+  content: string;
+  conversation_mode?: 'explore' | 'chat';
+  author_role?: string;
+  content_type?: string;
+  author_user_id?: string | null;
+  parent_message_id?: string | null;
+  api_endpoints?: [string, string][] | null;
+  model?: string;
+  temperature?: number;
+  max_tokens?: number | null;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+}

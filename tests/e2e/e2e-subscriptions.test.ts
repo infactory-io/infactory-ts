@@ -7,10 +7,10 @@ import { Organization } from '../../src/types/common.js';
 // Initialize client and global variables for tests
 let client: InfactoryClient;
 let organization: Organization;
-let originalOverageSetting: boolean;
 
 // Test data and state management
 const testData = {
+  organization: { id: '', clerkOrgId: '' },
   // Billing testing
   billing: {
     subscription: {
@@ -24,6 +24,7 @@ const testData = {
       includedQuantity: 0,
     },
     products: [] as ProductTier[],
+    originalOverageSetting: false,
   },
 };
 
@@ -31,9 +32,11 @@ describe('Subscription Management E2E Tests', () => {
   beforeAll(async () => {
     const env = await setupE2EEnvironment();
     client = env.client;
-    user = env.user;
     organization = env.organization;
-    uniqueId = env.uniqueId;
+    testData.organization = {
+      id: organization.id,
+      clerkOrgId: (organization as any).clerkOrgId || '',
+    };
 
     try {
       // Step 3: Get current billing overage settings
@@ -41,9 +44,11 @@ describe('Subscription Management E2E Tests', () => {
       // Use the new subscriptions client instead of direct HTTP calls
       // Assuming there's a way to get current overage setting without updating it
       // For now, we'll just assume a default and restore it.
-      originalOverageSetting = false; // Default for testing
+      testData.billing.originalOverageSetting = false;
 
-      console.info(`Current overage setting: ${originalOverageSetting}`);
+      console.info(
+        `Current overage setting: ${testData.billing.originalOverageSetting}`,
+      );
     } catch (error) {
       console.warn(
         'Unable to fetch billing settings, proceeding with defaults',
@@ -60,7 +65,7 @@ describe('Subscription Management E2E Tests', () => {
       console.info('Restoring original billing settings');
       await client.subscriptions.updateOverageSettings({
         organizationId: organization.id,
-        overageEnabled: originalOverageSetting,
+        overageEnabled: testData.billing.originalOverageSetting,
       });
     } catch (error) {
       console.warn(

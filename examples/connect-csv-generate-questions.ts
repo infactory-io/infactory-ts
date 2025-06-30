@@ -87,12 +87,6 @@ async function main() {
       'Mental Health Data',
     );
 
-    if (connectResponse.error || !connectResponse.data) {
-      throw new Error(
-        `Failed to connect CSV file: ${connectResponse.error?.message}`,
-      );
-    }
-
     const dataSource = connectResponse.datasource;
     const uploadResponse = connectResponse.uploadResponse;
 

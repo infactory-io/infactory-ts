@@ -8,8 +8,6 @@ import {
   QueryProgram,
   // API,
   APIEndpoint,
-  // OpenAPISpec,
-  Conversation,
   // ChatMessageCreate,
   ApiResponse,
   // InfactoryAPIError,
@@ -20,7 +18,7 @@ import {
 import * as dotenv from 'dotenv';
 import { randomBytes } from 'crypto';
 import { InfactoryAPIError } from '@infactory/infactory-ts';
-import { OpenAPISpec } from '@/api/live.js';
+import { Conversation, OpenAPISpec } from '@/clients/index.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -109,6 +107,9 @@ async function handleResponse<T>(
 
 // --- Main Example Function ---
 async function runSaaSMonitoringExample() {
+  if (!API_KEY) {
+    throw Error('Missing ');
+  }
   logStep(0, 'Initializing Infactory Client');
   const client = new InfactoryClient({ apiKey: API_KEY });
   logSuccess('Client initialized.');
@@ -131,7 +132,7 @@ async function runSaaSMonitoringExample() {
   }
   // === Step 0.5: Get Organization
   const organization = await handleResponse(
-    client.organizations.getOrganization(organizationId),
+    client.organizations.get(organizationId),
     'Fetching Organization',
   );
   if (!organization) {
@@ -232,7 +233,7 @@ async function runSaaSMonitoringExample() {
     // Using createQueryProgram directly for simplicity.
     // The platform's AI will translate the name/query into an executable program.
     const qp = await handleResponse(
-      client.queryprograms.createQueryProgram({
+      client.queryPrograms.createQueryProgram({
         projectId: projectId,
         name: question, // Use the question as the name
         // Provide context that might help generation (optional)
@@ -289,7 +290,7 @@ async function runSaaSMonitoringExample() {
   for (const qp of queryPrograms) {
     logInfo(`Publishing query: "${qp.name}" (ID: ${qp.id})`);
     const publishedQp = await handleResponse(
-      client.queryprograms.publishQueryProgram(qp.id),
+      client.queryPrograms.publishQueryProgram(qp.id),
       `Publishing Query ${qp.id}`,
     );
 
@@ -369,8 +370,8 @@ async function runSaaSMonitoringExample() {
   const chatQuestion = 'How many users signed up yesterday?';
   logInfo(`Sending chat message: "${chatQuestion}"`);
 
-  // Sending a message - this often returns a stream
-  const chatResponseStream = await client.chat.sendMessage(conversationId, {
+  // Sending a message - this often returns a stream (Promise of ReadableStream)
+  const chatResponsePromise = client.chat.sendMessage(conversationId, {
     projectId: projectId,
     conversationId: conversationId,
     content: chatQuestion,
@@ -380,7 +381,7 @@ async function runSaaSMonitoringExample() {
   // Process the stream response
   logInfo('Waiting for chat response...');
   const finalChatResponse = await handleResponse(
-    chatResponseStream, // Pass the stream directly
+    chatResponsePromise,
     'Sending Chat Message',
   );
 

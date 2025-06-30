@@ -37,7 +37,6 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
   beforeAll(async () => {
     const env = await setupE2EEnvironment();
     client = env.client;
-    user = env.user;
     organization = env.organization;
     team = env.team;
     uniqueId = env.uniqueId;
@@ -248,7 +247,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         // Initialize a placeholder secret in case API call fails
         secret = {
           id: `placeholder-${uniqueId}`,
-          name: secretName,
+          name: secretName(uniqueId),
           teamId: team.id,
           type: 'api_key',
           value: 'sk_test_51NZQBsLSIJ7WvUQoDQrAgQwLcm0ExAmPLEkEy',
@@ -257,7 +256,7 @@ describe('E2E Tests: Secrets & Credentials Management', () => {
         };
 
         const createParams = {
-          name: secretName,
+          name: secretName(uniqueId),
           teamId: team.id,
           type: 'api_key',
           value: 'sk_test_51NZQBsLSIJ7WvUQoDQrAgQwLcm0ExAmPLEkEy',

@@ -1,8 +1,15 @@
 import { HttpClient } from '../core/http-client.js';
-import { ApiResponse, ToolNameSpace } from '../types/common.js';
+import { ApiResponse, I7YPendingJob, ToolNameSpace } from '../types/common.js';
 
 // Type definitions
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+// Allow any valid HTTP method strings (case-sensitive) while preserving literal suggestions
+export type HttpMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'DELETE'
+  | 'PATCH'
+  | (string & {});
 
 // Authentication Header Definitions
 // 1. None
@@ -66,10 +73,13 @@ export interface CallToolFunctionParams {
 /**
  * Configuration for a parameter
  */
-export interface ParameterConfig {
-  value: string;
-  required: boolean;
-}
+// Accept either simple string or detailed config
+export type ParameterConfig =
+  | string
+  | {
+      value: string;
+      required: boolean;
+    };
 
 /**
  * Group of parameters
@@ -119,6 +129,10 @@ export interface TestHttpConnectionRequest {
   parameterGroups?: ParameterGroup[];
   authType?: AuthType;
   auth?: HttpAuthConfig;
+  /**
+   * @deprecated Use `auth` instead. Kept for backwards compatibility with examples.
+   */
+  authConfig?: HttpAuthConfig;
   body?: HttpBodyConfig;
   responsePathExtractor?: string;
 }

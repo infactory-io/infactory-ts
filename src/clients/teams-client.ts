@@ -103,8 +103,8 @@ export class TeamsClient {
     id: string,
     newOrganizationId: string,
   ): Promise<ApiResponse<Team>> {
-    return this.httpClient.post<Team>(`/v1/teams/${id}/move`, undefined, {
-      params: { new_organization_id: newOrganizationId },
+    return this.httpClient.post<Team>(`/v1/teams/${id}/move`, {
+      new_organization_id: newOrganizationId,
     });
   }
 

@@ -57,6 +57,9 @@ export async function setupE2EEnvironment(): Promise<E2EEnvironment> {
 
   if (teamsResponse.data?.teams && teamsResponse.data.teams.length > 0) {
     team = teamsResponse.data.teams[0];
+    if (!team) {
+      throw new Error('Team was not found');
+    }
     const orgResponse = await client.organizations.get(team.organizationId);
     if (orgResponse.error) {
       throw orgResponse.error;

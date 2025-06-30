@@ -85,7 +85,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
       // If projects exist, use the first one
       project = projectsResponse.data[0];
       console.info(
-        `✅ Found existing project: ${project.name} (${project.id})`,
+        `✅ Found existing project: ${project?.name} (${project?.id})`,
       );
     } else {
       console.info('ℹ️ No existing projects found in team');
@@ -112,7 +112,7 @@ describe('E2E Tests: User Onboarding Flow', () => {
 
       project = createProjectResponse.data!;
       console.info(
-        `✅ Created default project: ${project.name} (${project.id})`,
+        `✅ Created default project: ${project?.name} (${project?.id})`,
       );
     } else {
       console.info('ℹ️ Using existing project');

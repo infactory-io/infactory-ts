@@ -28,6 +28,7 @@ const testData = {
   exportedProjectPath: path.join(testDataDir, 'exported-project.json'),
   importedProject: { id: '', name: '' },
   exampleProject: { id: '', name: '' },
+  team: { id: '', name: '' },
 };
 
 describe('Project Management E2E Tests', () => {
@@ -36,7 +37,6 @@ describe('Project Management E2E Tests', () => {
     client = env.client;
     organization = env.organization;
     team = env.team;
-    uniqueId = env.uniqueId;
   }, 60000);
 
   afterAll(async () => {
@@ -179,7 +179,6 @@ describe('Project Management E2E Tests', () => {
     // In frontend, this would happen when user clicks Save button in EditProject view
     const updateResponse = await client.projects.updateProject(
       testData.project.id,
-      testData.team.id,
       {
         name: updatedName,
         description: updatedDescription,

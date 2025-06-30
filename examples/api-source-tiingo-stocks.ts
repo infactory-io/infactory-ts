@@ -33,7 +33,7 @@ const client = new InfactoryClient({
  * This script demonstrates using connectAPI to establish a connection to the Tiingo API
  * and retrieve historical stock prices for Apple (AAPL)
  */
-async function main(projectId: string, apiKey: string, ticker: string) {
+async function main(apiKey: string, ticker: string) {
   try {
     console.info('Connecting to Tiingo Stock API...');
 
@@ -112,4 +112,4 @@ if (!project.data) {
   process.exit(1);
 }
 
-main(project.data.id, process.env.TIINGO_API_KEY, 'AAPL').catch(console.error);
+main(process.env.TIINGO_API_KEY, 'AAPL').catch(console.error);

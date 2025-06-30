@@ -12,6 +12,7 @@ describe('Settings Management E2E Tests', () => {
 
   // Test data and state management
   const testData = {
+    organization: { id: '', name: '' },
     // For invitation testing
     invitation: { id: '', email: '' },
     // Member management testing
@@ -30,10 +31,9 @@ describe('Settings Management E2E Tests', () => {
   beforeAll(async () => {
     const env = await setupE2EEnvironment();
     client = env.client;
-    user = env.user;
     organization = env.organization;
     team = env.team;
-    uniqueId = env.uniqueId;
+    testData.organization = { id: organization.id, name: organization.name };
     originalOrgName = organization.name;
   }, 60000);
 

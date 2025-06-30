@@ -292,6 +292,12 @@ async function datasourcesExample() {
         console.info('\nStep 3: Verifying the datasource status...');
 
         // Get datasource details to verify status
+        if (!datasourceId) {
+          console.error(
+            'Error verifying datasource: Datasource ID is undefined',
+          );
+          return;
+        }
         const verifyResponse =
           await client.datasources.getDatasource(datasourceId);
         if (verifyResponse.error) {

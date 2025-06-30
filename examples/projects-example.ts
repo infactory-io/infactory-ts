@@ -1,7 +1,5 @@
 import { InfactoryClient } from '../src/client.js';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -127,7 +125,7 @@ async function projectsExample() {
       try {
         const updateResponse = await client.projects.updateProject(projectId, {
           description: 'Updated description via SDK example',
-          teamId: team.id,
+          // teamId: team.id,
         });
         console.info('Update response:');
         // Properly display the update response

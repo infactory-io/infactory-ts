@@ -3,15 +3,13 @@
  */
 
 import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { InfactoryClient } from '../src/client.js';
 
 // Load environment variables from .env file
 config();
 
 // Get the directory name of the current module
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Initialize the Infactory client with API key from environment variables
 const apiKey = process.env.NF_API_KEY || '';
