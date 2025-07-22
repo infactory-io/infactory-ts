@@ -39,6 +39,7 @@
     "test:e2e:deploy": "vitest run tests/e2e/e2e-deploy.test.ts",
     "test:e2e:settings": "vitest run tests/e2e/e2e-settings.test.ts",
     "test:e2e:subscriptions": "vitest run tests/e2e/e2e-subscriptions.test.ts",
+    "test:e2e:quickstart": "vitest run tests/e2e/e2e-quickstart.test.ts",
     "test:all": "vitest --run",
     "test:all:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",

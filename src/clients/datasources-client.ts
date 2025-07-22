@@ -18,9 +18,43 @@ import {
 } from '../types/common.js'; // Ensure all necessary types are imported
 import * as path from 'path';
 import * as fs from 'fs';
-import { InfactoryAPIError } from '@/errors/index.js'; // Import error type
-import { SubmitJobParams } from './jobs-client.js';
 
+// import type { Blob as NodeBlob } from 'buffer';     // for Node typings
+import type { ReadStream } from 'fs';
+import { uploadCsvFile } from '@/utils/uploadCsvFile.js';
+// import { fileURLToPath } from 'url';
+
+/**
+ * Acceptable "file" shapes for the helper.
+ * – Browser:  File | Blob
+ * – Node:     string (path), Buffer, ReadStream, Blob
+ */
+export type Uploadable = File | Blob | Buffer | ReadStream | string;
+
+/** Options expected by the helper */
+export interface UploadCsvOptions {
+  /**
+   * UUID shown in the URL path:  /v1/actions/load/{projectId}
+   */
+  projectId: string;
+  /**
+   * Same UUID that goes into the ?datasource_id= query string.
+   */
+  datasourceId: string;
+  /**
+   * CSV you want to send (path, File, Buffer, etc.).
+   */
+  file: Uploadable;
+  /**
+   * Raw bearer token without the "Bearer " prefix.
+   */
+  accessToken: string;
+  /**
+   * Hostname + port, defaults to the dev server.
+   * Provide your production base URL from the caller.
+   */
+  baseUrl?: string;
+}
 // Dynamic imports will be used inside the server block for node-fetch and form-data
 
 /**
@@ -128,24 +162,36 @@ export class DatasourcesClient {
    * Upload a CSV file to a project by creating a datasource and uploading a file in one operation
    * @param projectId - Project ID
    * @param csvFilePath - Path to the CSV file to upload
+   * @param chunksize_mb - Optional chunksize for the upload (defaults to 10)
    * @param datasourceName - Optional name for the datasource (defaults to file name + timestamp)
-   * @param customSubmitJob - Optional function to submit the job (if you need custom job handling)
    * @returns The created datasource, job ID, and the raw upload Response object
    */
   async uploadCsvFile(
     projectId: string,
     csvFilePath: string,
+    chunksize_mb?: number,
     datasourceName?: string,
-    customSubmitJob?: (client: any, params: SubmitJobParams) => Promise<string>, // Return type updated to string
   ): Promise<{
     datasource: Datasource;
-    jobId: string;
-    uploadResponse: Response; // Return the raw Response object
+    uploadResponse: unknown;
+    jobId?: string;
   }> {
+    if (!this.httpClient.getIsServer()) {
+      throw new Error(
+        'Server-side file upload is not supported in browser environment',
+      );
+    }
+
     // Generate datasource name if not provided
     const now = new Date().toISOString().replace(/:/g, '-');
     const fileName = path.basename(csvFilePath);
     const actualDatasourceName = datasourceName || `${fileName} ${now}`;
+    chunksize_mb = chunksize_mb || 10;
+
+    // Assert file exists
+    if (!fs.existsSync(csvFilePath)) {
+      throw new Error(`File does not exist: ${csvFilePath}`);
+    }
 
     // Infer type from file extension (assuming CSV for this specific method)
     const datasourceType = 'csv';
@@ -176,210 +222,35 @@ export class DatasourcesClient {
       );
     }
 
-    // Step 2: Submit the job
-    const fileSize = fs.statSync(csvFilePath).size;
-    const jobPayload = {
+    // Step 2: Upload the file using form data
+    console.info('Uploading file to datasource...');
+
+    // Browser (e.g. React component)
+    // const handleSubmit = async (e: React.FormEvent) => {
+    //   e.preventDefault();
+    //   const file = (e.target as HTMLFormElement).fileInput.files[0];
+    //   await this._uploadCsvFile({
+    //     projectId: 'd6413dc7-5f1f-4599-ae5b-e0b5b2979f98',
+    //     datasourceId: '46b57288-2b96-495e-8a0d-717de10cf7ee',
+    //     file,
+    //     accessToken: this.get,
+    //     baseUrl: import.meta.env.VITE_API_BASE,
+    //   });
+    // };
+    const response = await uploadCsvFile({
+      projectId: projectId,
       datasourceId: datasource.id,
-      fileName: fileName,
-      fileSize: fileSize,
-      datasetName: actualDatasourceName,
+      file: csvFilePath,
+      accessToken: this.httpClient.getApiKey(),
+      baseUrl: this.httpClient.getBaseUrl(),
+    });
+
+    console.info('Upload successful:', response);
+
+    return {
+      datasource,
+      uploadResponse: response,
     };
-    const jobMetadata = {
-      fileName: fileName,
-      fileSize: fileSize,
-      datasetName: actualDatasourceName,
-    };
-
-    let jobId: string;
-    console.info('Submitting job for file upload...');
-    if (customSubmitJob) {
-      jobId = await customSubmitJob(null, {
-        projectId: projectId,
-        jobType: 'upload',
-        payload: jobPayload,
-        doNotSendToQueue: true, // Keep this consistent
-        sourceId: datasource.id,
-        source: 'datasource',
-        sourceEventType: 'file_upload',
-        sourceMetadata: JSON.stringify(jobMetadata),
-      });
-    } else {
-      const jobResponse = await this.httpClient.post<string>(
-        '/v1/jobs/submit',
-        {
-          projectId: projectId,
-          jobType: 'upload',
-          payload: jobPayload,
-          doNotSendToQueue: true, // Keep this consistent
-          sourceId: datasource.id,
-          source: 'datasource',
-          sourceEventType: 'file_upload',
-          sourceMetadata: JSON.stringify(jobMetadata),
-        },
-      );
-
-      if (jobResponse.error) {
-        throw jobResponse.error;
-      }
-      jobId = jobResponse.data || '';
-    }
-
-    if (!jobId) {
-      throw new Error('Error: No job ID received from job submission');
-    }
-    console.info(`Job submitted successfully: ${jobId}`);
-
-    // Step 3: Upload the file
-    const isServerEnv = this.httpClient.getIsServer();
-    if (isServerEnv) {
-      // --- Server-side implementation using direct node-fetch ---
-      console.info('Executing server-side file upload using node-fetch...');
-
-      // Dynamic imports for Node.js environment
-      const fetch = (await import('node-fetch')).default;
-      const FormData = (await import('form-data')).default;
-
-      // Read the file as a buffer
-      let fileBuffer: Buffer;
-      try {
-        fileBuffer = fs.readFileSync(csvFilePath);
-        console.info(`Read file buffer of size: ${fileBuffer.length} bytes`);
-      } catch (readError) {
-        console.error(`Error reading file ${csvFilePath}:`, readError);
-        throw new Error(`Failed to read file: ${csvFilePath}`);
-      }
-
-      // Prepare FormData
-      const formData = new FormData();
-      formData.append('file', fileBuffer, {
-        filename: path.basename(csvFilePath),
-        contentType: 'text/csv', // Explicitly set content type
-      });
-      // *** ADDED file_type FIELD ***
-      formData.append('file_type', 'csv');
-      // Include datasource_id and job_id in the form data as before
-      formData.append('datasource_id', datasource.id);
-      formData.append('job_id', jobId);
-
-      // Prepare fetch call
-      const baseUrl = this.httpClient.getBaseUrl();
-      const apiKey = this.httpClient.getApiKey();
-      const url = `${baseUrl}/v1/actions/load/${projectId}`;
-      const formHeaders = formData.getHeaders(); // Get headers from form-data library
-
-      console.info(`Uploading to URL: ${url}`);
-      console.info(
-        'Headers (excluding Auth):',
-        JSON.stringify(formHeaders, null, 2),
-      );
-
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            ...formHeaders, // Use headers generated by form-data
-            Authorization: `Bearer ${apiKey}`, // Add Authorization header
-          },
-          body: formData, // Pass FormData instance directly
-        });
-
-        console.info(
-          `Upload fetch completed with status: ${response.status} ${response.statusText}`,
-        );
-
-        // Check for HTTP errors - return the raw Response object regardless
-        // The caller (E2E test) can then check response.ok or status
-        if (!response.ok) {
-          const errorBody = await response.text();
-          console.error(`Upload failed response body: ${errorBody}`);
-          throw new InfactoryAPIError(
-            response.status,
-            'upload_failed',
-            `File upload failed with status ${response.status}: ${errorBody.substring(0, 500)}`,
-            response.headers.get('x-request-id') || undefined,
-          );
-        }
-
-        // Return the raw Response object
-        return {
-          datasource,
-          jobId,
-          uploadResponse: response as unknown as Response,
-        };
-      } catch (error) {
-        console.error('Error during direct fetch upload:', error);
-        if (error instanceof Error) {
-          throw new InfactoryAPIError(
-            0,
-            'network_error',
-            `Network error during file upload: ${error.message}`,
-            undefined,
-            error,
-          );
-        }
-        throw error; // Re-throw if it's not an Error instance
-      }
-    } else {
-      // --- Browser-side implementation using browser Fetch API ---
-      console.info(
-        'Executing browser-side file upload using browser Fetch API...',
-      );
-
-      // Validate file path for browser environment (conceptual)
-      if (!csvFilePath) {
-        throw new Error(
-          'Error: csvFilePath is required for browser-side file upload.',
-        );
-      }
-
-      // For tests, we'll create a simple mock file without actually reading the file
-      // This avoids the need for fs.readFileSync in browser tests
-      const mockFileContent = new Uint8Array([1, 2, 3, 4]); // Simple mock data
-      const fileName = path.basename(csvFilePath);
-      // Create a File object with mock content
-      const file = new File([mockFileContent], fileName, {
-        type: 'text/csv',
-      });
-
-      // Create FormData with the file
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Use httpClient.request as it handles FormData better across environments potentially
-      const uploadResponse = await this.httpClient.request({
-        url: `/v1/actions/load/${projectId}`,
-        method: 'POST',
-        params: {
-          jobId: jobId,
-          datasourceId: datasource.id,
-        },
-        body: formData, // Pass browser FormData
-        // HttpClient should handle Content-Type for FormData automatically in browser
-      });
-
-      if (uploadResponse.error) {
-        throw uploadResponse.error;
-      }
-
-      // Adapt return type if necessary, httpClient.request returns ApiResponse
-      // We need the raw Response object to match the server-side branch
-      // This part might require adjusting HttpClient or this return logic
-      console.warn(
-        'Browser upload path needs verification for returning raw Response object.',
-      );
-      // Placeholder: Returning a mock Response or adjusting the return type might be needed
-      const mockBrowserResponse = new Response(
-        JSON.stringify(uploadResponse.data),
-        { status: 200 },
-      );
-
-      return {
-        datasource,
-        jobId,
-        // This needs careful handling based on what HttpClient.request actually returns
-        uploadResponse: mockBrowserResponse, // Placeholder
-      };
-    }
   }
 
   /**

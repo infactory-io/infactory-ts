@@ -16,5 +16,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './vitest.setup-env.ts',
+    testTimeout: 120000, // 2 minutes for E2E tests
+    hookTimeout: 30000, // 30 seconds for hooks
   },
 });

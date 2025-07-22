@@ -277,6 +277,9 @@ export class HttpClient {
     params: Record<string, any> = {},
     options: RequestInit = {},
   ): Promise<ApiResponse<T>> {
+    console.log('HttpClient.get called with endpoint:', endpoint);
+    console.log('HttpClient.get called with params:', params);
+    console.log('HttpClient.get called with options:', options);
     return this.request<T>({
       url: endpoint,
       method: 'GET',
