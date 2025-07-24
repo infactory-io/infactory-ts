@@ -173,7 +173,12 @@ export class DatasourcesClient {
     datasourceName?: string,
   ): Promise<{
     datasource: Datasource;
-    uploadResponse: unknown;
+    uploadResponse: {
+      datasource_id: string;
+      message: string;
+      redirect_to: string;
+      success: boolean;
+    };
     jobId?: string;
   }> {
     if (!this.httpClient.getIsServer()) {

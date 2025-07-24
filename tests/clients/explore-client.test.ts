@@ -51,7 +51,7 @@ const createMockChatMessage = (
   data: null,
   reactElement: null,
   responseFormat: null,
-  status: 'completed',
+  status: 'ready',
   endTurn: null,
   weight: 1.0,
   recipient: 'all',

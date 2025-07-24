@@ -1,7 +1,7 @@
 /**
  * Type definitions for data-related models according to the OpenAPI schema
  */
-import { BaseEntity } from './common.js';
+import { BaseEntity, DatasourceStatusType } from './common.js';
 
 /**
  * Model for DataObject matching the OpenAPI schema
@@ -40,14 +40,7 @@ export interface DatasourceWithDataLinesModel extends BaseEntity {
   uri: string | null;
   projectId: string;
   credentials: Record<string, any> | null;
-  status:
-    | 'created'
-    | 'sync_waiting'
-    | 'sync_started'
-    | 'sync_completed'
-    | 'sync_error'
-    | 'transformation_started'
-    | null;
+  status: DatasourceStatusType | null;
   dataobjects: DataObjectModel[];
   projects: Record<string, any> | null;
 }

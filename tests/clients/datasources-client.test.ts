@@ -529,7 +529,7 @@ describe('DatasourcesClient', () => {
             deletedAt: null,
           },
         ],
-        status: 'sync_completed',
+        status: 'ready',
       };
 
       // Setup the mock response

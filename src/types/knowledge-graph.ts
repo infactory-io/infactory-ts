@@ -1,7 +1,7 @@
 /**
  * Type definitions for the Knowledge Graph API
  */
-import { BaseEntity } from './common.js';
+import { BaseEntity, DatasourceStatusType } from './common.js';
 
 /**
  * Knowledge Graph entity representing a graph structure
@@ -76,7 +76,7 @@ export interface KnowledgeGraphImportRequest {
  */
 export interface KnowledgeGraphImportStatus extends BaseEntity {
   graphId: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: DatasourceStatusType;
   progress: number;
   totalItems: number;
   processedItems: number;

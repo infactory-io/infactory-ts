@@ -24,7 +24,12 @@ export async function uploadCsvFile({
   file,
   accessToken,
   baseUrl = 'http://localhost:8000',
-}: UploadCsvOptions): Promise<unknown> {
+}: UploadCsvOptions): Promise<{
+  datasource_id: string;
+  message: string;
+  redirect_to: string;
+  success: boolean;
+}> {
   // 1. Decide once, at the top of the module
   const isNode = typeof process !== 'undefined' && !!process.versions?.node;
 

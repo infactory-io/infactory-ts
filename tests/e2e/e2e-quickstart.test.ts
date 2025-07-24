@@ -179,9 +179,12 @@ describe('E2E Quickstart Scenario', () => {
     logInfo(`Polling status for datasource ${stocksDatasource.id}...`);
     const readyDatasource = await poll(
       () => client.datasources.getDatasource(stocksDatasource!.id),
-      (ds) => ds?.status === 'sync_completed',
+      (ds) => {
+        console.info(`Polling status for datasource ${ds?.id}...`);
+        return ds?.status === 'ready';
+      },
     );
-    expect(readyDatasource.status).toBe('sync_completed');
+    expect(readyDatasource.status).toBe('ready');
     logSuccess('Datasource is ready.');
   });
 

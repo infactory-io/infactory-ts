@@ -291,13 +291,7 @@ export interface Datasource extends BaseEntity {
   projectId: string;
   type: string;
   uri?: string;
-  status?:
-    | 'created'
-    | 'sync_waiting'
-    | 'sync_started'
-    | 'sync_completed'
-    | 'sync_error'
-    | 'transformation_started';
+  status?: DatasourceStatusType;
   deletedAt?: string | null;
 }
 
