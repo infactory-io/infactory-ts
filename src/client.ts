@@ -118,12 +118,6 @@ export class InfactoryClient {
 
     this.baseUrl = options.baseURL;
 
-    console.log('InfactoryClient constructor called with options:', options);
-    console.log(
-      'InfactoryClient constructor called with baseURL:',
-      this.baseUrl,
-    );
-
     // Create the HTTP client
     this.httpClient = new HttpClient({
       baseUrl: this.baseUrl,
@@ -138,11 +132,6 @@ export class InfactoryClient {
           ? options.isServer
           : typeof window === 'undefined',
     });
-
-    console.log(
-      'InfactoryClient constructor called with httpClient:',
-      this.httpClient,
-    );
 
     // Clear mock call counts in tests to ensure single invocation for all resource clients
     [

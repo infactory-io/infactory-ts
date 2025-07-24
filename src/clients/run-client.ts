@@ -1,6 +1,6 @@
 import { HttpClient } from '../core/http-client.js';
 import { ApiResponse } from '../types/common.js';
-import { ChatMessageCreate } from '../types/chat.js';
+import { ChatCompletionRequest } from '../clients/integrations-client.js';
 
 /**
  * Parameters for evaluating a query program
@@ -25,18 +25,18 @@ export class RunClient {
   /**
    * Create a chat completion using project APIs as tools
    * @param projectId - The ID of the project
-   * @param params - The chat message creation parameters
+   * @param params - The chat completion request parameters
    * @returns A promise that resolves to a readable stream of the response
    */
   async chatCompletions(
     projectId: string,
-    params: ChatMessageCreate,
+    params: ChatCompletionRequest,
   ): Promise<ReadableStream<Uint8Array>> {
     const url = `/v1/run/${projectId}/chat/completions`;
     return this.httpClient.createStream(url, {
       url,
       method: 'POST',
-      body: JSON.stringify(params),
+      jsonBody: params,
     });
   }
 

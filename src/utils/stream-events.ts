@@ -15,6 +15,10 @@ export enum EventType {
   ERROR = 'error',
   COMPLETE = 'complete',
   DATA = 'data',
+  QUERY_PROGRAM = 'QueryProgram',
+  MESSAGES = 'messages',
+  USAGE = 'usage',
+  LLM_CONTENT = 'LLMContent',
 }
 
 /**
@@ -63,6 +67,8 @@ export async function processEventStream<T>(
       // Convert the chunk to a string and add to buffer
       const chunk = new TextDecoder().decode(value);
       buffer += chunk;
+
+      // console.log('buffer', buffer);
 
       // Process events in the buffer
       const events = parseEvents(buffer);
@@ -134,7 +140,7 @@ export async function processEventStream<T>(
  * @param buffer String buffer containing SSE data
  * @returns Array of parsed events
  */
-function parseEvents(buffer: string): EventData[] {
+export function parseEvents(buffer: string): EventData[] {
   const events: EventData[] = [];
   const eventChunks = buffer
     .split('\n\n')
@@ -183,6 +189,41 @@ function parseEvents(buffer: string): EventData[] {
 
   return events;
 }
+
+/**
+ * Parse the SSE event-style response into a list of events
+ * @param sseData The SSE data to parse
+ * @returns An array of events
+ */
+// export function parseSSEEvents(sseData: string) {
+//   const events: { event: string; data: any }[] = [];
+//   // Split by double newlines (end of event)
+//   const rawEvents = sseData.split(/\r?\n\r?\n/);
+//   for (const rawEvent of rawEvents) {
+//       if (!rawEvent.trim()) continue;
+//       const lines = rawEvent.split(/\r?\n/);
+//       let eventType = '';
+//       const dataLines: string[] = [];
+//       for (const line of lines) {
+//           if (line.startsWith('event: ')) {
+//               eventType = line.slice(7).trim();
+//           } else if (line.startsWith('data: ')) {
+//               dataLines.push(line.slice(6));
+//           }
+//       }
+//       if (eventType && dataLines.length > 0) {
+//           // Try to parse JSON, fallback to string
+//           let data: any = dataLines.join('\n');
+//           try {
+//               data = JSON.parse(data);
+//           } catch {
+//               // leave as string
+//           }
+//           events.push({ event: eventType, data });
+//       }
+//   }
+//   return events;
+// }
 
 /**
  * Process a chat stream response with specialized handling for chat events

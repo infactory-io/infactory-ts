@@ -305,8 +305,7 @@ export class ExploreClient {
       queryParams['noReply'] = 'true';
     }
 
-    const url = `/v1/explore/${conversationId}`;
-
+    const url = `/v1/run/${conversationId}`;
     return this.httpClient.createStream(url, {
       url,
       method: 'POST',

@@ -7,6 +7,8 @@ The test automates the same path a new user would follow in the UI:
 sign-in → load / rename a project → connect data (`stocks.csv`) → build & deploy
 queries → exercise live APIs → explore results → clean up.
 
+To run `npm run test:e2e:
+
 ### 1. Sign in to Infactory
 
 - **User action**: Open `https://workshop.infactory.ai` and authenticate.

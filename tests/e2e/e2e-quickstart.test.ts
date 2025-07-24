@@ -4,12 +4,14 @@ import {
   Project,
   Datasource,
   QueryProgram,
-  API,
   isReadableStream,
 } from '../../dist/index.js'; // Adjust path if running from within the repo
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
+import { NodeItem } from '@/types/index.js';
+import { parseEvents, processEventStream } from '@/utils/stream-events.js';
 
 // --- Test Configuration ---
 dotenv.config();
@@ -22,40 +24,9 @@ if (!API_KEY) {
   throw new Error('🔴 FATAL: NF_API_KEY environment variable not set.');
 }
 
-// Parse the SSE event-style response into a list of events
-function parseSSEEvents(sseData: string) {
-  const events: { event: string; data: any }[] = [];
-  // Split by double newlines (end of event)
-  const rawEvents = sseData.split(/\r?\n\r?\n/);
-  for (const rawEvent of rawEvents) {
-    if (!rawEvent.trim()) continue;
-    const lines = rawEvent.split(/\r?\n/);
-    let eventType = '';
-    const dataLines: string[] = [];
-    for (const line of lines) {
-      if (line.startsWith('event: ')) {
-        eventType = line.slice(7).trim();
-      } else if (line.startsWith('data: ')) {
-        dataLines.push(line.slice(6));
-      }
-    }
-    if (eventType && dataLines.length > 0) {
-      // Try to parse JSON, fallback to string
-      let data: any = dataLines.join('\n');
-      try {
-        data = JSON.parse(data);
-      } catch {
-        // leave as string
-      }
-      events.push({ event: eventType, data });
-    }
-  }
-  return events;
-}
-
 // --- Helper Functions ---
-const logInfo = (message: string) => console.log(`[INFO] ${message}`);
-const logSuccess = (message: string) => console.log(`✅ [SUCCESS] ${message}`);
+const logInfo = (message: string) => console.info(`[INFO] ${message}`);
+const logSuccess = (message: string) => console.info(`✅ [SUCCESS] ${message}`);
 const logError = (message: string, error?: any) => {
   console.error(`🔴 [ERROR] ${message}`);
   if (error) console.error(error);
@@ -68,7 +39,6 @@ async function poll<T>(
   timeout = 90000,
   interval = 5000,
 ): Promise<T> {
-  const startTime = Date.now();
   let timeoutId: NodeJS.Timeout | null = null;
   let timedOut = false;
 
@@ -107,13 +77,14 @@ describe('E2E Quickstart Scenario', () => {
   let client: InfactoryClient;
   let sandboxProject: Project | undefined;
   let stocksDatasource: Datasource | undefined;
-  //   let aiQueryProgram: QueryProgram | undefined;
+  let aiQueryProgram: QueryProgram | undefined;
   //   let deployedApi: API | undefined;
 
-  const csvFilePath = path.join(__dirname, 'stocks.csv');
+  const tmpDir = os.tmpdir();
+  const csvFilePath = path.join(tmpDir, 'stocks.csv');
 
   // Increase timeout for the entire suite
-  vi.setConfig({ testTimeout: 120000 });
+  vi.setConfig({ testTimeout: 1200000 });
 
   beforeAll(async () => {
     logInfo('Setting up E2E test suite...');
@@ -122,9 +93,8 @@ describe('E2E Quickstart Scenario', () => {
       baseURL: BASE_URL,
       isServer: true,
     });
-    console.log('Client created:', client);
 
-    // Step 3 (Setup): Create a fresh sandbox project
+    // Step 0 (Setup): Create a fresh sandbox project
     const userResponse = await client.users.getCurrentUser();
     if (userResponse.error || !userResponse.data?.userTeams?.[0]?.teamId) {
       throw new Error('Could not get user or team ID for setup.');
@@ -208,7 +178,7 @@ describe('E2E Quickstart Scenario', () => {
     // Step 5: Upload stocks.csv
     // curl -X POST \
     // -H "Authorization: Bearer YOUR_ACTUAL_TOKEN_HERE" \
-    // -F "file=@/Users/seankruzel/repos/dev/__yard_sale/slots_examples/stocks.csv" \
+    // -F "file=@/Users/infactory/stocks.csv" \
     // "http://localhost:8000/v1/actions/load/d6413dc7-5f1f-4599-ae5b-e0b5b2979f98?datasource_id=46b57288-2b96-495e-8a0d-717de10cf7ee"
 
     const uploadResult = await client.datasources.uploadCsvFile(
@@ -295,11 +265,11 @@ describe('E2E Quickstart Scenario', () => {
     expect(response.data).toBeDefined();
 
     // Example usage:
-    const sseEvents = parseSSEEvents(response.data as unknown as string);
+    const sseEvents = parseEvents(response.data as unknown as string);
     expect(Array.isArray(sseEvents)).toBe(true);
-    expect(sseEvents.some((e) => e.event === 'QueryProgram')).toBe(true);
-    const aiQueryProgram = sseEvents.find(
-      (e) => e.event === 'QueryProgram',
+    expect(sseEvents.some((e) => e.type + '' === 'QueryProgram')).toBe(true);
+    aiQueryProgram = sseEvents.find(
+      (e) => e.type + '' === 'QueryProgram',
     )?.data;
     logSuccess(`AI generated query`);
 
@@ -325,65 +295,144 @@ describe('E2E Quickstart Scenario', () => {
     );
   });
 
-  //   it('Steps 11-13: should deploy the query as an API and test it', async () => {
-  //     expect(aiQueryProgram, 'Prerequisite: AI Query Program must exist').toBeDefined();
+  it('Steps 11-13: should deploy the query as an API and test it', async () => {
+    expect(
+      aiQueryProgram,
+      'Prerequisite: AI Query Program must exist',
+    ).toBeDefined();
 
-  //     // Step 11: Deploy the query as an API
-  //     const deployResponse = await client.queryPrograms.publishQueryProgram(aiQueryProgram!.id);
-  //     expect(deployResponse.error).toBeUndefined();
-  //     expect(deployResponse.data?.published).toBe(true);
-  //     logSuccess(`Deployed query ${aiQueryProgram!.id} as an API.`);
-  //     await delay(3000); // Allow time for deployment propagation
+    // Step 11: Deploy the query as an API
+    const deployResponse = await client.queryPrograms.publishQueryProgram(
+      aiQueryProgram!.id,
+    );
+    expect(deployResponse.error).toBeUndefined();
+    expect(deployResponse.data?.published).toBe(true);
+    logSuccess(`Deployed query ${aiQueryProgram!.id} as an API.`);
 
-  //     // Step 12: Browse the Deploy catalog
-  //     const apisResponse = await client.apis.getProjectApis(sandboxProject!.id);
-  //     deployedApi = apisResponse.data?.find(api => api.specification?.paths);
-  //     expect(deployedApi).toBeDefined();
-  //     logSuccess(`Found deployed API: "${deployedApi!.name}"`);
+    // Step 12: Browse the Deploy catalog and wait for API to be available
+    const deployedApis = await poll(
+      () => client.apis.getProjectApis(sandboxProject!.id),
+      (apis) => {
+        if (apis?.length === 1) {
+          const api = apis[0];
+          logInfo(`Found API: "${api.name}" - checking if ready...`);
+          return api !== undefined;
+        }
+        return false;
+      },
+      30000, // 30 second timeout
+      1000, // Check every 1 second
+    );
+    expect(deployedApis.length).toBe(1);
+    const deployedApi = deployedApis[0];
+    expect(deployedApi).toBeDefined();
+    logSuccess(`Found deployed API: "${deployedApi.name}"`);
 
-  //     // Step 13: Test the direct endpoint
-  //     const endpointsResponse = await client.apis.getApiEndpoints(deployedApi!.id);
-  //     const endpoint = endpointsResponse.data?.[0];
-  //     expect(endpoint).toBeDefined();
-  //     const apiCallResponse = await client.live.callCustomEndpoint(deployedApi!.slug, deployedApi!.version, endpoint!.path.substring(1));
-  //     expect(apiCallResponse.error).toBeUndefined();
-  //     expect(apiCallResponse.data).toBeDefined();
-  //     logSuccess('Live API endpoint call was successful.');
-  //   });
+    // Step 13: Test the direct endpoint
+    const endpointsResponse = await client.apis.getApiEndpoints(deployedApi.id);
+    const endpoint = endpointsResponse.data?.[0];
+    expect(endpoint).toBeDefined();
+    const apiCallResponse = await client.live.callCustomEndpoint(
+      deployedApi.slug,
+      deployedApi.version,
+      endpoint!.path,
+    );
+    expect(apiCallResponse.error).toBeUndefined();
+    expect(apiCallResponse.data).toBeDefined();
+    const data = apiCallResponse.data.items.MAIN.item.rows;
 
-  //   it('Step 14: should test the unified chat endpoint', async () => {
-  //     const chatQuestion = 'Using the available tools, what is the average trading volume for GOOGL?';
-  //     const stream = await client.run.chatCompletions(sandboxProject!.id, { content: chatQuestion } as any);
-  //     expect(isReadableStream(stream)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+    const applVolume = data.find((r: any) => r[0] === 'AAPL')[1];
+    const googlVolume = data.find((r: any) => r[0] === 'GOOGL')[1];
+    expect(applVolume).toBeDefined();
+    expect(googlVolume).toBeDefined();
+    expect(applVolume).toBeCloseTo((112117500 + 89113600) / 2);
+    expect(googlVolume).toBeCloseTo((28131200 + 34854800) / 2);
+    logSuccess('Live API endpoint call was successful.');
+  });
 
-  //     const reader = stream.getReader();
-  //     const decoder = new TextDecoder();
-  //     let fullResponse = '';
-  //     while (true) {
-  //         const { done, value } = await reader.read();
-  //         if (done) break;
-  //         fullResponse += decoder.decode(value);
-  //     }
-  //     expect(fullResponse).toContain('GOOGL');
-  //     logSuccess('Chat completions endpoint responded as expected.');
-  //   });
+  it('Step 14: should test the unified chat endpoint', async () => {
+    const chatQuestion =
+      'Using the available tools, what is the average trading volume for GOOGL?';
+    const stream = await client.run.chatCompletions(sandboxProject!.id, {
+      messages: [
+        {
+          role: 'user',
+          content: chatQuestion,
+        },
+      ],
+      model: 'infactory-v1',
+    });
+    expect(isReadableStream(stream)).toBe(true);
 
-  //   it('Steps 16-18: should use the Explore chat feature and get a graph', async () => {
-  //     // Step 16: Launch the Explore chat
-  //     const convResponse = await client.explore.createConversation({ projectId: sandboxProject!.id });
-  //     expect(convResponse.error).toBeUndefined();
-  //     const conversation = convResponse.data!;
-  //     logSuccess(`Created Explore session: ${conversation.id}`);
+    // Manually consume the stream and save to a single string
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      fullResponse += decoder.decode(value);
+    }
+    const jsonResponse = JSON.parse(fullResponse);
+    const toolResponse = JSON.parse(jsonResponse.choices[0].message.content);
 
-  //     // Step 17: Ask an exploratory question
-  //     const exploreStream = await client.explore.sendMessage(conversation.id, { content: 'Show me AAPL volume' } as any);
-  //     expect(isReadableStream(exploreStream)).toBe(true);
-  //     logSuccess('Sent exploratory question.');
+    const googlVolume = toolResponse.items.MAIN.item.rows.find(
+      (r: any) => r[0] === 'GOOGL',
+    )[1];
+    expect(googlVolume).toBeDefined();
+    expect(googlVolume).toBeCloseTo((28131200 + 34854800) / 2);
 
-  //     // Step 18: Interact with the visualization (Get Graph)
-  //     const graphResponse = await client.explore.getConversationGraph(conversation.id);
-  //     expect(graphResponse.error).toBeUndefined();
-  //     expect(graphResponse.data?.items?.length).toBeGreaterThan(0);
-  //     logSuccess('Retrieved conversation graph successfully.');
-  //   });
+    logSuccess('Chat completions endpoint responded as expected.');
+  });
+
+  it('Steps 16-18: should use the Explore chat feature and get a graph', async () => {
+    // Step 16: Launch the Explore chat
+    const convResponse = await client.explore.createConversation({
+      projectId: sandboxProject!.id,
+    });
+    expect(convResponse.error).toBeUndefined();
+    const conversation = convResponse.data!;
+    logSuccess(`Created Explore session: ${conversation.id}`);
+
+    // Step 17: Ask an exploratory question
+    const exploreStream = await client.explore.sendMessage(conversation.id, {
+      content: 'Show me AAPL volume',
+      projectId: sandboxProject!.id,
+      conversationId: conversation.id,
+    });
+    expect(isReadableStream(exploreStream)).toBe(true);
+
+    // Manually process the stream without using the processEventStream function
+    // const reader = exploreStream.getReader();
+    // const decoder = new TextDecoder();
+    // let fullResponse = '';
+    // while (true) {
+    //   const { done, value } = await reader.read();
+    //   if (done) break;
+    //   fullResponse += decoder.decode(value);
+    // }
+    const events: any[] = [];
+    await processEventStream(exploreStream, {
+      onEvent: (event) => {
+        events.push(event);
+      },
+    });
+    expect(events.length).toBeGreaterThan(0);
+    expect(events[events.length - 1].type).toBe('messages');
+    expect(events[events.length - 1].data.content_type).toBe(
+      'function-response',
+    );
+    logSuccess('Sent exploratory question.');
+
+    // Step 18: Interact with the visualization (Get Graph)
+    const graphResponse = await client.explore.getConversationGraph(
+      conversation.id,
+    );
+    expect(graphResponse.error).toBeUndefined();
+    expect(graphResponse.data?.items?.length).toBeGreaterThan(1);
+    const initialMessage = graphResponse.data?.items?.[0] as NodeItem;
+    expect(initialMessage.message?.contentText).toEqual('Show me AAPL volume');
+    logSuccess('Retrieved conversation graph successfully.');
+  });
 });

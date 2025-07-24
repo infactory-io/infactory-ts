@@ -85,10 +85,6 @@ export async function uploadCsvFile({
   /* -------------------------------------------------------------- */
   const url = `${baseUrl}/v1/actions/load/${projectId}?datasource_id=${datasourceId}`;
 
-  console.info(`Uploading to ${url}`);
-  console.info(`Headers: ${JSON.stringify(headers)}`);
-  console.info(`Form: ${JSON.stringify(form)}`);
-
   const resp = await fetchFn(url, {
     method: 'POST',
     headers,

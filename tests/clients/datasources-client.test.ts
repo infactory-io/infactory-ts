@@ -381,9 +381,6 @@ describe('DatasourcesClient', () => {
         data: { id: 'ds-1', name: 'Custom Datasource Name' }, // Use the expected custom name here
       });
 
-      // Create a mock custom job submission function
-      const customSubmitJob = vi.fn().mockResolvedValue('custom-job-123');
-
       // Mock file upload response
       vi.mocked(mockHttpClient.request).mockResolvedValueOnce({
         data: { success: true },
@@ -396,20 +393,8 @@ describe('DatasourcesClient', () => {
       const result = await datasourcesClient.uploadCsvFile(
         'project-1',
         '/path/to/test.csv',
+        10,
         'Custom Datasource Name',
-        customSubmitJob,
-      );
-
-      // Verify the custom job submission function was called with correct parameters
-      expect(customSubmitJob).toHaveBeenCalledWith(
-        null,
-        expect.objectContaining({
-          projectId: 'project-1',
-          jobType: 'upload',
-          sourceId: 'ds-1',
-          source: 'datasource',
-          sourceEventType: 'file_upload',
-        }),
       );
 
       // Verify the standard job submission was not called
@@ -449,6 +434,7 @@ describe('DatasourcesClient', () => {
       const result = await datasourcesClient.uploadCsvFile(
         'project-1',
         '/path/to/test.csv',
+        10,
         customName,
       );
 
