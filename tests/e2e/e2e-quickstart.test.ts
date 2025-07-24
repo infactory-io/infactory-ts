@@ -5,13 +5,16 @@ import {
   Datasource,
   QueryProgram,
   isReadableStream,
-} from '../../dist/index.js'; // Adjust path if running from within the repo
+} from '../../src/index.js';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { NodeItem } from '@/types/index.js';
-import { parseEvents, processEventStream } from '@/utils/stream-events.js';
+import { NodeItem } from '../../src/types/index.js';
+import {
+  parseEvents,
+  processEventStream,
+} from '../../src/utils/stream-events.js';
 
 // --- Test Configuration ---
 dotenv.config();

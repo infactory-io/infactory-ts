@@ -308,22 +308,20 @@ async function handleEventStreamingResponse() {
 
 For complete examples, see:
 
-- `example.ts` - Basic SDK usage examples
-- `infactory-e2e-test.ts` - End-to-end testing workflow including project creation, data upload, query execution, and API usage
+- [`quickstart.md`](./quickstart.md) - A step-by-step guide that mirrors the end-to-end test, explaining the purpose and SDK methods for each stage of a typical user workflow.
+- `example.ts` - Basic SDK usage examples.
+- `infactory-e2e-test.ts` - The end-to-end test implementation that creates a project, uploads data, runs queries, and deploys APIs.
 
 ## Command Line Tools
 
-To run the included example files:
+To run the included tests from the command line:
 
 ```bash
 # Set up your API key
 export NF_API_KEY=your-api-key-here
 
-# Run the basic example
-npm run example
-
-# Run the end-to-end test
-npm run e2e-test
+# Run the end-to-end tests
+npm run test:e2e
 ```
 
 ## Development
@@ -334,66 +332,52 @@ npm run e2e-test
 git clone https://github.com/infactory-io/infactory-ts.git
 cd infactory-ts
 npm install
-npm run e2e-test
+npm run build
 ```
 
 ## Testing the SDK
 
-The SDK includes a comprehensive test suite using Jest with several types of tests:
+The SDK includes a comprehensive test suite using Vitest.
 
-### Unit Tests
+### Running Tests
 
-Unit tests verify individual components of the SDK in isolation:
+- **Run unit & integration tests**:
 
-```bash
-npm run test:unit
-```
+    ```bash
+    npm test
+    ```
 
-### Integration Tests
+- **Run end-to-end tests** (requires `NF_API_KEY`):
 
-Integration tests verify how components work together and with the Infactory API:
+    ```bash
+    npm run test:e2e
+    ```
 
-```bash
-npm run test:integration
-```
+- **Run a specific E2E test** (e.g., the quickstart test):
 
-### Mock Service Worker Tests
+    ```bash
+    npm run test:e2e:quickstart
+    ```
 
-MSW tests simulate API interactions using request interception:
+- **Run the entire test suite**:
 
-```bash
-npm run test:msw
-```
-
-### Running All Tests
-
-To run the entire test suite:
-
-```bash
-npm test
-```
+    ```bash
+    npm run test:all
+    ```
 
 ### Test Coverage
 
-Generate test coverage reports:
+Generate a test coverage report for non-E2E tests:
 
 ```bash
 npm run test:coverage
 ```
 
-### Setting Up Tests
-
-For contributors writing tests:
-
-1. **Unit Tests**: Place in `src/__tests__/` and name as `*.test.ts`
-2. **Integration Tests**: Place in `src/__tests__/integration/` directory
-3. **MSW Tests**: Place in `src/__tests__/msw/` directory
-
 ### Testing Dependencies
 
 The test suite uses several tools:
 
-- **vitest**: Test runner and assertion library
+- **Vitest**: Test runner and assertion library
 - **nock**: HTTP server mocking
 - **MSW**: API mocking via request interception
 
