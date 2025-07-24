@@ -7,8 +7,9 @@ import { QueryProgram, CreateQueryProgramParams } from '../types/common.js';
  */
 export interface CreateCuesParams {
   projectId: string;
-  queryprogramId: string;
-  cues: string[];
+  previousQuestions: string[];
+  count: number;
+  guidance?: string;
 }
 
 /**
